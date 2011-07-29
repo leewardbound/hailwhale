@@ -1,0 +1,168 @@
+<!doctype html>
+<!--[if lt IE 7 ]><html class="ie ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]><html class="ie ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]><html class="ie ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--><html lang="en"> <!--<![endif]-->
+<head>
+
+	<!-- Basic Page Needs
+  ================================================== -->
+	<meta charset="utf-8" />
+	<title>Hailwhale</title>
+	<meta name="description" content="">
+	<meta name="author" content="">
+	<!--[if lt IE 9]>
+		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+  <script src="../js/hailwhale.complete.js"></script>
+  <style> .plot { width: 100%; height: 300px; }</style>
+  <script>
+$(function() { 
+  hw_host = '';
+  hw = $.hailwhale(hw_host);
+  category=demo_name='countOne';
+  $(function() {
+      debug = true;
+    hw.add_graph($('#countOne .plot'), {category: 'countOne', autoupdate: !debug});
+    hw.add_graph($('#countMany .plot'), {category: 'countMany', depth: 1,
+        autoupdate: !debug});
+    hw.add_graph($('#manyMetrics .plot'), {category: 'system_status', 
+        metrics: {'CPU percent': 'avg', 'RAM percent': 'avg'},
+        period: '10x300',
+        interval: 10000,
+        autoupdate: debug});
+  });
+});
+  </script>
+	
+	<!-- Mobile Specific Metas
+  ================================================== -->
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" /> 
+	
+	<!-- CSS
+  ================================================== -->
+	<link rel="stylesheet" href="stylesheets/base.css">
+	<link rel="stylesheet" href="stylesheets/docs.css">
+	<link rel="stylesheet" href="stylesheets/skeleton.css">
+	<link rel="stylesheet" href="stylesheets/layout.css">
+	
+	<!-- Favicons
+	================================================== -->
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png" />
+	<link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png" />
+	
+</head>
+<body>
+
+
+
+
+
+	<!-- Primary Page Layout
+	================================================== -->
+	
+	<!-- Delete everything in this .container and get started on your own site! -->
+
+	<div class="container">	
+      <div class="three columns sidebar">
+          <nav>
+            <h3 id="logo">HailWhale</h3>
+            <ul>
+              <li><a href="#whatAndWhy">What &amp; Why</a></li>
+              <li><a href="#countOne">Count One Thing</a></li>
+              <li><a href="#countMany">Count Many Things</a></li>
+              <li><a href="#manyMetrics">Many Metrics</a></li>
+              <li><a href="#manyUses">Many Uses</a></li>
+              <li><a href="#veryFast">Very Fast</a></li>
+              <li><a href="#compatibility">Compatibility</a></li>
+              <li><a href="#support">Support</a></li>
+              <li><a href="#theFuture">The Future</a></li>
+              <li class="download"><a href="#download">Download</a></li>
+            </ul>
+          </nav>
+          &nbsp;
+        </div>
+		<div class="twelve columns content offset-by-one">
+      <header>
+          <h1>Demo</h1>
+      </header>
+			<h5>Version 0.0.3</h5>
+			<hr />
+      <div class="doc-section" id="whatAndWhy">
+            <h3>What Is It?</h3>
+            <p>Real-time counting of rolled-up multi-dimensional metric data
+            via HTTP service.</p>
+            <p><b>OK, now in english?</b> Live graphs of events happening in
+            real-time, for any measurable things you want to measure, 
+            grouped by any properties you want to define about these events.</p>
+            <p>Fire GET requests to log <b>Events</b>. Events can be optionally tagged with <b>Dimensions</b>,
+            which are like properties (and can be nested!), and each Event has
+            some <b>Metrics</b>, or measurable counting data.</p>
+            <p><b>For example</b>, let's say you need to count today's revenue
+            from various income streams and put a fancy graph in your admin
+            panel. From the proper points in your sales and services software,
+            you insert HTTP calls to send Events like these: </p>
+            <blockquote>
+                http://.../count?dimension=services&metric={"dollars": 200}
+                <br />
+                http://.../count?dimension=advertising&metric={"dollars": -2000}
+                <br />
+                http://.../count?dimensions={"sales": $product_id}&metric={"dollars": 500}
+            </blockquote>
+            <p>Notice that in the third example, the dimensions are nested.
+            Now, using the jQuery widget, you can add a graph to your admin
+            panel that will show "Overall Dollars", as well as any dimensions that
+            exceed 10% of the total revenue stream (10% is the default
+            threshold). Additionally, you can get a graph of "Sales Overall",
+            which would also show any $product_id that represented 10% or more
+            of the sales.</p>
+            <p> For each dimension/metric combination, hailwhale provides graphs
+            (<a href="http://flot.googlecode.com/">flot</a>)
+            and summary data, at whatever roll-up intervals you want, via
+            HTTP/JSON or with the provided jQuery plugin.</p>
+            <p>On the backend, Hailwhale is composed of two servers -- </p>
+            <ul>
+                <li>The <b>hail</b> server is <i>optional</i>, and designed to quickly
+                collect incoming events in high-traffic scenarios. Hail depends
+                on Redis and Bottle.py.</li>
+                <li>The <b>whale</b> server is required. It provides graphs, and
+                allows for directly counting data when used without a Hail
+                server. The whale stores data into a large datastore.
+                Currently Redis is supported, MongoDB and cassandra coming soon.
+            </ul>
+      </div>
+      <div class="doc-section" id="countOne">
+            <h3>Counting One Thing</h3>
+            <button id="countOne">Send fake events</button>
+            <script>$(function() { $('#countOne').click( function() {
+                hw.trigger_fake_hits({category: 'countOne'})})})
+            </script>
+            <div class="plot"></div>
+      </div>
+      <div class="doc-section" id="countMany">
+            <h3>Counting Many Things</h3>
+            <button class="countMany" id='red' style="color: red">Send fake events</button>
+            <button class="countMany" id='blue' style="color: blue">Send fake events</button>
+            <button class="countMany" id='green' style="color: green">Send fake events</button>
+            <script>$(function() { $('.countMany').click( function() {
+                hw.trigger_fake_hits({category: 'countMany',
+                    dimension: $(this).attr('id'),
+                })})})
+            </script>
+            <div class="plot"></div>
+      </div>
+      <div class="doc-section" id="manyMetrics">
+            <h3>Track different kinds of data</h3>
+            <div class="plot"></div>
+      </div>
+      
+    </div>
+
+	</div><!-- container -->
+
+<!-- End Document
+================================================== -->
+</body>
+</html>

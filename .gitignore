@@ -1,0 +1,4 @@
+*.pyc
+dev.*
+*.swp
+*.log
