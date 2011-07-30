@@ -3,6 +3,7 @@ from bottle import run, route, request as req, static_file
 from hail import Hail
 from whale import Whale
 import util
+PORT=8080
 project_dir = os.path.dirname(os.path.abspath(__file__))
 here = lambda * x: os.path.join(os.path.abspath(os.path.dirname(__file__)), *x)
 
@@ -106,4 +107,4 @@ def send_static_js(filename):
 
 
 if __name__ == '__main__':
-    run(reloader=True)
+    run(app, host='0.0.0.0', port=PORT)
