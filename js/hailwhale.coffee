@@ -22,7 +22,8 @@ $.hailwhale = (@host, @opts) ->
         dimensions: extra.dimensions or extra.dimension or false
         metrics: extra.metrics or extra.metric or false
         metric: extra.metrics and extra.metrics[0] or extra.metric or false
-        metric_two: if extra.metrics then extra.metrics[1] or false
+        metric_two: if extra.metrics and extra.metrics[1] then extra.metrics[1] else false
+        width_factor: extra.width_factor or 6
     }
     params = @make_params extra
     params['depth'] = extra.depth or 0
@@ -48,17 +49,19 @@ $.hailwhale = (@host, @opts) ->
                 d_d = dimension_data[dimension]
                 if not extra.metric
                     extra.metric = d_d.metrics[0]
+                if not extra.metric_two and d_d.metrics.length > 1
+                    extra.metric_two = d_d.metrics[1]
                 if not extra.metric in d_d.metrics then break
                 if extra.depth
                     if d_d.length == min_dim
                         label = 'Overall ' + d_d.unpacked
-                        line_width = 4
+                        line_width = extra.width_factor
                     else
                         label = d_d.unpacked[0]
-                        line_width = 4 / (1+(d_d.length - min_dim))
+                        line_width = extra.width_factor / (.5+(d_d.length - min_dim))
                 else
                     label = d_d.unpacked[0] or 'Overall'
-                    line_width = 4
+                    line_width = extra.width_factor*3/4
                 lines.push {
                         data: metrics[extra.metric],
                         lines: {

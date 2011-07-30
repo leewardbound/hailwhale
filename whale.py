@@ -4,7 +4,7 @@ from collections import Counter, defaultdict
 from datetime import datetime
 import json, itertools
 from util import to_flot_time
-DELIM = '|'
+DELIM = '||'
 def keyify(*args):
     json_args = [json.dumps(arg) if not isinstance(arg, basestring) else arg
             for arg in args]
@@ -54,12 +54,12 @@ class WhaleRedisDriver(Redis):
                 key = keyify(cats_str, dimension, period, metric)
                 value_dict = self.hgetall(key)
                 if metric in conversions and conversions[metric] not in [1,'1']:
-                    if conversions[metric] == 'avg': second_key = 'hit'
+                    if conversions[metric] == 'avg': second_key = 'hits'
                     else: second_key = conversions[metric]
                     key = keyify(cats_str, dimension, period, second_key)
                     avg_dict = self.hgetall(key)
                     for flottime, val in value_dict.items():
-                        try: value_dict[flottime] = val / avg_dict[flottime]
+                        try: value_dict[flottime] = float(val) / float(avg_dict[flottime])
                         except Exception as e: 
                             print e
                             value_dict[flottime] = 0

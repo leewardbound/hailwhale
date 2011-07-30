@@ -23,9 +23,9 @@ $(function() {
   category=demo_name='countOne';
   $(function() {
       debug = true;
-    hw.add_graph($('#countOne .plot'), {category: 'countOne', autoupdate: !debug});
+    hw.add_graph($('#countOne .plot'), {category: 'countOne', autoupdate: debug});
     hw.add_graph($('#countMany .plot'), {category: 'countMany', depth: 1,
-        autoupdate: !debug});
+        autoupdate: debug});
     hw.add_graph($('#manyMetrics .plot'), {category: 'system_status', 
         metrics: {'CPU percent': 'avg', 'RAM percent': 'avg'},
         period: '10x300',
@@ -117,7 +117,12 @@ $(function() {
             exceed 10% of the total revenue stream (10% is the default
             threshold). Additionally, you can get a graph of "Sales Overall",
             which would also show any $product_id that represented 10% or more
-            of the sales.</p>
+            of the sales.<b>More additionally still,</b> you can get a graph of
+            the average revenue per sale, because hailwhale adds an extra metric
+            {hits: 1} to each event. Since hailwhale lets you perform
+            transformations on metrics in real-time, graphing e.g. the
+            click-through ratio on a page is as simple as tracking pageviews
+            with one metric, and clickthroughs with another.</p>
             <p> For each dimension/metric combination, hailwhale provides graphs
             (<a href="http://flot.googlecode.com/">flot</a>)
             and summary data, at whatever roll-up intervals you want, via

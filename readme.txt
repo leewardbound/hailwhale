@@ -1,79 +1,25 @@
-### HailWhale : Open-source, web-scale, nested-parameter hit counting. Whew. ###
+=== HailWhale : Open-source, web-scale, nested-parameter hit counting. Whew. ===
+*What Is It?*
+Real-time counting of rolled-up multi-dimensional metric data via HTTP service.
 
-HailWhale is a package for quickly counting things with many properties.
-Modeled after Twitter's Rainbird demo, logging servers count events
-and denormalize them into summary data for user-defined time periods
-that can be quickly turned into graphs of key performance metrics.
+OK, now in english? Live graphs of events happening in real-time, for any measurable things you want to measure, grouped by any properties you want to define about these events.
 
-It has two primary components -- 
-  + One or more Hail servers, collects inbound events
-    - uWSGI server collects incoming JSON data
-    - process hits with Celery + RabbitMQ
-    - runs independantly of other Hail servers, scales linearly with nodes
-    - hailwail.py cronjob dumps hits to Whale server
-  + The Whale server, which is a connector to any database suitable for storing your data
-    - Currently only Redis supported
-    - Hbase, Mongo, Cassandra, MySQL planned
+Fire GET requests to log *Events*. Events can be optionally tagged with *Dimensions*, which are like properties (and can be nested!), and each *Event *has some *Metrics*, or measurable counting data.
 
-The best examples are code; here's counting hits to a webpage:
-  # settings.py
-  # Define our graph periods
-  PERIODS = [
-    (15, 3600*3), # Every 15 seconds for the last 3 hours
-    (3600, 3600*24*7), # Every hour for the last week
-    (3600*24, 3600*24*365), # Every day for the last year
-  ]
-  HAIL_SERVER='redis://localhost:11211'
-  WHALE_STORAGE='hbase://localhost:9090'
-  
-  # Table must have column families 'meta', 'values'
-  DEFAULT_TABLE='analytics'
+For example, let's say you need to count today's revenue from various income streams and put a fancy graph in your admin panel. From the proper points in your sales and services software, you insert HTTP calls to send Events like these:
 
+    http://.../count?dimension=services&metric={"dollars": 200} 
+    http://.../count?dimension=advertising&metric={"dollars": -2000} 
+    http://.../count?dimensions={"sales": $product_id}&metric={"dollars": 500}
 
-  # my_site.wsgi
-  def main_page(request):
-    visitor_id = request.user.id
+Notice that in the third example, the dimensions are nested. Now, using the jQuery widget, you can add a graph to your admin panel that will show "Overall Dollars", as well as any dimensions that exceed 10% of the total revenue stream (10% is the default threshold). Additionally, you can get a graph of "Sales Overall", which would also show any $product_id that represented 10% or more of the sales.
 
-    # A hierarchy of traits to log
-    update_params = ['pageviews', 'site.com', 'site.com/main', visitor_id]
-    
-    # The metrics we'll be tracking
-    update_values = {
-      hits = 1, # Increment a value
-      time_on_page = 25, # Or store things to aggregate
-      visitors = 'is_unique', # Magic strings get replaced
-      }
+For each dimension/metric combination, hailwhale provides graphs (flot) and summary data, at whatever roll-up intervals you want, via HTTP/JSON or with the provided jQuery plugin.
 
-    HailWhale.log(update_params, update_values)
-    return "<h1>Hello, Whale</h1>"
+On the backend, Hailwhale is composed of two servers --
 
-In effect, this will increment counts for each of:
-  [
-    ('pageviews', )
-    ('pageviews', 'site.com'),
-    ('pageviews', 'site.com', full_url),
-    ('pageviews', 'site.com', full_url, visitor_id),
-  ]
-
-And we could then get plotpoints for a graph for each with the following:
-  
-  total_hits_this_month = HailWhale.dataset(
-              ['pageviews'],
-              value='hits',
-              period=settings.PERIOD[-1],
-              start_at=datetime.now() - timedelta(months=1),
-      )
-  #=> [(datetime, value), (datetime, value), (datetime, value), ... ]
-
-  timeonpage_per_page_for_sitecom_this_week = \
-    HailWhale.dataset( ['pageviews', 'site.com'],
-              depth=1, # include 1 layer beneath 'site.com'
-              value='time_on_page',
-              period=settings.PERIOD[1])
-  #=> {'site.com/main': [(datetime,value),(datetime,value) ... ],
-  #    'site.com/about': [(datetime,value),(datetiem,value) ...] }
-
-              
++ The hail server is optional, and designed to quickly collect incoming events in high-traffic scenarios. Hail depends on Redis and Bottle.py.
++ The whale server is required. It provides graphs, and allows for directly counting data when used without a Hail server. The whale stores data into a large datastore. Currently Redis is supported, MongoDB and cassandra coming soon.
               
 === About The Project ===
 I built this after studying a presentation on Rainbird by Brian Weil 
