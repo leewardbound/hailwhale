@@ -1,15 +1,19 @@
-=== HailWhale : Open-source, web-scale, nested-parameter hit counting. Whew. ===
+HailWhale
+=========
 *What Is It?*
 Real-time counting of rolled-up multi-dimensional metric data via HTTP service.
 
 OK, now in english? Live graphs of events happening in real-time, for any measurable things you want to measure, grouped by any properties you want to define about these events.
 
-Fire GET requests to log *Events*. Events can be optionally tagged with *Dimensions*, which are like properties (and can be nested!), and each *Event *has some *Metrics*, or measurable counting data.
+Fire GET requests to log *Events*. Events can be optionally tagged with *Dimensions*, which are like properties (and can be nested!), and each *Event* has some *Metrics*, or measurable counting data.
 
-For example, let's say you need to count today's revenue from various income streams and put a fancy graph in your admin panel. From the proper points in your sales and services software, you insert HTTP calls to send Events like these:
+For example, let's say you need to count today's revenue from various income streams and put a fancy graph in your admin panel. From the proper points in your sales and services software, you insert HTTP calls to send Events like these::
 
+    # Sold $200 in services
     http://.../count?dimension=services&metric={"dollars": 200} 
+    # Bought $2000 in advertising
     http://.../count?dimension=advertising&metric={"dollars": -2000} 
+    # Sold a $product_id for $500
     http://.../count?dimensions={"sales": $product_id}&metric={"dollars": 500}
 
 Notice that in the third example, the dimensions are nested. Now, using the jQuery widget, you can add a graph to your admin panel that will show "Overall Dollars", as well as any dimensions that exceed 10% of the total revenue stream (10% is the default threshold). Additionally, you can get a graph of "Sales Overall", which would also show any $product_id that represented 10% or more of the sales.
@@ -19,9 +23,11 @@ For each dimension/metric combination, hailwhale provides graphs (flot) and summ
 On the backend, Hailwhale is composed of two servers --
 
 + The hail server is optional, and designed to quickly collect incoming events in high-traffic scenarios. Hail depends on Redis and Bottle.py.
+
 + The whale server is required. It provides graphs, and allows for directly counting data when used without a Hail server. The whale stores data into a large datastore. Currently Redis is supported, MongoDB and cassandra coming soon.
               
-=== About The Project ===
+About
+=====
 I built this after studying a presentation on Rainbird by Brian Weil 
 (of Twitter), and re-using a lot of recent work I've done in
 parameterized hit counting.
