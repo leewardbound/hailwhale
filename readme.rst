@@ -39,7 +39,7 @@ parameterized hit counting.
 Full credit to Twitter for the inspiriation, and my project name (a pun 
 on both the name "Rainbird" and their classic downtime logo).
 
-Rainbird looked awesome I knew I had to have it, but after 3 months
+Rainbird looked awesome I knew I had to have it, but after 5 months
 of waiting on release, I proceeded to roll my own solution. Now I
 can count things at webscale without losing my mind, if you know what I mean.
 

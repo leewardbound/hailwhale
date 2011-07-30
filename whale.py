@@ -1,6 +1,6 @@
 from redis import Redis
 from periods import DEFAULT_PERIODS, Period
-from collections import Counter, defaultdict
+from collections import defaultdict
 from datetime import datetime
 import json, itertools
 from util import to_flot_time
