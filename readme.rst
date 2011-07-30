@@ -1,11 +1,11 @@
 HailWhale
 =========
-*What Is It?*
+**What Is It?**
 Real-time counting of rolled-up multi-dimensional metric data via HTTP service.
 
-OK, now in english? Live graphs of events happening in real-time, for any measurable things you want to measure, grouped by any properties you want to define about these events.
+**OK, now in english?** Live graphs of events happening in real-time, for any measurable things you want to measure, grouped by any properties you want to define about these events.
 
-Fire GET requests to log *Events*. Events can be optionally tagged with *Dimensions*, which are like properties (and can be nested!), and each *Event* has some *Metrics*, or measurable counting data.
+Fire GET requests to log **Events**. Events can be optionally tagged with **Dimensions**, which are like properties (and can be nested!), and each Event has some **Metrics**, or measurable counting data.
 
 For example, let's say you need to count today's revenue from various income streams and put a fancy graph in your admin panel. From the proper points in your sales and services software, you insert HTTP calls to send Events like these::
 
@@ -16,7 +16,11 @@ For example, let's say you need to count today's revenue from various income str
     # Sold a $product_id for $500
     http://.../count?dimensions={"sales": $product_id}&metric={"dollars": 500}
 
-Notice that in the third example, the dimensions are nested. Now, using the jQuery widget, you can add a graph to your admin panel that will show "Overall Dollars", as well as any dimensions that exceed 10% of the total revenue stream (10% is the default threshold). Additionally, you can get a graph of "Sales Overall", which would also show any $product_id that represented 10% or more of the sales.
+Notice that in the third example, the dimensions are nested. Now, using the jQuery widget, you can add a graph to your admin panel that will show "Overall Dollars", as well as any dimensions that exceed 10% of the total revenue stream (10% is the default threshold). Additionally, you can get a graph of "Sales Overall", which would also show any $product_id that represented 10% or more of the sales. **More additionally still**, you can get a graph of the average revenue per sale,
+because hailwhale adds an extra metric {hits: 1} to each event. Since hailwhale
+lets you perform transformations on metrics in real-time, graphing e.g. the
+click-through ratio on a page is as simple as tracking pageviews with one
+metric, and clickthroughs with another
 
 For each dimension/metric combination, hailwhale provides graphs (flot) and summary data, at whatever roll-up intervals you want, via HTTP/JSON or with the provided jQuery plugin.
 
