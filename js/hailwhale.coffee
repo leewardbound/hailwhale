@@ -90,7 +90,7 @@ $.hailwhale = (@host, @opts) ->
                 yaxis = [yaxis, yaxis_two]
                 console.log('yaxis:',yaxis)
             plot = $.plot(target, lines, {
-                legend: {show:true,position:'sw'},
+                legend: {show:not extra.hide_legend,position:'sw'},
                 xaxis: {mode: "time"},
                 yaxes: yaxis})
     poller()
