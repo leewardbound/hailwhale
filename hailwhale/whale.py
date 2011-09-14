@@ -29,7 +29,7 @@ class WhaleRedisDriver(Redis):
                 json.dumps(dimension))
         return self.hincrby(key, dt, int(count))
     def retrieve(self, categories, dimensions, metrics, period='all', dt=None,
-            depth=0):
+            depth=0,overall=True):
         if type(categories) in [str,unicode]: categories = [categories,]
         cats_str = json.dumps(categories)
         if depth > 0: 
@@ -43,15 +43,16 @@ class WhaleRedisDriver(Redis):
         to_i = lambda n: int(n) if n else 0
         if period=='all': dt='time'
         conversions = {}
+        if isinstance(metrics, dict):
+            conversions = metrics
+            metrics = conversions.keys()
         for dimension in map(json.dumps, iterate_dimensions(dimensions)):
-            if isinstance(metrics, dict):
-                conversions = metrics
-                metrics = conversions.keys()
             for metric in metrics:
                 if not isinstance(dimension, basestring):
                     dimension = json.dumps(dimension) 
                 elif dimension == '"_"':
                     dimension = '["_"]'
+                if dimension == '["_"]' and overall == False: continue
                 key = keyify(cats_str, dimension, period, metric)
                 value_dict = self.hgetall(key)
                 if metric in conversions and conversions[metric] not in [1,'1']:
