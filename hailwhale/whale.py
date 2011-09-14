@@ -93,7 +93,7 @@ class Whale():
         return rr
 
     def plotpoints(self, categories=None, dimensions=None, metrics=None,
-            period=None, depth=0):
+            period=None, depth=0, overall=True):
         categories = categories or ''
         dimensions = dimensions or json.dumps(list(list()))
         # Convert categories to a list, if it's not
@@ -101,7 +101,7 @@ class Whale():
         metrics = metrics or ['hits',]
         period = period or Period.default_size()
         sparse = self.driver().retrieve(categories,dimensions,metrics,
-                period=period, depth=depth)
+                period=period, depth=depth, overall=True)
         nonsparse = defaultdict(dict)
         for dimensions, metrics in sparse.items():
             for metric, points in metrics.items():
