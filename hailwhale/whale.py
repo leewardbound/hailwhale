@@ -42,6 +42,7 @@ class WhaleRedisDriver(Redis):
         nested = defaultdict(dict)
         to_i = lambda n: int(n) if n else 0
         if period=='all': dt='time'
+        conversions = {}
         for dimension in map(json.dumps, iterate_dimensions(dimensions)):
             if isinstance(metrics, dict):
                 conversions = metrics
