@@ -101,7 +101,7 @@ class Whale():
         metrics = metrics or ['hits',]
         period = period or Period.default_size()
         sparse = self.driver().retrieve(categories,dimensions,metrics,
-                period=period, depth=depth, overall=True)
+                period=period, depth=depth, overall=overall)
         nonsparse = defaultdict(dict)
         for dimensions, metrics in sparse.items():
             for metric, points in metrics.items():
