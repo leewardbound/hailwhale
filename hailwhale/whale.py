@@ -70,11 +70,11 @@ class WhaleRedisDriver(Redis):
         return dict(nested)
 
 class Whale():
-    driver_class = WhaleRedisDriver
-    driver_settings = {}
+    whale_driver_class = WhaleRedisDriver
+    whale_driver_settings = {}
     def whale_driver(self):
         if not hasattr(self, '_whale_driver'):
-            self._whale_driver = self.driver_class(**self.driver_settings)
+            self._whale_driver = self.whale_driver_class(**self.whale_driver_settings)
         return self._whale_driver
     def dotproduct_keys(self, metrics, periods=False, at=False):
         from itertools import product

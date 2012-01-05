@@ -3,13 +3,13 @@ import json, datetime
 class HailRedisDriver(Redis):
     pass
 class Hail():
-    driver_class = HailRedisDriver
-    driver_settings = {}
+    hail_driver_class = HailRedisDriver
+    hail_driver_settings = {}
     spy_size = 100
     @classmethod
     def hail_driver(cls):
         if not hasattr(cls, '_hail_driver'):
-            cls._hail_driver = cls.driver_class(**cls.driver_settings)
+            cls._hail_driver = cls.hail_driver_class(**cls.hail_driver_settings)
         return cls._hail_driver
     @classmethod
     def count(cls, categories, dimensions, metrics, at=False):
