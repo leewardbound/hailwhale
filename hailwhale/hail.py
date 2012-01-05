@@ -8,9 +8,9 @@ class Hail():
     spy_size = 100
     @classmethod
     def driver(cls):
-        if not hasattr(cls, '_driver'):
-            cls._driver = cls.driver_class(**cls.driver_settings)
-        return cls._driver
+        if not hasattr(cls, '_hail_driver'):
+            cls._hail_driver = cls.driver_class(**cls.driver_settings)
+        return cls._hail_driver
     @classmethod
     def count(cls, categories, dimensions, metrics, at=False):
         import time, json, random

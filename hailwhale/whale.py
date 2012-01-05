@@ -73,9 +73,9 @@ class Whale():
     driver_class = WhaleRedisDriver
     driver_settings = {}
     def driver(self):
-        if not hasattr(self, '_driver'):
-            self._driver = self.driver_class(**self.driver_settings)
-        return self._driver
+        if not hasattr(self, '_whale_driver'):
+            self._whale_driver = self.driver_class(**self.driver_settings)
+        return self._whale_driver
     def dotproduct_keys(self, metrics, periods=False, at=False):
         from itertools import product
         periods = periods or DEFAULT_PERIODS
@@ -141,7 +141,7 @@ class Whale():
         for dimension, (period, dt, metric, i) in itertools.product(
             iterate_dimensions(dimensions),
                         self.dotproduct_keys(metrics, periods, at)):
-            self._driver.store(categories, dimension, metric, period, dt, i)
+            self._whale_driver.store(categories, dimension, metric, period, dt, i)
 
 def iterate_dimensions(dimensions):
     from util import nested_dict_to_list_of_keys

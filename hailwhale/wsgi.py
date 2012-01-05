@@ -3,12 +3,11 @@ from bottle import run, route, request as req, static_file
 from hail import Hail
 from whale import Whale
 import util
-PORT=8080
+PORT=8085
 project_dir = os.path.dirname(os.path.abspath(__file__))
 here = lambda * x: os.path.join(os.path.abspath(os.path.dirname(__file__)), *x)
 
 bottle.debug(True)
-app = bottle.Bottle()
 
 def g(name, default=None, coerce_to=True):
     val = req.GET.get(name, default)
@@ -99,12 +98,12 @@ def graph():
 
 @route('/demo/:filename#.*#')
 def send_static_demo(filename):
-    return static_file(filename, root=here('demo'))
+    return static_file(filename, root=here('../demo'))
 
 @route('/js/:filename#.*#')
 def send_static_js(filename):
-    return static_file(filename, root=here('js'))
+    return static_file(filename, root=here('../js'))
 
 
 if __name__ == '__main__':
-    run(app, host='0.0.0.0', port=PORT)
+    run(host='0.0.0.0', port=PORT)
