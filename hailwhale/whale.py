@@ -65,7 +65,7 @@ class WhaleRedisDriver(Redis):
                         except Exception as e: 
                             print e
                             value_dict[flottime] = 0
-                if dt == 'time': nested[d_p][metric] = getattr(value_dict, 'time',0) 
+                if dt == 'time': nested[dimension][metric] = getattr(value_dict, 'time',0) 
                 else: nested[dimension][metric] = value_dict
         return dict(nested)
 
