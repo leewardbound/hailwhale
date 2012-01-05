@@ -7,7 +7,7 @@ class Hail():
     driver_settings = {}
     spy_size = 100
     @classmethod
-    def driver(cls):
+    def hail_driver(cls):
         if not hasattr(cls, '_hail_driver'):
             cls._hail_driver = cls.driver_class(**cls.driver_settings)
         return cls._hail_driver
@@ -15,7 +15,7 @@ class Hail():
     def count(cls, categories, dimensions, metrics, at=False):
         import time, json, random
         try:
-            r=cls.driver()
+            r=cls.hail_driver()
             if not r: return 0
             set_number_name = 'hail_number'
             set_number = r.get(set_number_name) or 0
@@ -37,7 +37,7 @@ class Hail():
 
     @classmethod
     def spy_pos(cls, uid):
-        r = cls.driver() 
+        r = cls.hail_driver() 
         if not r: return 0
         pos_key = cls.spy_pos_key(uid)
         if not r.get(pos_key): r.set(pos_key, 0)
@@ -52,7 +52,7 @@ class Hail():
     @classmethod
     def spy_log(cls, uid, data):
         import json, time
-        r = cls.driver()
+        r = cls.hail_driver()
         if not r or data is None: return None
         if not isinstance(data, str): data = json.dumps(data)
         spy_pos = r.incr(cls.spy_pos_key(uid))
@@ -67,7 +67,7 @@ class Hail():
     @classmethod
     def spy_at_key(cls, uid, pos=None, r=None):
         import json
-        r = cls.driver()
+        r = cls.hail_driver()
         if not r: return None
         spy_key = cls.spy_key(uid, pos)
         hit_key = r.get(spy_key)
@@ -78,7 +78,7 @@ class Hail():
     # Get the whole list
     @classmethod
     def get_spy(cls, uid, max_results=15):
-        r = cls.driver()
+        r = cls.hail_driver()
         if not r: return
         pos_key = cls.spy_pos_key(uid)
         spy_pos = int(r.get(pos_key))
@@ -94,7 +94,7 @@ class Hail():
         # Get the incoming hits from Hail
         from whale import Whale
         whale = Whale()
-        r=cls.driver()
+        r=cls.hail_driver()
         _s_n_n = 'hail_number'
         r.setnx(_s_n_n, 0)
         set_number = r.incr(_s_n_n) - 1

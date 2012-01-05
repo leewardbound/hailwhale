@@ -72,7 +72,7 @@ class WhaleRedisDriver(Redis):
 class Whale():
     driver_class = WhaleRedisDriver
     driver_settings = {}
-    def driver(self):
+    def whale_driver(self):
         if not hasattr(self, '_whale_driver'):
             self._whale_driver = self.driver_class(**self.driver_settings)
         return self._whale_driver
@@ -100,7 +100,7 @@ class Whale():
         if type(categories) in [str,unicode]: categories = [categories,]
         metrics = metrics or ['hits',]
         period = period or Period.default_size()
-        sparse = self.driver().retrieve(categories,dimensions,metrics,
+        sparse = self.whale_driver().retrieve(categories,dimensions,metrics,
                 period=period, depth=depth, overall=overall)
         nonsparse = defaultdict(dict)
         for dimensions, metrics in sparse.items():
@@ -119,12 +119,12 @@ class Whale():
         categories = categories or ''
         dimensions = dimensions or json.dumps(list(list()))
         metrics = metrics or ['hits',]
-        return self.driver().retrieve(categories,dimensions,metrics)
+        return self.whale_driver().retrieve(categories,dimensions,metrics)
 
     def count_now(self, categories, dimensions, metrics, at=False):
         """ Immediately count a hit, as opposed to logging it into Hail"""
         import time, random
-        r=self.driver()
+        r=self.whale_driver()
         periods = DEFAULT_PERIODS
 
         # Convert categories to a list, if it's not
