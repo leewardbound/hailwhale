@@ -2,7 +2,7 @@ from redis import Redis
 from periods import DEFAULT_PERIODS, Period
 from collections import defaultdict
 from datetime import datetime
-import json, itertools
+import json, itertools, collections
 from util import to_flot_time
 DELIM = '||'
 def keyify(*args):
@@ -11,22 +11,32 @@ def keyify(*args):
     return DELIM.join([arg if arg not in 
         [None, False, '[null]', [], ['_'], '', '""', '"_"', '\"\"']
         else '["_"]' for arg in json_args ])
+
 class WhaleRedisDriver(Redis):
+    def __init__(self, *args, **kwargs):
+        super(WhaleRedisDriver, self).__init__(*args, **kwargs)
+        self._added_dimensions = collections.defaultdict(list)
+        self._added_subdimensions = collections.defaultdict(list)
     def store(self, categories, dimension, metric, period, dt, count):
         if type(categories) in [str,unicode]: categories = [categories,]
         # Keep a list of graphs per category
         cats_str = json.dumps(categories)
         key = keyify(cats_str, json.dumps(dimension), period, metric)
         # Store category dimensions
-        self.sadd(keyify(categories,'dimensions',cats_str),
-                json.dumps(dimension))
+        dimension_key = keyify(categories,'dimensions',cats_str)
+        dimension_json = json.dumps(dimension)
+        if not dimension_json in self._added_dimensions[dimension_key]:
+            self.sadd(dimension_key,dimension_json)
+            self._added_dimensions[dimension_key].append(dimension_json)
         # Store dimensional subdimensions
         if len(dimension) > 1:
             parent_dimension = dimension[:-1]
         else: parent_dimension = '["_"]'
         if(dimension != '["_"]'):
-            self.sadd(keyify(categories,'subdimensions',cats_str,parent_dimension),
-                json.dumps(dimension))
+            subdimension_key = keyify(categories,'subdimensions',cats_str,parent_dimension)
+            if not dimension_json in self._added_subdimensions[subdimension_key]:
+                self.sadd(subdimension_key, dimension_json)
+                self._added_subdimensions[subdimension_key].append(dimension_json)
         return self.hincrby(key, dt, int(count))
     def retrieve(self, categories, dimensions, metrics, period='all', dt=None,
             depth=0,overall=True):
