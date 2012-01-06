@@ -71,7 +71,7 @@ class Period():
 {'name': 'Last 6 hours, by 15 minutes', 'length': 3600*6, 'interval': 60*15},
 {'name': 'Last hour, by 2 minutes', 'length': 3600, 'interval': 60*2},
 {'name': 'Last 5 minutes, by 10 seconds', 'length': 300, 'interval': 10},
-{'name': 'Last minute, by seconds', 'length': 60, 'interval': 1}]
+]
         PERIOD_OBJS = []
         for p in PERIODS:
             period = Period(p['interval'], p['length'], p['name'])
