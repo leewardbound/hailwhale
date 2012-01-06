@@ -120,7 +120,7 @@ class Hail():
             whale.count_now(categories, dimensions, metrics, at=at)
 
         # Delete the hits
-        map(r.delete, get_keys_from_json)
+        map(r.delete, keys_from_hail)
         r.delete(set_name)
 
 
