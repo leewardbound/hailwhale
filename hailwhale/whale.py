@@ -188,7 +188,7 @@ class Whale():
             if (len(val) - deleted) == 0:
                 r.delete(k)
                 print 'Key empty, deleting --',k
-            else:
+            elif deleted > 0:
                 print 'Deleted',deleted,'old keys from',k
 
     def count_now(self, categories, dimensions, metrics, at=False):
