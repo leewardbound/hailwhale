@@ -101,9 +101,8 @@ class Whale():
             rr.append( ('all','time',metric,incr_by) )
         return rr
 
-    def plotpoints(self, pk=None, dimensions=None, metrics=None,
+    def plotpoints(self, pk, dimensions=None, metrics=None,
             period=None, overall=True):
-        pk = pk or []
         metrics = metrics or ['hits',]
         period = period or Period.default_size()
         sparse = self.whale_driver().retrieve(pk,dimensions,metrics,
@@ -120,7 +119,7 @@ class Whale():
                         float(value)])
         return nonsparse
 
-    def totals(self, pk=None, dimensions=None, metrics=None):
+    def totals(self, pk, dimensions=None, metrics=None):
         metrics = metrics or ['hits',]
         d = {}
         for p in DEFAULT_PERIODS: 
@@ -138,7 +137,7 @@ class Whale():
                 pk, dimensions, metrics, period='all')
         return d
 
-    def reset(self, pk=None, dimensions=None, metrics=None):
+    def reset(self, pk, dimensions=None, metrics=None):
         r= self.whale_driver().reset(
                 pk,dimensions,metrics)
         return r
