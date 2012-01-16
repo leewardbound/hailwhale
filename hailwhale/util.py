@@ -32,20 +32,31 @@ def curry_instance_attribute(attr, func_name, instance):
     ...     def __init__(self, name):
     ...         self.name = name
     ...         curry_instance_attribute('name', 'print_record', self)
+    ...         curry_instance_attribute('upper_name', 'print_record_upper', self)
     ...     @classmethod
     ...     def print_record(cls, name):
     ...         print 'Person',name
+    ...     @classmethod
+    ...     def print_record_upper(cls, name):
+    ...         print 'PERSON',name
+    ...     def upper_name(self):
+    ...         return self.name.upper()
     >>> Person.print_record('bob')
     Person bob
     >>> p=Person('jane')
     >>> p.print_record()
     Person jane
+    >>> p.print_record_upper()
+    PERSON JANE
     """
     from types import MethodType
     func = getattr(instance, func_name)
     def curried(self, *args, **kwargs):
-        return func(getattr(self, attr),
-                *args, **kwargs)
+        pass_attr = getattr(self, attr)
+        # Can also be callable
+        if hasattr(pass_attr, '__call__'):
+            pass_attr = pass_attr()
+        return func(pass_attr, *args, **kwargs)
     setattr(instance, func_name,
             MethodType(curried, instance, instance.__class__))
 

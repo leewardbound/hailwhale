@@ -3,7 +3,7 @@ from periods import DEFAULT_PERIODS, Period
 from collections import defaultdict
 from datetime import datetime
 import json, itertools, collections
-from util import to_flot_time
+from util import to_flot_time, curry_instance_attribute
 DELIM = '||'
 def keyify(*args):
     json_args = [json.dumps(arg) if not isinstance(arg, basestring) else arg
@@ -74,6 +74,13 @@ class WhaleRedisDriver(Redis):
 class Whale():
     whale_driver_class = WhaleRedisDriver
     whale_driver_settings = {}
+    def __init__(self, *args, **kwargs):
+        if hasattr(self, 'id'):
+            curry_instance_attribute('id', 'plotpoints', self)
+            curry_instance_attribute('id', 'totals', self)
+            curry_instance_attribute('id', 'count_now', self)
+            curry_instance_attribute('id', 'reset', self)
+
     def whale_driver(self):
         if not hasattr(self, '_whale_driver'):
             self._whale_driver = self.whale_driver_class(**self.whale_driver_settings)

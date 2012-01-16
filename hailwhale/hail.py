@@ -8,8 +8,14 @@ class Hail():
     hail_driver_settings = {}
     spy_size = 100
     def __init__(self, *args, **kwargs):
-        if hasattr(self, 'pk'):
-            curry_instance_attribute('pk', 'count', self)
+        if hasattr(self, 'id'):
+            curry_instance_attribute('id', 'count', self)
+            curry_instance_attribute('id', 'spy_pos_key', self)
+            curry_instance_attribute('id', 'spy_pos', self)
+            curry_instance_attribute('id', 'spy_key', self)
+            curry_instance_attribute('id', 'spy_log', self)
+            curry_instance_attribute('id', 'spy_at_key', self)
+            curry_instance_attribute('id', 'get_spy', self)
     @classmethod
     def hail_driver(cls):
         if not hasattr(cls, '_hail_driver'):
