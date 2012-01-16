@@ -192,7 +192,7 @@ class Whale():
 
 def iterate_dimensions(dimensions):
     from util import nested_dict_to_list_of_keys
-    if not dimensions: dimensions = []
+    if not dimensions: dimensions = '_' 
     if isinstance(dimensions, dict):
         dimensions = list(nested_dict_to_list_of_keys(dimensions))
     elif type(dimensions) in [str, unicode]:
