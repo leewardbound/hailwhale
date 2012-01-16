@@ -208,7 +208,9 @@ class Whale():
         if type(metrics) == list:
             metrics = dict([(k,1) for k in metrics])
         metrics['hits'] = 1
+        if not '_' in dimensions: dimensions.append('_')
         # Dimensions: {a: 5, b: {x: 1, y: 2}} --> will increment each of: 
+        # [_], (overall)
         # [a],
         # [a, 5], 
         # [b], 
@@ -230,6 +232,5 @@ def iterate_dimensions(dimensions):
         dimensions = [dimensions, ]
     elif isinstance(dimensions, list) and len(dimensions) and not isinstance(dimensions[0], list):
         dimensions = [dimensions, ]
-    if not '_' in dimensions: dimensions.append('_')
     return dimensions
 
