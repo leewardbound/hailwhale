@@ -10,7 +10,7 @@ def keyify(*args):
             for arg in args]
     return DELIM.join([arg if arg not in 
         [None, False, '[null]', [], ['_'], '', '""', '"_"', '\"\"']
-        else '["_"]' for arg in json_args ])
+        else '_' for arg in json_args ])
 
 class WhaleRedisDriver(Redis):
     def __init__(self, *args, **kwargs):
@@ -23,17 +23,17 @@ class WhaleRedisDriver(Redis):
         cats_str = json.dumps(categories)
         key = keyify(cats_str, json.dumps(dimension), period, metric)
         # Store category dimensions
-        dimension_key = keyify(categories,'dimensions',cats_str)
-        dimension_json = json.dumps(dimension)
+        dimension_key = keyify(categories,'dimensions')
+        dimension_json = isinstance(dimension, basestring) and dimension or json.dumps(dimension)
         if not dimension_json in self._added_dimensions[dimension_key]:
             self.sadd(dimension_key,dimension_json)
             self._added_dimensions[dimension_key].append(dimension_json)
         # Store dimensional subdimensions
         if len(dimension) > 1:
             parent_dimension = dimension[:-1]
-        else: parent_dimension = '["_"]'
-        if(dimension != '["_"]'):
-            subdimension_key = keyify(categories,'subdimensions',cats_str,parent_dimension)
+        else: parent_dimension = '_'
+        if(dimension != '_'):
+            subdimension_key = keyify(categories,'subdimensions',parent_dimension)
             if not dimension_json in self._added_subdimensions[subdimension_key]:
                 self.sadd(subdimension_key, dimension_json)
                 self._added_subdimensions[subdimension_key].append(dimension_json)
@@ -61,8 +61,8 @@ class WhaleRedisDriver(Redis):
                 if not isinstance(dimension, basestring):
                     dimension = json.dumps(dimension) 
                 elif dimension == '"_"':
-                    dimension = '["_"]'
-                if dimension == '["_"]' and overall == False: continue
+                    dimension = '_'
+                if dimension == '_' and overall == False: continue
                 key = keyify(cats_str, dimension, period, metric)
                 value_dict = self.hgetall(key)
                 if metric in conversions and conversions[metric] not in [1,'1']:
@@ -75,9 +75,24 @@ class WhaleRedisDriver(Redis):
                         except Exception as e: 
                             print e
                             value_dict[flottime] = 0
-                if dt == 'time': nested[dimension][metric] = getattr(value_dict, 'time',0) 
-                else: nested[dimension][metric] = value_dict
+                if period=='all' and dt == 'time':
+                    nested[dimension][metric] = float(value_dict.get('time', 0))
+                else: nested[dimension][metric] = dict([
+                        (k, float(v)) for k,v in value_dict.items()])
         return dict(nested)
+    def get_subdimensions(self, category, dimension=None):
+        if not dimension: return '_'
+        return self.smembers(keyify(category,'subdimensions', dimension))
+    def all_subdimensions(self, category, dimension=None):
+        subdimensions = []
+        for d in self.get_subdimensions(category, dimension):
+            subdimensions += self.all_subdimensions(category, d)
+        if dimension: 
+            if isinstance(dimension, list) and len(dimension) == 1:
+                subdimensions.append(dimension[0])
+            else:
+                subdimensions.append(dimension)
+        return subdimensions
 
 class Whale():
     whale_driver_class = WhaleRedisDriver
@@ -104,8 +119,7 @@ class Whale():
 
     def plotpoints(self, categories=None, dimensions=None, metrics=None,
             period=None, depth=0, overall=True):
-        categories = categories or ''
-        dimensions = dimensions or json.dumps(list(list()))
+        categories = categories or []
         # Convert categories to a list, if it's not
         if type(categories) in [str,unicode]: categories = [categories,]
         metrics = metrics or ['hits',]
@@ -124,12 +138,48 @@ class Whale():
                         float(value)])
         return nonsparse
 
-
     def totals(self, categories=None, dimensions=None, metrics=None):
-        categories = categories or ''
-        dimensions = dimensions or json.dumps(list(list()))
+        categories = categories or [] 
+        if type(categories) in [str,unicode]: categories = [categories,]
         metrics = metrics or ['hits',]
-        return self.whale_driver().retrieve(categories,dimensions,metrics)
+        d = {}
+        for p in DEFAULT_PERIODS: 
+            p_data = self.whale_driver().retrieve(
+                categories,dimensions,metrics,period=str(p))
+            p_totals = dict()
+            for dim, mets in p_data.items():
+                p_totals[dim] = dict()
+                for met, vals in mets.items():
+                    p_totals[dim][met] = sum([
+                        v for k,v in vals.items()
+                        if p.flatten(k)])
+            d[str(p)] = p_totals
+        d['alltime'] = self.whale_driver().retrieve(
+                categories, dimensions, metrics, period='all')
+        return d
+
+    def reset(self, categories=None, dimensions=None, metrics=None):
+        categories = categories or [] 
+        if type(categories) in [str,unicode]: categories = [categories,]
+        r= self.whale_driver().reset(
+                categories,dimensions,metrics)
+        return r
+    def cleanup(self):
+        from periods import DEFAULT_PERIODS
+        ps = dict([(str(p), p) for p in DEFAULT_PERIODS])
+        r = self.whale_driver()
+        keys = r.keys('*||*||*||*')
+        for k in keys:
+            try: val = r.hgetall(k)
+            except: r.delete(k)
+            this_p = k.split('||')[2]
+            if this_p == 'all': continue
+            if not this_p in ps:
+                r.delete(k)
+                continue
+            for dt, num in val.items():
+                if not ps[this_p].flatten(dt):
+                    r.hdel(k, dt)
 
     def count_now(self, categories, dimensions, metrics, at=False):
         """ Immediately count a hit, as opposed to logging it into Hail"""
@@ -137,8 +187,16 @@ class Whale():
         r=self.whale_driver()
         periods = DEFAULT_PERIODS
 
+        if isinstance(at, basestring):
+            try:
+                if ':' in at: at = datetime.strptime(at, '%c')
+                else: at = float(at)
+            except Exception as e: print e
+
         # Convert categories to a list, if it's not
         if type(categories) == str: categories = [categories,]
+        if type(metrics) == list:
+            metrics = dict([(k,1) for k in metrics])
         metrics['hits'] = 1
         # Dimensions: {a: 5, b: {x: 1, y: 2}} --> will increment each of: 
         # [a],
@@ -155,12 +213,13 @@ class Whale():
 
 def iterate_dimensions(dimensions):
     from util import nested_dict_to_list_of_keys
-    if not dimensions: dimensions = ['empty',]
-    if type(dimensions) is dict:
+    if not dimensions: dimensions = []
+    if isinstance(dimensions, dict):
         dimensions = list(nested_dict_to_list_of_keys(dimensions))
     elif type(dimensions) in [str, unicode]:
         dimensions = [dimensions, ]
-    elif type(dimensions) is list and type(dimensions[0]) is not list:
+    elif isinstance(dimensions, list) and len(dimensions) and not isinstance(dimensions[0], list):
         dimensions = [dimensions, ]
-    if not ['_'] in dimensions: dimensions += [ ['_',] ]
+    if not '_' in dimensions: dimensions.append('_')
     return dimensions
+

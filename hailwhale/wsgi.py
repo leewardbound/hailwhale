@@ -42,6 +42,13 @@ def count():
     except Exception as e: return str(e)
     return 'OK'
 
+@route('/reset')
+def reset():
+    whale = Whale()
+    try: whale.reset(**default_params())
+    except Exception as e: return str(e)
+    return 'OK'
+
 @route('/count_now')
 def count_now():
     from datetime import datetime
@@ -69,7 +76,7 @@ def plotpoints():
     whale = Whale()
     params = default_params()
     params['depth'] = g('depth', 0)
-    params['period'] = g('period', '1x60')
+    params['period'] = g('period', None)
     return json.dumps(whale.plotpoints(**params))
 
 @route('/graph')

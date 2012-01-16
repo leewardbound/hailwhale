@@ -83,7 +83,7 @@ class Period():
             Period.all_sizes()))
     @staticmethod
     def default_size():
-        return str(Period.all_sizes()[-1])
+        return str(Period.all_sizes()[-4])
     def friendly_name(self):
         return self.name if self.name else '%sx%s'%(
                 self.interval, self.length)

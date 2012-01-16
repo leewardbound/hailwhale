@@ -2,7 +2,7 @@ import unittest, urllib, json, time
 
 class TestHailWhaleHTTP(unittest.TestCase):
     def setUp(self):
-        self.service_url = 'http://localhost:8080'
+        self.service_url = 'http://localhost:8085'
     def getURL(self, url):
         data = urllib.urlopen(self.service_url + url).read()
         try: return json.loads(data)

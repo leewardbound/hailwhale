@@ -20,8 +20,13 @@ class Hail():
             set_number_name = 'hail_number'
             set_number = r.get(set_number_name) or 0
             if not set_number: set_number = r.set(set_number_name, 0)
-            at = at or time.time()
-            if isinstance(categories, cls): categories = categories.getattr(cls.unique_key)
+            at = at or datetime.datetime.now()
+            if isinstance(at, str):
+                try: at = datetime.datetime.fromtimestamp(float(at))
+                except ValueError: pass # if at is not a float, ignore this
+            if isinstance(at, datetime.datetime): at = at.ctime()
+            if isinstance(categories, cls): 
+                categories = categories.getattr(cls.unique_key)
             hit_key = '%s_%s_%s_%s'%(
                     cls.__name__,categories,at,random.randint(1,1000))
             r.sadd('hail_%s'%(set_number), hit_key)
@@ -106,8 +111,8 @@ class Hail():
             return
         def get_keys_from_json(k):
             try: 
-                class_name, categories, dimensions, metrics, t = json.loads(r[k])
-                at = datetime.datetime.fromtimestamp(float(t))
+                class_name, categories, dimensions, metrics, at = json.loads(r[k])
+                #at = datetime.datetime.fromtimestamp(float(t))
                 return (categories, dimensions, metrics, at)
             except Exception as e: 
                 print e
@@ -122,5 +127,3 @@ class Hail():
         # Delete the hits
         map(r.delete, keys_from_hail)
         r.delete(set_name)
-
-
