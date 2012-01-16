@@ -171,15 +171,25 @@ class Whale():
         keys = r.keys('*||*||*||*')
         for k in keys:
             try: val = r.hgetall(k)
-            except: r.delete(k)
+            except: 
+                r.delete(k)
+                continue
             this_p = k.split('||')[2]
             if this_p == 'all': continue
             if not this_p in ps:
                 r.delete(k)
                 continue
+            deleted = 0
             for dt, num in val.items():
                 if not ps[this_p].flatten(dt):
                     r.hdel(k, dt)
+                    deleted += 1
+            # Cleanup empty key
+            if (len(val) - deleted) == 0:
+                r.delete(k)
+                print 'Key empty, deleting --',k
+            else:
+                print 'Deleted',deleted,'old keys from',k
 
     def count_now(self, categories, dimensions, metrics, at=False):
         """ Immediately count a hit, as opposed to logging it into Hail"""
