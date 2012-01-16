@@ -30,7 +30,7 @@ def g_tup(k, v):
     return (k, g(k, v))
 def default_params():
     return dict([
-            g_tup('categories', ['_',]), 
+            g_tup('pk', '_'), 
             g_tup('dimensions', ['_',]),
             g_tup('metrics', dict(hits=1))])
 
@@ -38,8 +38,7 @@ def default_params():
 @route('/count')
 def count():
     hail = Hail()
-    try: val = hail.count(**default_params())
-    except Exception as e: return str(e)
+    val = hail.count(**default_params())
     return 'OK'
 
 @route('/reset')

@@ -31,14 +31,14 @@ class TestHailWhaleHTTP(unittest.TestCase):
     def testResetCategory(self):
         self.getStandardParamsURL('/reset')
     def testCountingNowCorrectly(self):
-        counting = lambda n: n['["empty"]']['counting_now']
+        counting = lambda n: n['alltime']['["empty"]']['counting_now']
         totals = self.getTotalsURL(metrics=['counting_now',])
         for i in range(3):
             self.assertEqual(self.getCountNowURL(metrics={'counting_now': 5}), 'OK')
         new_totals = self.getTotalsURL(metrics=['counting_now',])
         self.assertEqual(counting(new_totals), counting(totals) + 15)
     def testCountingCorrectly(self):
-        counting = lambda n: n['["empty"]']['counting']
+        counting = lambda n: n['alltime']['["empty"]']['counting']
         totals = self.getTotalsURL(metrics=['counting',])
         for i in range(3):
             self.assertEqual(self.getCountURL(metrics={'counting': 5}), 'OK')

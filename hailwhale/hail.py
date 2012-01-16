@@ -1,4 +1,5 @@
 from redis import Redis
+from util import curry_instance_attribute
 import json, datetime
 class HailRedisDriver(Redis):
     pass
@@ -6,13 +7,16 @@ class Hail():
     hail_driver_class = HailRedisDriver
     hail_driver_settings = {}
     spy_size = 100
+    def __init__(self, *args, **kwargs):
+        if hasattr(self, 'pk'):
+            curry_instance_attribute('pk', 'count', self)
     @classmethod
     def hail_driver(cls):
         if not hasattr(cls, '_hail_driver'):
             cls._hail_driver = cls.hail_driver_class(**cls.hail_driver_settings)
         return cls._hail_driver
     @classmethod
-    def count(cls, categories, dimensions, metrics, at=False):
+    def count(cls, pk, dimensions, metrics, at=False):
         import time, json, random
         try:
             r=cls.hail_driver()
@@ -25,13 +29,13 @@ class Hail():
                 try: at = datetime.datetime.fromtimestamp(float(at))
                 except ValueError: pass # if at is not a float, ignore this
             if isinstance(at, datetime.datetime): at = at.ctime()
-            if isinstance(categories, cls): 
-                categories = categories.getattr(cls.unique_key)
+            if isinstance(pk, cls): 
+                pk = pk.getattr(cls.unique_key)
             hit_key = '%s_%s_%s_%s'%(
-                    cls.__name__,categories,at,random.randint(1,1000))
+                    cls.__name__,pk,at,random.randint(1,1000))
             r.sadd('hail_%s'%(set_number), hit_key)
             r.set(hit_key, json.dumps(
-                (cls.__name__, categories, dimensions, metrics, at)))
+                (cls.__name__, pk, dimensions, metrics, at)))
         except Exception as e: return '%s'%e
         return 'OK'
 
@@ -111,9 +115,9 @@ class Hail():
             return
         def get_keys_from_json(k):
             try: 
-                class_name, categories, dimensions, metrics, at = json.loads(r[k])
+                class_name, pk, dimensions, metrics, at = json.loads(r[k])
                 #at = datetime.datetime.fromtimestamp(float(t))
-                return (categories, dimensions, metrics, at)
+                return (pk, dimensions, metrics, at)
             except Exception as e: 
                 print e
                 return False 
@@ -121,8 +125,8 @@ class Hail():
         keys_to_update = map(get_keys_from_json, keys_from_hail)
         for packed in keys_to_update:
             if not packed: continue
-            categories, dimensions, metrics, at = packed
-            whale.count_now(categories, dimensions, metrics, at=at)
+            pk, dimensions, metrics, at = packed
+            whale.count_now(pk, dimensions, metrics, at=at)
 
         # Delete the hits
         map(r.delete, keys_from_hail)
