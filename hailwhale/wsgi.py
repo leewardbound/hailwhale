@@ -53,7 +53,7 @@ def reset():
 def count_now():
     from datetime import datetime
     whale = Whale()
-    val = whale.count_now(at=datetime.utcnow(), **default_params())
+    val = whale.count_now(at=datetime.now(), **default_params())
     return 'OK'
 
 @route('/flush_hail')

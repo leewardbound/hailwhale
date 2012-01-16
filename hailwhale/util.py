@@ -13,7 +13,7 @@ def nested_dict_to_list_of_keys(d):
                 yield [k,] + n
         else: yield [k,f]
 
-def datetimeIterator(from_date=None, to_date=None, use_utc=True, delta=timedelta(days=1)):
+def datetimeIterator(from_date=None, to_date=None, use_utc=False, delta=timedelta(days=1)):
     if not from_date:
         if use_utc: from_date = datetime.utcnow()
         else: from_date = datetime.now()
