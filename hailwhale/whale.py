@@ -81,31 +81,18 @@ class Whale():
             curry_instance_attribute('id', 'count_now', self)
             curry_instance_attribute('id', 'reset', self)
 
-    def whale_driver(self):
-        if not hasattr(self, '_whale_driver'):
-            self._whale_driver = self.whale_driver_class(**self.whale_driver_settings)
-        return self._whale_driver
-    def generate_increments(self, metrics, periods=False, at=False):
-        from itertools import product
-        periods = periods or DEFAULT_PERIODS
-        observations = set()
-        at = at or datetime.utcnow()
-        for period in periods:
-            dt = period.flatten_str(at)
-            if not dt: continue
-            observations.add( (period,dt) )
-        rr = [ (str(period),dt,metric,incr_by)
-                for (period,dt) in observations
-                for metric, incr_by in metrics.items()]
-        for metric, incr_by in metrics.items():
-            rr.append( ('all','time',metric,incr_by) )
-        return rr
+    @classmethod
+    def whale_driver(cls):
+        if not hasattr(cls, '_whale_driver'):
+            cls._whale_driver = cls.whale_driver_class(**cls.whale_driver_settings)
+        return cls._whale_driver
 
-    def plotpoints(self, pk, dimensions=None, metrics=None,
+    @classmethod
+    def plotpoints(cls, pk, dimensions=None, metrics=None,
             period=None, overall=True):
         metrics = metrics or ['hits',]
         period = period or Period.default_size()
-        sparse = self.whale_driver().retrieve(pk,dimensions,metrics,
+        sparse = cls.whale_driver().retrieve(pk,dimensions,metrics,
                 period=period, overall=overall)
         nonsparse = defaultdict(dict)
         for dimensions, metrics in sparse.items():
@@ -119,11 +106,12 @@ class Whale():
                         float(value)])
         return nonsparse
 
-    def totals(self, pk, dimensions=None, metrics=None):
+    @classmethod
+    def totals(cls, pk, dimensions=None, metrics=None):
         metrics = metrics or ['hits',]
         d = {}
         for p in DEFAULT_PERIODS: 
-            p_data = self.whale_driver().retrieve(
+            p_data = cls.whale_driver().retrieve(
                 pk,dimensions,metrics,period=str(p))
             p_totals = dict()
             for dim, mets in p_data.items():
@@ -133,18 +121,20 @@ class Whale():
                         v for k,v in vals.items()
                         if p.flatten(k)])
             d[str(p)] = p_totals
-        d['alltime'] = self.whale_driver().retrieve(
+        d['alltime'] = cls.whale_driver().retrieve(
                 pk, dimensions, metrics, period='all')
         return d
 
-    def reset(self, pk, dimensions=None, metrics=None):
-        r= self.whale_driver().reset(
+    @classmethod
+    def reset(cls, pk, dimensions=None, metrics=None):
+        r= cls.whale_driver().reset(
                 pk,dimensions,metrics)
         return r
-    def cleanup(self):
+    @classmethod
+    def cleanup(cls):
         from periods import DEFAULT_PERIODS
         ps = dict([(str(p), p) for p in DEFAULT_PERIODS])
-        r = self.whale_driver()
+        r = cls.whale_driver()
         keys = r.keys('*||*||*||*')
         for k in keys:
             try: val = r.hgetall(k)
@@ -168,10 +158,11 @@ class Whale():
             elif deleted > 0:
                 print 'Deleted',deleted,'old keys from',k
 
-    def count_now(self, pk, dimensions, metrics, at=False):
+    @classmethod
+    def count_now(cls, pk, dimensions, metrics, at=False):
         """ Immediately count a hit, as opposed to logging it into Hail"""
         import time, random
-        r=self.whale_driver()
+        r=cls.whale_driver()
         periods = DEFAULT_PERIODS
 
         if isinstance(at, basestring):
@@ -193,8 +184,8 @@ class Whale():
         # [b, y, 2]
         for dimension, (period, dt, metric, i) in itertools.product(
             iterate_dimensions(dimensions)+['_'],
-                        self.generate_increments(metrics, periods, at)):
-            self._whale_driver.store(pk, dimension, metric, period, dt, i)
+                        generate_increments(metrics, periods, at)):
+            cls._whale_driver.store(pk, dimension, metric, period, dt, i)
 
 def iterate_dimensions(dimensions):
     from util import nested_dict_to_list_of_keys
@@ -207,3 +198,18 @@ def iterate_dimensions(dimensions):
         dimensions = [dimensions, ]
     return dimensions
 
+def generate_increments(metrics, periods=False, at=False):
+    from itertools import product
+    periods = periods or DEFAULT_PERIODS
+    observations = set()
+    at = at or datetime.utcnow()
+    for period in periods:
+        dt = period.flatten_str(at)
+        if not dt: continue
+        observations.add( (period,dt) )
+    rr = [ (str(period),dt,metric,incr_by)
+            for (period,dt) in observations
+            for metric, incr_by in metrics.items()]
+    for metric, incr_by in metrics.items():
+        rr.append( ('all','time',metric,incr_by) )
+    return rr
