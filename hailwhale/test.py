@@ -45,6 +45,38 @@ class TestHailWhaleHTTP(unittest.TestCase):
         self.assertEqual(self.getURL('/flush_hail'), 'OK')
         new_totals = self.getTotalsURL(metrics=['counting',])
         self.assertEqual(counting(new_totals), counting(totals) + 15)
+class TestHailWHale(unittest.TestCase):
+    def setUp(self):
+        from hail import Hail
+        from whale import Whale
+        self.hail = Hail()
+        self.whale = Whale()
+    def testGetSubdimensions(self):
+        self.whale.count_now('test', {'a': 1, 'b': 2})
+        subs = self.whale.get_subdimensions('test')
+        assert(['a',] in subs)
+        assert(['b',] in subs)
+    def testGetAllSubdimensions(self):
+        self.whale.count_now('test', {'a': 1, 'b': 2})
+        subs = self.whale.all_subdimensions('test')
+        assert(['a',] in subs)
+        assert(['a', '1'] in subs)
+        assert(['b',] in subs)
+        assert(['b', '2'] in subs)
+
+    def testCrunch(self):
+        # Unique key for every test
+        t = str(time.time())
+        self.whale.count_now('test_crunch', [t, 'a'],
+                {'value': 5})
+        self.whale.count_now('test_crunch', [t, 'b'],
+                {'value': 1})
+        self.whale.count_now('test_crunch', [t, 'c'],
+                {'value': 15})
+
+        data = self.whale.crunch('test_crunch', [t],
+                'value' )
+
         
 if __name__ == '__main__':
     unittest.main()

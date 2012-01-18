@@ -5,6 +5,42 @@ from datetime import datetime
 import json, itertools, collections
 from util import to_flot_time, curry_instance_attribute
 DELIM = '||'
+
+"""
+Ahoy, traveler!
+You're a long way from home!
+Go back now?
+(y/n)> n
+Are you sure?
+(y/n)> y
+A nearby sign reads, 
+    """ + "" + "" + "" + "" + "" + """
+    Here there be dragons!
+     This is the belly of the beast, 
+     the heart of the whale, 
+     this thing pulls the
+     wings right off of bees! 
+     Live fucking bees! 
+     While they're flying and shit!
+    DON'T SAY WE DIDN'T WARN YOU
+    """ + "" + "" + "" + "" + "" + """
+                """+''+"""    *
+      '  *      """+''+"""    ' *
+       \'  *    """+''+""" *  \ ' 
+        '  '    """+''+""" '   *
+      """"""""""""""""""""""""""""""
+Brave traveler that you are, you cut the sign in half!
+With an appetite for insanity, you dive deep into the sauce,
+hacking and slashing with your +3 caffiene enhanced coffeemug-of-glory.
+
+Take an advil, or three. It's going to be a long day.
+
+    <3 leeward
+
+P.S. don't trust the comments --
+    they are as sparse as they are outdated
+
+"""
 def keyify(*args):
     json_args = [json.dumps(arg) if not isinstance(arg, basestring) else arg
             for arg in args]
@@ -18,13 +54,13 @@ class WhaleRedisDriver(Redis):
         self._added_dimensions = collections.defaultdict(list)
         self._added_subdimensions = collections.defaultdict(list)
     def store(self, pk, dimension, metric, period, dt, count):
-        # Keep a list of graphs per category
-        pk = json.dumps(pk)
-        key = keyify(pk, json.dumps(dimension), period, metric)
-        # Store category dimensions
+        # Keep a list of graphs per pk
+        key = keyify(pk, dimension, period, metric)
+        # Store pk dimensions
         dimension_key = keyify(pk,'dimensions')
-        dimension_json = isinstance(dimension, basestring) and dimension or json.dumps(dimension)
+        dimension_json = keyify(dimension)
         if not dimension_json in self._added_dimensions[dimension_key]:
+
             self.sadd(dimension_key,dimension_json)
             self._added_dimensions[dimension_key].append(dimension_json)
         # Store dimensional subdimensions
@@ -57,29 +93,16 @@ class WhaleRedisDriver(Redis):
                 else: nested[dimension][metric] = dict([
                         (k, float(v)) for k,v in value_dict.items()])
         return dict(nested)
-    def get_subdimensions(self, category, dimension=None):
-        if not dimension: return '_'
-        return self.smembers(keyify(category,'subdimensions', dimension))
-    def all_subdimensions(self, category, dimension=None):
-        subdimensions = []
-        for d in self.get_subdimensions(category, dimension):
-            subdimensions += self.all_subdimensions(category, d)
-        if dimension: 
-            if isinstance(dimension, list) and len(dimension) == 1:
-                subdimensions.append(dimension[0])
-            else:
-                subdimensions.append(dimension)
-        return subdimensions
 
 class Whale():
     whale_driver_class = WhaleRedisDriver
     whale_driver_settings = {}
-    def __init__(self, *args, **kwargs):
-        if hasattr(self, 'id'):
-            curry_instance_attribute('id', 'plotpoints', self)
-            curry_instance_attribute('id', 'totals', self)
-            curry_instance_attribute('id', 'count_now', self)
-            curry_instance_attribute('id', 'reset', self)
+    def curry_whale_instance_methods(self, attr='id'):
+        if hasattr(self, attr):
+            curry_instance_attribute(attr, 'plotpoints', self)
+            curry_instance_attribute(attr, 'totals', self)
+            curry_instance_attribute(attr, 'count_now', self)
+            curry_instance_attribute(attr, 'reset', self)
 
     @classmethod
     def whale_driver(cls):
@@ -157,9 +180,22 @@ class Whale():
                 print 'Key empty, deleting --',k
             elif deleted > 0:
                 print 'Deleted',deleted,'old keys from',k
+    @classmethod
+    def get_subdimensions(cls, pk, dimension='_'):
+        return map(lambda s: map(str, json.loads(s)),
+                cls.whale_driver().smembers(keyify(pk,'subdimensions',
+                    dimension)))
+    @classmethod
+    def all_subdimensions(cls, pk, dimension='_'):
+        subdimensions = []
+        for d in cls.get_subdimensions(pk, dimension):
+            subdimensions += cls.all_subdimensions(pk, d)
+        if dimension: 
+            subdimensions.append(dimension)
+        return subdimensions
 
     @classmethod
-    def count_now(cls, pk, dimensions, metrics, at=False):
+    def count_now(cls, pk, dimensions, metrics=None, at=False):
         """ Immediately count a hit, as opposed to logging it into Hail"""
         import time, random
         r=cls.whale_driver()
@@ -170,6 +206,7 @@ class Whale():
                 if ':' in at: at = datetime.strptime(at, '%c')
                 else: at = float(at)
             except Exception as e: print e
+        if not metrics: metrics = list()
         if type(metrics) == list:
             metrics = dict([(k,1) for k in metrics])
         metrics['hits'] = 1
