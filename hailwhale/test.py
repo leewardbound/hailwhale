@@ -68,15 +68,20 @@ class TestHailWHale(unittest.TestCase):
         # Unique key for every test
         t = str(time.time())
         self.whale.count_now('test_crunch', [t, 'a'],
-                {'value': 5})
-        self.whale.count_now('test_crunch', [t, 'b'],
-                {'value': 1})
-        self.whale.count_now('test_crunch', [t, 'c'],
                 {'value': 15})
+        self.whale.count_now('test_crunch', [t, 'b'],
+                {'value': 10})
+        self.whale.count_now('test_crunch', [t, 'c'],
+                {'value': 25})
 
-        data = self.whale.crunch('test_crunch', [t],
-                'value' )
-
+        data = self.whale.crunch('test_crunch', [t], 'value')
+        # Data should be:
+        # { [t,'a']: {'value': 15, 'weight': .30},
+        #   [t,'b']: {'value': 10, 'weight': .20},
+        #   [t,'c']: {'value': 25, 'weight': .50}}
+        assert(data[[t,'a']]['weight'], .30)
+        assert(data[[t,'b']]['weight'], .20)
+        assert(data[[t,'c']]['weight'], .50)
         
 if __name__ == '__main__':
     unittest.main()
