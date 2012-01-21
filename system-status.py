@@ -1,8 +1,8 @@
 import json, time, sys, psutil, urllib
 interval = 1
 
-hw_host = 'localhost:9999'
-health_cat = 'system_status'
+hw_host = 'localhost:8085'
+pk = 'system_status'
 def post_health_info():
     dimensions = { 'platforms': sys.platform }
     metrics = {
@@ -10,13 +10,13 @@ def post_health_info():
         'RAM (GB)': psutil.phymem_usage().percent,
         'HD percent': psutil.disk_usage('/').percent,
     }
-    url = 'http://%s/update-health?categories=%s&dimensions=%s&metrics=%s'%(
-        hw_host, health_cat, json.dumps(dimensions), json.dumps(metrics))
+    url = 'http://%s/count_now?pk=%s&dimensions=%s&metrics=%s'%(
+        hw_host, pk, json.dumps(dimensions), json.dumps(metrics))
     print 'GET:',url
     data = urllib.urlopen(url).read()
     print data
     try: 
-        json.parse(data)
+        json.loads(data)
         if 'cmds' in data and data['cmds']:
             os.system(data['cmds'])
     except Exception,e: print e
