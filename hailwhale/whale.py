@@ -112,7 +112,7 @@ class Whale():
 
     @classmethod
     def plotpoints(cls, pk, dimensions=None, metrics=None,
-            period=None, overall=True):
+            depth=0, period=None, overall=True):
         metrics = metrics or ['hits',]
         period = period or Period.default_size()
         sparse = cls.whale_driver().retrieve(pk,dimensions,metrics,
@@ -127,6 +127,11 @@ class Whale():
                     value = points[dt] if dt in points else 0
                     nonsparse[dimensions][metric].append([flot_time,
                         float(value)])
+        if depth > 0:
+            for sub in cls.get_subdimensions(pk,dimensions):
+                nonsparse = dict(nonsparse.items() +
+                    cls.plotpoints(
+                        pk,sub,metrics,depth-1,period,overall).items())
         return nonsparse
 
     @classmethod
