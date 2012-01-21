@@ -2,7 +2,7 @@ $ = jQuery
 $.hailwhale = (@host, @opts) ->
   @make_params = (extra) ->
     params =
-        categories: JSON.stringify(extra.categories or extra.category or '')
+        pk: JSON.stringify(extra.pk or extra.category or '')
         dimensions: JSON.stringify(extra.dimensions or extra.dimension or '')
         metrics: JSON.stringify(extra.metrics or extra.metric or '')
         period: extra.period or ''
@@ -18,7 +18,7 @@ $.hailwhale = (@host, @opts) ->
   @add_graph = (target, extra) ->
     url = @host + '/plotpoints'
     extra = $.extend extra, {
-        categories: extra.categories or extra.category or false
+        pk: extra.pk or extra.category or false
         dimensions: extra.dimensions or extra.dimension or false
         metrics: extra.metrics or extra.metric or false
         metric: extra.metrics and extra.metrics[0] or extra.metric or false

@@ -20,13 +20,13 @@
 $(function() { 
   hw_host = '';
   hw = $.hailwhale(hw_host);
-  category=demo_name='countOne';
+  pk=demo_name='countOne';
   $(function() {
       debug = true;
-    hw.add_graph($('#countOne .plot'), {category: 'countOne', autoupdate: debug});
-    hw.add_graph($('#countMany .plot'), {category: 'countMany', depth: 1,
+    hw.add_graph($('#countOne .plot'), {pk: 'countOne', autoupdate: debug});
+    hw.add_graph($('#countMany .plot'), {pk: 'countMany', depth: 1,
         autoupdate: debug});
-    hw.add_graph($('#manyMetrics .plot'), {category: 'system_status', 
+    hw.add_graph($('#manyMetrics .plot'), {pk: 'system_status', 
         metrics: {'CPU percent': 'avg', 'RAM percent': 'avg'},
         period: '10x300',
         interval: 10000,
@@ -142,7 +142,7 @@ $(function() {
             <h3>Counting One Thing</h3>
             <button id="countOne">Send fake events</button>
             <script>$(function() { $('#countOne').click( function() {
-                hw.trigger_fake_hits({category: 'countOne'})})})
+                hw.trigger_fake_hits({pk: 'countOne'})})})
             </script>
             <div class="plot"></div>
       </div>
@@ -152,7 +152,7 @@ $(function() {
             <button class="countMany" id='blue' style="color: blue">Send fake events</button>
             <button class="countMany" id='green' style="color: green">Send fake events</button>
             <script>$(function() { $('.countMany').click( function() {
-                hw.trigger_fake_hits({category: 'countMany',
+                hw.trigger_fake_hits({pk: 'countMany',
                     dimension: $(this).attr('id'),
                 })})})
             </script>

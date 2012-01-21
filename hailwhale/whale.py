@@ -41,11 +41,14 @@ P.S. don't trust the comments --
     they are as sparse as they are outdated
 
 """
+def try_loads(arg):
+    try: return json.loads(arg)
+    except: return arg
 def keyify(*args):
     json_args = [json.dumps(arg) if not isinstance(arg, basestring) else arg
-            for arg in args]
+            for arg in map(try_loads, args)]
     return DELIM.join([arg if arg not in 
-        [None, False, '[null]', [], ['_'], '', '""', '"_"', '\"\"']
+        [None, False, '[null]', [], ['_'], '', '""', '"_"', '\"\"', '["_"]']
         else '_' for arg in json_args ])
 
 class WhaleRedisDriver(Redis):
@@ -187,6 +190,7 @@ class Whale():
                 print 'Deleted',deleted,'old keys from',k
     @classmethod
     def get_subdimensions(cls, pk, dimension='_'):
+        if dimension == ['_']: dimension = '_'
         return map(lambda s: map(str, json.loads(s)),
                 cls.whale_driver().smembers(keyify(pk,'subdimensions',
                     dimension)))
