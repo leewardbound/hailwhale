@@ -68,8 +68,8 @@ class TestHailWhale(unittest.TestCase):
     def testPlotpoints(self):
         t = str(time.time())
 
-        self.whale.count_now('test_ratio', t, {'hits': 1, 'values': 5})
-        plotpoints = self.whale.plotpoints('test_ratio', t, ['hits'], points_type=list)
+        self.whale.count_now('test_plotpoints', t, {'hits': 1, 'values': 5})
+        plotpoints = self.whale.plotpoints('test_plotpoints', t, ['hits'], points_type=list)
 
         self.assertEqual(plotpoints[t]['hits'][-1][1], 1)    
 
