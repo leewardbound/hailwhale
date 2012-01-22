@@ -173,7 +173,7 @@ class Whale(object):
                         if dt == dtb: idx = i
                         i += 1
                     return mets[top][idx][1]
-            return (dim, dict([(dt,
+            return (dim, points_type([(dt,
                     denom and (get_top(dt)/denom) or 0)
                                     for (dt,denom) in tgt_iter]))
         return dict(map(ratio_func, pps.items()))
