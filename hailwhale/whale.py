@@ -56,6 +56,7 @@ def try_loads(arg):
     except: return arg
 def maybe_dumps(arg):
     if isinstance(arg, basestring): return arg
+    if isinstance(arg, list) and len(arg) == 1: return maybe_dumps(arg[0])
     return json.dumps(arg)
             
 
@@ -91,7 +92,6 @@ class WhaleRedisDriver(Redis):
                 self._added_subdimensions[subdimension_key].append(dimension_json)
         return self.hincrby(key, dt, int(count))
     def retrieve(self, pk, dimensions, metrics, period='all', dt=None):
-        pk = json.dumps(pk)
         nested = defaultdict(dict)
         to_i = lambda n: int(n) if n else 0
         if period=='all': dt='time'
@@ -99,6 +99,7 @@ class WhaleRedisDriver(Redis):
             for metric in metrics:
                 hash_key = keyify(pk, dimension, period, metric)
                 value_dict = self.hgetall(hash_key)
+                print hash_key, value_dict, metric, dimension
                 if period=='all' and dt == 'time':
                     nested[dimension][metric] = float(value_dict.get('time', 0))
                 else: nested[dimension][metric] = dict([
@@ -227,7 +228,7 @@ class Whale(object):
     @classmethod
     def get_subdimensions(cls, pk, dimension='_'):
         if dimension == ['_']: dimension = '_'
-        return map(lambda s: map(str, json.loads(s)),
+        return map(lambda s: map(str, try_loads(s)),
                 cls.whale_driver().smembers(keyify(pk,'subdimensions',
                     dimension)))
 
