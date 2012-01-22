@@ -69,7 +69,7 @@ class TestHailWHale(unittest.TestCase):
         t = str(time.time())
 
         self.whale.count_now('test_ratio', t, {'hits': 1, 'values': 5})
-        plotpoints = self.whale.plotpoints('test_ratio', t, ['hits'])
+        plotpoints = self.whale.plotpoints('test_ratio', t, ['hits'], points_type=list)
 
         print 'plotpoints', plotpoints
 
