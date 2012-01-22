@@ -16,6 +16,7 @@ class Hail(object):
     hail_driver_class = HailRedisDriver
     hail_driver_settings = {}
     spy_size = 100
+
     def __init__(self, *args, **kwargs):
         if hasattr(self, 'id'):
             curry_instance_attribute('id', 'count', self)
@@ -25,11 +26,13 @@ class Hail(object):
             curry_instance_attribute('id', 'spy_log', self)
             curry_instance_attribute('id', 'spy_at_key', self)
             curry_instance_attribute('id', 'get_spy', self)
+
     @classmethod
     def hail_driver(cls):
         if not hasattr(cls, '_hail_driver'):
             cls._hail_driver = cls.hail_driver_class(**cls.hail_driver_settings)
         return cls._hail_driver
+        
     @classmethod
     def count(cls, pk, dimensions, metrics, at=False):
         try:
