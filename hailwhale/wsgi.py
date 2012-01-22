@@ -1,8 +1,15 @@
-import bottle, json, os
+import bottle
+import json
+import os
+
+from datetime import datetime
 from bottle import run, route, request as req, static_file
+
+import util
+
 from hail import Hail
 from whale import Whale
-import util
+
 PORT=8085
 project_dir = os.path.dirname(os.path.abspath(__file__))
 here = lambda * x: os.path.join(os.path.abspath(os.path.dirname(__file__)), *x)
@@ -13,21 +20,27 @@ def g(name, default=None, coerce_to=True):
     val = req.GET.get(name, default)
     try: 
         val = json.loads(val)
-    except Exception as e: pass
+    except Exception as e:
+        pass
     try: 
-        if coerce_to is True: coerce_to = type(default)
+        if coerce_to is True:
+            coerce_to = type(default)
         if coerce_to: 
-            if coerce_to is list and type(val) in [str, unicode]:
+            if coerce_to is list and isinstance(val, basestring):
                 val = [val, ]
             elif coerce_to is list and type(val) == dict:
                 pass
             else:
                 val = coerce_to(val)
-    except Exception as e: pass
-    if val in ['', [], {}, '""', '\"\"', [u''], [u'""']]: return default
+    except Exception as e:
+        pass
+    if val in ['', [], {}, '""', '\"\"', [u''], [u'""']]:
+        return default
     return val
+
 def g_tup(k, v):
     return (k, g(k, v))
+
 def default_params():
     return dict([
             g_tup('pk', '_'), 
@@ -44,13 +57,14 @@ def count():
 @route('/reset')
 def reset():
     whale = Whale()
-    try: whale.reset(**default_params())
-    except Exception as e: return str(e)
+    try:
+        whale.reset(**default_params())
+    except Exception as e:
+        return str(e)
     return 'OK'
 
 @route('/count_now')
 def count_now():
-    from datetime import datetime
     whale = Whale()
     val = whale.count_now(at=datetime.now(), **default_params())
     return 'OK'
@@ -58,8 +72,10 @@ def count_now():
 @route('/flush_hail')
 def flush_hail():
     hail = Hail()
-    try: hail.dump_now()
-    except Exception as e: return e
+    try:
+        hail.dump_now()
+    except Exception as e:
+        return str(e)
     return 'OK'
 
 @route('/totals')
@@ -99,7 +115,7 @@ def graph():
     {data: data, lines: {show: true}},
   ], { xaxis: { mode: "time" } });
 
-</script>"""%params
+</script>""" % params
 
 
 @route('/demo/:filename#.*#')
