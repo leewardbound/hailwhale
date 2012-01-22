@@ -75,7 +75,7 @@ class TestHailWHale(unittest.TestCase):
 
         #remove added quotes, this is a temp workaround a bug
 
-        self.assertEqual(plotpoints['"'+t+'"']['hits'][-1][1], 1)    
+        self.assertEqual(plotpoints[t]['hits'][-1][1], 1)    
 
         '''
     def testRatioPlotpoints(self):
