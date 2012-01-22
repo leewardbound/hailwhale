@@ -99,13 +99,6 @@ class WhaleRedisDriver(Redis):
             for metric in map(maybe_dumps, metrics):
                 hash_key = keyify(pk, dimension, period, metric)
                 value_dict = self.hgetall(hash_key)
-
-                print '*' * 5
-                print hash_key
-                print value_dict
-                print dimension
-                print metric
-                print '*' * 5
                 if period=='all' and dt == 'time':
                     nested[dimension][metric] = float(value_dict.get('time', 0))
                 else: nested[dimension][metric] = dict([
