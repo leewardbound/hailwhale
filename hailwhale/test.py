@@ -70,7 +70,6 @@ class TestHailWhale(unittest.TestCase):
 
         self.whale.count_now('test_ratio', t, {'hits': 1, 'values': 5})
         plotpoints = self.whale.plotpoints('test_ratio', t, ['hits'], points_type=list)
-        #remove added quotes, this is a temp workaround a bug
 
         self.assertEqual(plotpoints[t]['hits'][-1][1], 1)    
 
@@ -79,7 +78,11 @@ class TestHailWhale(unittest.TestCase):
         t = str(time.time())
 
         self.whale.count_now('test_ratio', t, {'hits': 1, 'values': 5})
-        self.whale.ratio_plotpoints('test_ratio', 'values', 'hits', t, points_type=list)
+        plotpoints = self.whale.ratio_plotpoints('test_ratio', 'values', 'hits', points_type=list)
+
+        print plotpoints
+
+        self.assertEqual(plot)
 
     def testCrunch(self):
         return False # No longer in use
