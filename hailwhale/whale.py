@@ -54,10 +54,13 @@ P.S. don't trust the comments --
 def try_loads(arg):
     try: return json.loads(arg)
     except: return arg
+def maybe_dumps(arg):
+    if isinstance(arg, basestring): return arg
+    return json.dumps(arg)
+            
 
 def keyify(*args):
-    json_args = [json.dumps(arg) if not isinstance(arg, basestring) else arg
-            for arg in map(try_loads, args)]
+    json_args = map(maybe_dumps, map(try_loads, args))
     return DELIM.join([arg if arg not in 
         [None, False, '[null]', [], ['_'], '', '""', '"_"', '\"\"', '["_"]']
         else '_' for arg in json_args ])
@@ -92,12 +95,8 @@ class WhaleRedisDriver(Redis):
         nested = defaultdict(dict)
         to_i = lambda n: int(n) if n else 0
         if period=='all': dt='time'
-        for dimension in iterate_dimensions(dimensions):
+        for dimension in map(maybe_dumps, iterate_dimensions(dimensions)):
             for metric in metrics:
-                if not isinstance(dimension, basestring):
-                    dimension = json.dumps(dimension) 
-                elif dimension == '"_"':
-                    dimension = '_'
                 hash_key = keyify(pk, dimension, period, metric)
                 value_dict = self.hgetall(hash_key)
                 if period=='all' and dt == 'time':
@@ -151,12 +150,16 @@ class Whale(object):
         top,bot = numerator_metric, denomenator_metric  
         pps = cls.plotpoints(pk, dimensions, [top,bot], depth=depth, period=period,
             flot_time=flot_time, points_type=points_type)
+        # The function that makes the ratios
         def ratio_func(tup):
             dim, mets = tup
             tgt_iter = points_type is dict and mets[bot].items() or mets[bot]
+            # A function to get the numerator from either points_type=dict or points_type=list
             def get_top(dt):
+                # Easy, just use the dict index
                 if points_type is dict:
                     return mets[top][dt]
+                # Complicated, use i-based index
                 else:
                     idx = i = 0
                     for dtb,valb in mets[bot]:
