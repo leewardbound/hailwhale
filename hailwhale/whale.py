@@ -1,9 +1,18 @@
+import time
+import random
+import json
+import itertools
+import collections
+
 from redis import Redis
-from periods import DEFAULT_PERIODS, Period
 from collections import defaultdict
+from itertools import product
 from datetime import datetime
-import json, itertools, collections
+
 from util import to_flot_time, curry_instance_attribute
+from util import nested_dict_to_list_of_keys
+from periods import DEFAULT_PERIODS, Period
+
 DELIM = '||'
 
 """
@@ -163,7 +172,7 @@ class Whale(object):
         return r
     @classmethod
     def cleanup(cls):
-        from periods import DEFAULT_PERIODS
+        
         ps = dict([(str(p), p) for p in DEFAULT_PERIODS])
         r = cls.whale_driver()
         keys = r.keys('*||*||*||*')
@@ -206,7 +215,6 @@ class Whale(object):
     @classmethod
     def count_now(cls, pk, dimensions, metrics=None, at=False):
         """ Immediately count a hit, as opposed to logging it into Hail"""
-        import time, random
         r=cls.whale_driver()
         periods = DEFAULT_PERIODS
 
@@ -234,7 +242,6 @@ class Whale(object):
             cls._whale_driver.store(pk, dimension, metric, period, dt, i)
 
 def iterate_dimensions(dimensions):
-    from util import nested_dict_to_list_of_keys
     if not dimensions: dimensions = '_' 
     if isinstance(dimensions, dict):
         dimensions = list(nested_dict_to_list_of_keys(dimensions))
@@ -245,7 +252,6 @@ def iterate_dimensions(dimensions):
     return dimensions
 
 def generate_increments(metrics, periods=False, at=False):
-    from itertools import product
     periods = periods or DEFAULT_PERIODS
     observations = set()
     at = at or datetime.utcnow()
