@@ -92,7 +92,7 @@ class WhaleRedisDriver(Redis):
         nested = defaultdict(dict)
         to_i = lambda n: int(n) if n else 0
         if period=='all': dt='time'
-        for dimension in map(json.dumps, iterate_dimensions(dimensions)):
+        for dimension in iterate_dimensions(dimensions):
             for metric in metrics:
                 if not isinstance(dimension, basestring):
                     dimension = json.dumps(dimension) 
