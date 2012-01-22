@@ -286,7 +286,7 @@ def iterate_dimensions(dimensions):
 def generate_increments(metrics, periods=False, at=False):
     periods = periods or DEFAULT_PERIODS
     observations = set()
-    at = at or datetime.utcnow()
+    at = at or datetime.now()
     for period in periods:
         dt = period.flatten_str(at)
         if not dt: continue
