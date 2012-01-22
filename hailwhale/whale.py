@@ -140,6 +140,7 @@ class Whale():
     @classmethod
     def totals(cls, pk, dimensions=None, metrics=None):
         metrics = metrics or ['hits',]
+        if not isinstance(metrics, list): metrics = [metrics,]
         d = {}
         for p in DEFAULT_PERIODS: 
             p_data = cls.whale_driver().retrieve(
@@ -232,6 +233,23 @@ class Whale():
             iterate_dimensions(dimensions)+['_'],
                         generate_increments(metrics, periods, at)):
             cls._whale_driver.store(pk, dimension, metric, period, dt, i)
+
+    @classmethod
+    def crunch(cls, pk, dimension='_', metric='value', period='alltime'):
+        divide = None
+        d_k=keyify(dimension)
+        if isinstance(metric, tuple):
+            if len(metric) != 2:
+                raise Exception("Crunch can take up to two dimensions")
+            metric, divide = metric
+        total = cls.totals(pk,dimension,metric)[period][d_k][metric]
+        if divide: 
+            divide_total = cls.totals(pk, dimension, divide)[period][d_k][divide]
+            divided_total = divide_total and ( total / divide_total ) or 0
+        print total, divided_total
+
+
+
 
 def iterate_dimensions(dimensions):
     from util import nested_dict_to_list_of_keys
