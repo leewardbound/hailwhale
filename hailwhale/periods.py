@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import time
-class Period():
+class Period(object):
     def __init__(self, interval, length, name=False):
         self.interval = int(interval)
         self.length = int(length)
@@ -58,10 +58,13 @@ class Period():
         f = self.flatten(dtf)
         if not f: return False
         return self.format_dt_str(f)
+
     def __unicode__(self):
       return '%dx%d'%(self.interval, self.length)
+
     def __str__(self):
       return '%dx%d'%(self.interval, self.length)
+
     @staticmethod
     def all_sizes():
         PERIODS = [
@@ -77,13 +80,16 @@ class Period():
             period = Period(p['interval'], p['length'], p['name'])
             PERIOD_OBJS.append(period)
         return PERIOD_OBJS
+
     @staticmethod
     def all_sizes_dict():
         return dict(map(lambda p: ('%sx%s'%(p.interval,p.length),p),
             Period.all_sizes()))
+
     @staticmethod
     def default_size():
         return str(Period.all_sizes()[-4])
+        
     def friendly_name(self):
         return self.name if self.name else '%sx%s'%(
                 self.interval, self.length)

@@ -8,7 +8,6 @@ from redis import Redis
 from util import curry_instance_attribute
 from whale import Whale
 
-
 class HailRedisDriver(Redis):
     pass
 
@@ -32,7 +31,7 @@ class Hail(object):
         if not hasattr(cls, '_hail_driver'):
             cls._hail_driver = cls.hail_driver_class(**cls.hail_driver_settings)
         return cls._hail_driver
-        
+
     @classmethod
     def count(cls, pk, dimensions, metrics, at=False):
         try:

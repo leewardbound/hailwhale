@@ -50,9 +50,11 @@ P.S. don't trust the comments --
     they are as sparse as they are outdated
 
 """
+
 def try_loads(arg):
     try: return json.loads(arg)
     except: return arg
+
 def keyify(*args):
     json_args = [json.dumps(arg) if not isinstance(arg, basestring) else arg
             for arg in map(try_loads, args)]
@@ -65,6 +67,7 @@ class WhaleRedisDriver(Redis):
         super(WhaleRedisDriver, self).__init__(*args, **kwargs)
         self._added_dimensions = collections.defaultdict(list)
         self._added_subdimensions = collections.defaultdict(list)
+
     def store(self, pk, dimension, metric, period, dt, count):
         # Keep a list of graphs per pk
         key = keyify(pk, dimension, period, metric)
@@ -72,7 +75,6 @@ class WhaleRedisDriver(Redis):
         dimension_key = keyify(pk,'dimensions')
         dimension_json = keyify(dimension)
         if not dimension_json in self._added_dimensions[dimension_key]:
-
             self.sadd(dimension_key,dimension_json)
             self._added_dimensions[dimension_key].append(dimension_json)
         # Store dimensional subdimensions
@@ -85,6 +87,7 @@ class WhaleRedisDriver(Redis):
                 self.sadd(subdimension_key, dimension_json)
                 self._added_subdimensions[subdimension_key].append(dimension_json)
         return self.hincrby(key, dt, int(count))
+
     def retrieve(self, pk, dimensions, metrics, period='all', dt=None,
             overall=True):
         pk = json.dumps(pk)
@@ -171,9 +174,9 @@ class Whale(object):
         r= cls.whale_driver().reset(
                 pk,dimensions,metrics)
         return r
+
     @classmethod
-    def cleanup(cls):
-        
+    def cleanup(cls):       
         ps = dict([(str(p), p) for p in DEFAULT_PERIODS])
         r = cls.whale_driver()
         keys = r.keys('*||*||*||*')
@@ -198,12 +201,14 @@ class Whale(object):
                 print 'Key empty, deleting --',k
             elif deleted > 0:
                 print 'Deleted',deleted,'old keys from',k
+
     @classmethod
     def get_subdimensions(cls, pk, dimension='_'):
         if dimension == ['_']: dimension = '_'
         return map(lambda s: map(str, json.loads(s)),
                 cls.whale_driver().smembers(keyify(pk,'subdimensions',
                     dimension)))
+
     @classmethod
     def all_subdimensions(cls, pk, dimension='_'):
         subdimensions = []

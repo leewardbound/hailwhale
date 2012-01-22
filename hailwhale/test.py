@@ -45,6 +45,7 @@ class TestHailWhaleHTTP(unittest.TestCase):
         self.assertEqual(self.getURL('/flush_hail'), 'OK')
         new_totals = self.getTotalsURL(metrics=['counting',])
         self.assertEqual(counting(new_totals), counting(totals) + 15)
+        
 class TestHailWHale(unittest.TestCase):
     def setUp(self):
         from hail import Hail
