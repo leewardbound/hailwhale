@@ -1,9 +1,18 @@
+import json
+import datetime
+import time
+import random
+
 from redis import Redis
+
 from util import curry_instance_attribute
-import json, datetime
+from whale import Whale
+
+
 class HailRedisDriver(Redis):
     pass
-class Hail():
+
+class Hail(object):
     hail_driver_class = HailRedisDriver
     hail_driver_settings = {}
     spy_size = 100
@@ -23,7 +32,6 @@ class Hail():
         return cls._hail_driver
     @classmethod
     def count(cls, pk, dimensions, metrics, at=False):
-        import time, json, random
         try:
             r=cls.hail_driver()
             if not r: return 0
@@ -66,7 +74,6 @@ class Hail():
 
     @classmethod
     def spy_log(cls, uid, data):
-        import json, time
         r = cls.hail_driver()
         if not r or data is None: return None
         if not isinstance(data, str): data = json.dumps(data)
@@ -81,7 +88,6 @@ class Hail():
 
     @classmethod
     def spy_at_key(cls, uid, pos=None, r=None):
-        import json
         r = cls.hail_driver()
         if not r: return None
         spy_key = cls.spy_key(uid, pos)
@@ -107,7 +113,7 @@ class Hail():
     def dump_now(cls):
         """ Flush hits to Whale and increment """
         # Get the incoming hits from Hail
-        from whale import Whale
+        
         whale = Whale()
         r=cls.hail_driver()
         _s_n_n = 'hail_number'
