@@ -77,11 +77,15 @@ class TestHailWhale(unittest.TestCase):
     def testRatioPlotpoints(self):
         t = str(time.time())
 
-        self.whale.count_now('test_ratio', t, {'hits': 1, 'values': 5})
+        for i in range(5):
+            self.whale.count_now('test_ratio', t, {'hits': 1, 'values': 5})
         plotpoints = self.whale.ratio_plotpoints('test_ratio', 'values', 'hits', t, points_type=list)
 
         print plotpoints
 
+        self.assertEqual(plotpoints[t]['hits'][-1][1], 5)
+
+>>>>>>> Stashed changes
     def testCrunch(self):
         return False # No longer in use
         # Unique key for every test
