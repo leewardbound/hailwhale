@@ -96,7 +96,7 @@ class WhaleRedisDriver(Redis):
         to_i = lambda n: int(n) if n else 0
         if period=='all': dt='time'
         for dimension in map(maybe_dumps, iterate_dimensions(dimensions)):
-            for metric in metrics:
+            for metric in map(maybe_dumps, metrics):
                 hash_key = keyify(pk, dimension, period, metric)
                 value_dict = self.hgetall(hash_key)
 
