@@ -152,7 +152,6 @@ class Whale(object):
         pps = cls.plotpoints(pk, dimensions, [top,bot], depth=depth, period=period)
         def ratio_func(tup):
             dim, mets = tup
-            print top, mets[top]
             return (dim, dict([(dt,
                     denom and (mets[top][dt]/denom) or 0)
                                     for dt,denom in mets[bot].items()]))
