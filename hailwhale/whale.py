@@ -97,7 +97,7 @@ class WhaleRedisDriver(Redis):
                         (k, float(v)) for k,v in value_dict.items()])
         return dict(nested)
 
-class Whale():
+class Whale(object):
     whale_driver_class = WhaleRedisDriver
     whale_driver_settings = {}
     def curry_whale_instance_methods(self, attr='id'):
@@ -238,7 +238,7 @@ def iterate_dimensions(dimensions):
     if not dimensions: dimensions = '_' 
     if isinstance(dimensions, dict):
         dimensions = list(nested_dict_to_list_of_keys(dimensions))
-    elif type(dimensions) in [str, unicode]:
+    elif isinstance(dimensions, basestring):
         dimensions = [dimensions, ]
     elif isinstance(dimensions, list) and len(dimensions) and not isinstance(dimensions[0], list):
         dimensions = [dimensions, ]
