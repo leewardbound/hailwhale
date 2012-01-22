@@ -147,9 +147,10 @@ class Whale(object):
         return nonsparse
     @classmethod
     def ratio_plotpoints(cls, pk, numerator_metric, denomenator_metric='hits',
-            dimensions=None, depth=0, period=None):
+            dimensions=None, depth=0, period=None, flot_time=False, points_type=dict):
         top,bot = numerator_metric, denomenator_metric  
-        pps = cls.plotpoints(pk, dimensions, [top,bot], depth=depth, period=period)
+        pps = cls.plotpoints(pk, dimensions, [top,bot], depth=depth, period=period,
+            flot_time=flot_time, points_type=points_type)
         def ratio_func(tup):
             dim, mets = tup
             return (dim, dict([(dt,
