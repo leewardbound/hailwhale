@@ -128,7 +128,7 @@ class Whale(object):
     @classmethod
     def plotpoints(cls, pk, dimensions=None, metrics=None,
             depth=0, period=None, overall=True):
-        metrics = metrics or ['hits',]
+        metrics = metrics or ['hits']
         period = period or Period.default_size()
         sparse = cls.whale_driver().retrieve(pk,dimensions,metrics,
                 period=period, overall=overall)
