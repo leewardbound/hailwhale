@@ -76,8 +76,7 @@ class WhaleRedisDriver(Redis):
                 self.sadd(subdimension_key, dimension_json)
                 self._added_subdimensions[subdimension_key].append(dimension_json)
         return self.hincrby(key, dt, int(count))
-    def retrieve(self, pk, dimensions, metrics, period='all', dt=None,
-            overall=True):
+    def retrieve(self, pk, dimensions, metrics, period='all', dt=None):
         pk = json.dumps(pk)
         nested = defaultdict(dict)
         to_i = lambda n: int(n) if n else 0
@@ -88,7 +87,6 @@ class WhaleRedisDriver(Redis):
                     dimension = json.dumps(dimension) 
                 elif dimension == '"_"':
                     dimension = '_'
-                if dimension == '_' and overall == False: continue
                 hash_key = keyify(pk, dimension, period, metric)
                 value_dict = self.hgetall(hash_key)
                 if period=='all' and dt == 'time':
@@ -115,27 +113,39 @@ class Whale():
 
     @classmethod
     def plotpoints(cls, pk, dimensions=None, metrics=None,
-            depth=0, period=None, overall=True):
+            depth=0, period=None, flot_time=False, points_type=dict):
         metrics = metrics or ['hits',]
+        if isinstance(metrics, basestring): metrics = [metrics]
         period = period or Period.default_size()
-        sparse = cls.whale_driver().retrieve(pk,dimensions,metrics,
-                period=period, overall=overall)
+        sparse = cls.whale_driver().retrieve(pk,dimensions,metrics, period=period)
         nonsparse = defaultdict(dict)
         for dimensions, metrics in sparse.items():
             for metric, points in metrics.items():
                 dts = Period(*period.split('x')).datetimes_strs()
                 nonsparse[dimensions][metric] = []
                 for dt in dts:
-                    flot_time = to_flot_time(Period.parse_dt_str(dt))
+                    if flot_time: dt = to_flot_time(Period.parse_dt_str(dt))
+
                     value = points[dt] if dt in points else 0
-                    nonsparse[dimensions][metric].append([flot_time,
-                        float(value)])
+                    nonsparse[dimensions][metric].append([dt,float(value)])
+                nonsparse[dimensions][metric] = points_type(nonsparse[dimensions][metric])
         if depth > 0:
             for sub in cls.get_subdimensions(pk,dimensions):
                 nonsparse = dict(nonsparse.items() +
-                    cls.plotpoints(
-                        pk,sub,metrics,depth-1,period,overall).items())
+                    cls.plotpoints(pk,sub,metrics,depth-1,period).items())
         return nonsparse
+    @classmethod
+    def ratio_plotpoints(cls, pk, numerator_metric, denomenator_metric='hits',
+            dimensions=None, depth=0, period=None):
+        top,bot = numerator_metric, denomenator_metric  
+        pps = cls.plotpoints(pk, dimensions, [top,bot], depth=depth, period=period)
+        def ratio_func(tup):
+            dim, mets = tup
+            print top, mets[top]
+            return (dim, dict([(dt,
+                    denom and (mets[top][dt]/denom) or 0)
+                                    for dt,denom in mets[bot].items()]))
+        return dict(map(ratio_func, pps.items()))
 
     @classmethod
     def totals(cls, pk, dimensions=None, metrics=None):

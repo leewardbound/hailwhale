@@ -16,11 +16,11 @@ class TestHailWhaleHTTP(unittest.TestCase):
     def getTotalsURL(self, **args):
         return self.getStandardParamsURL('/totals', **args)
     def getStandardParamsURL(self, stub='/', **kwargs):
-        categories = json.dumps(kwargs.pop('categories', 'test'))
+        pk = json.dumps(kwargs.pop('pk', 'test'))
         dimensions = json.dumps(kwargs.pop('dimensions', ['empty',]))
         metrics = json.dumps(kwargs.pop('metrics', {}))
-        params = (stub, categories,dimensions,metrics)
-        url = '%s?categories=%s&dimensions=%s&metrics=%s'%params
+        params = (stub, pk,dimensions,metrics)
+        url = '%s?pk=%s&dimensions=%s&metrics=%s'%params
         return self.getURL(url)
     def testCountService(self):
         """ /count should return 'OK' for successful hits """
@@ -66,7 +66,7 @@ class TestHailWHale(unittest.TestCase):
 
     def testRatioPlotpoints(self):
         self.whale.count_now('test_ratio', '_', {'hits': 1, 'values': 5})
-        self.whale.ratio_plotpoints('test_ratio', '_', 'hits', 'values')
+        self.whale.ratio_plotpoints('test_ratio', 'values')
     def testCrunch(self):
         return False # No longer in use
         # Unique key for every test
