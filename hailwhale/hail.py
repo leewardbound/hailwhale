@@ -1,12 +1,21 @@
+import json
+import datetime
+import time
+import random
+
 from redis import Redis
+
 from util import curry_instance_attribute
-import json, datetime
+from whale import Whale
+
 class HailRedisDriver(Redis):
     pass
-class Hail():
+
+class Hail(object):
     hail_driver_class = HailRedisDriver
     hail_driver_settings = {}
     spy_size = 100
+
     def __init__(self, *args, **kwargs):
         if hasattr(self, 'id'):
             curry_instance_attribute('id', 'count', self)
@@ -16,14 +25,15 @@ class Hail():
             curry_instance_attribute('id', 'spy_log', self)
             curry_instance_attribute('id', 'spy_at_key', self)
             curry_instance_attribute('id', 'get_spy', self)
+
     @classmethod
     def hail_driver(cls):
         if not hasattr(cls, '_hail_driver'):
             cls._hail_driver = cls.hail_driver_class(**cls.hail_driver_settings)
         return cls._hail_driver
+
     @classmethod
     def count(cls, pk, dimensions, metrics, at=False):
-        import time, json, random
         try:
             r=cls.hail_driver()
             if not r: return 0
@@ -66,7 +76,6 @@ class Hail():
 
     @classmethod
     def spy_log(cls, uid, data):
-        import json, time
         r = cls.hail_driver()
         if not r or data is None: return None
         if not isinstance(data, str): data = json.dumps(data)
@@ -81,7 +90,6 @@ class Hail():
 
     @classmethod
     def spy_at_key(cls, uid, pos=None, r=None):
-        import json
         r = cls.hail_driver()
         if not r: return None
         spy_key = cls.spy_key(uid, pos)
@@ -97,7 +105,7 @@ class Hail():
         if not r: return
         pos_key = cls.spy_pos_key(uid)
         spy_pos = int(r.get(pos_key))
-        for i in range(0,min(cls.spy_size, max_results)):
+        for i in range(min(cls.spy_size, max_results)):
             n = (spy_pos - i) % cls.spy_size
             entry = cls.spy_at_key(uid,n,r)
             if entry is None: return
@@ -107,18 +115,19 @@ class Hail():
     def dump_now(cls):
         """ Flush hits to Whale and increment """
         # Get the incoming hits from Hail
-        from whale import Whale
+        
         whale = Whale()
         r=cls.hail_driver()
-        _s_n_n = 'hail_number'
-        r.setnx(_s_n_n, 0)
-        set_number = r.incr(_s_n_n) - 1
-        set_name = 'hail_%s'%set_number
+        set_number_name = 'hail_number'
+        r.setnx(set_number_name, 0)
+        set_number = r.incr(set_number_name) - 1
+        set_name = 'hail_%s' % set_number
         try: keys_from_hail = r.smembers(set_name)
         except: return
-        if len(keys_from_hail) is 0:
+        if not len(keys_from_hail):
             r.delete(set_name)
             return
+
         def get_keys_from_json(k):
             try: 
                 class_name, pk, dimensions, metrics, at = json.loads(r[k])
@@ -130,9 +139,9 @@ class Hail():
 
         keys_to_update = map(get_keys_from_json, keys_from_hail)
         for packed in keys_to_update:
-            if not packed: continue
-            pk, dimensions, metrics, at = packed
-            whale.count_now(pk, dimensions, metrics, at=at)
+            if packed:
+                pk, dimensions, metrics, at = packed
+                whale.count_now(pk, dimensions, metrics, at=at)
 
         # Delete the hits
         map(r.delete, keys_from_hail)

@@ -49,14 +49,16 @@ def curry_instance_attribute(attr, func_name, instance):
     >>> p.print_record_upper()
     PERSON JANE
     """
-    from types import MethodType
+
     func = getattr(instance, func_name)
+
     def curried(self, *args, **kwargs):
         pass_attr = getattr(self, attr)
         # Can also be callable
         if hasattr(pass_attr, '__call__'):
             pass_attr = pass_attr()
         return func(pass_attr, *args, **kwargs)
+        
     setattr(instance, func_name,
             MethodType(curried, instance, instance.__class__))
 

@@ -1,9 +1,18 @@
+import time
+import random
+import json
+import itertools
+import collections
+
 from redis import Redis
-from periods import DEFAULT_PERIODS, Period
 from collections import defaultdict
+from itertools import product
 from datetime import datetime
-import json, itertools, collections
+
 from util import to_flot_time, curry_instance_attribute
+from util import nested_dict_to_list_of_keys
+from periods import DEFAULT_PERIODS, Period
+
 DELIM = '||'
 
 """
@@ -41,9 +50,11 @@ P.S. don't trust the comments --
     they are as sparse as they are outdated
 
 """
+
 def try_loads(arg):
     try: return json.loads(arg)
     except: return arg
+
 def keyify(*args):
     json_args = [json.dumps(arg) if not isinstance(arg, basestring) else arg
             for arg in map(try_loads, args)]
@@ -56,6 +67,7 @@ class WhaleRedisDriver(Redis):
         super(WhaleRedisDriver, self).__init__(*args, **kwargs)
         self._added_dimensions = collections.defaultdict(list)
         self._added_subdimensions = collections.defaultdict(list)
+
     def store(self, pk, dimension, metric, period, dt, count):
         # Keep a list of graphs per pk
         key = keyify(pk, dimension, period, metric)
@@ -63,7 +75,6 @@ class WhaleRedisDriver(Redis):
         dimension_key = keyify(pk,'dimensions')
         dimension_json = keyify(dimension)
         if not dimension_json in self._added_dimensions[dimension_key]:
-
             self.sadd(dimension_key,dimension_json)
             self._added_dimensions[dimension_key].append(dimension_json)
         # Store dimensional subdimensions
@@ -95,7 +106,7 @@ class WhaleRedisDriver(Redis):
                         (k, float(v)) for k,v in value_dict.items()])
         return dict(nested)
 
-class Whale():
+class Whale(object):
     whale_driver_class = WhaleRedisDriver
     whale_driver_settings = {}
     def curry_whale_instance_methods(self, attr='id'):
@@ -172,9 +183,9 @@ class Whale():
         r= cls.whale_driver().reset(
                 pk,dimensions,metrics)
         return r
+
     @classmethod
-    def cleanup(cls):
-        from periods import DEFAULT_PERIODS
+    def cleanup(cls):       
         ps = dict([(str(p), p) for p in DEFAULT_PERIODS])
         r = cls.whale_driver()
         keys = r.keys('*||*||*||*')
@@ -199,12 +210,14 @@ class Whale():
                 print 'Key empty, deleting --',k
             elif deleted > 0:
                 print 'Deleted',deleted,'old keys from',k
+
     @classmethod
     def get_subdimensions(cls, pk, dimension='_'):
         if dimension == ['_']: dimension = '_'
         return map(lambda s: map(str, json.loads(s)),
                 cls.whale_driver().smembers(keyify(pk,'subdimensions',
                     dimension)))
+
     @classmethod
     def all_subdimensions(cls, pk, dimension='_'):
         subdimensions = []
@@ -217,7 +230,6 @@ class Whale():
     @classmethod
     def count_now(cls, pk, dimensions, metrics=None, at=False):
         """ Immediately count a hit, as opposed to logging it into Hail"""
-        import time, random
         r=cls.whale_driver()
         periods = DEFAULT_PERIODS
 
@@ -262,18 +274,16 @@ class Whale():
 
 
 def iterate_dimensions(dimensions):
-    from util import nested_dict_to_list_of_keys
     if not dimensions: dimensions = '_' 
     if isinstance(dimensions, dict):
         dimensions = list(nested_dict_to_list_of_keys(dimensions))
-    elif type(dimensions) in [str, unicode]:
+    elif isinstance(dimensions, basestring):
         dimensions = [dimensions, ]
     elif isinstance(dimensions, list) and len(dimensions) and not isinstance(dimensions[0], list):
         dimensions = [dimensions, ]
     return dimensions
 
 def generate_increments(metrics, periods=False, at=False):
-    from itertools import product
     periods = periods or DEFAULT_PERIODS
     observations = set()
     at = at or datetime.utcnow()

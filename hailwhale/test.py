@@ -45,6 +45,7 @@ class TestHailWhaleHTTP(unittest.TestCase):
         self.assertEqual(self.getURL('/flush_hail'), 'OK')
         new_totals = self.getTotalsURL(metrics=['counting',])
         self.assertEqual(counting(new_totals), counting(totals) + 15)
+        
 class TestHailWHale(unittest.TestCase):
     def setUp(self):
         from hail import Hail
@@ -64,9 +65,27 @@ class TestHailWHale(unittest.TestCase):
         assert(['b',] in subs)
         assert(['b', '2'] in subs)
 
+    def testPlotpoints(self):
+        t = str(time.time())
+
+        self.whale.count_now('test_ratio', t, {'hits': 1, 'values': 5})
+        plotpoints = self.whale.plotpoints('test_ratio', t, ['hits'])
+
+        print 'plotpoints', plotpoints
+
+        #remove added quotes, this is a temp workaround a bug
+
+        self.assertEqual(plotpoints[t]['hits'][-1][1], 1)    
+
+        
     def testRatioPlotpoints(self):
-        self.whale.count_now('test_ratio', '_', {'hits': 1, 'values': 5})
-        self.whale.ratio_plotpoints('test_ratio', 'values')
+        t = str(time.time())
+
+        self.whale.count_now('test_ratio', t, {'hits': 1, 'values': 5})
+        self.whale.ratio_plotpoints('test_ratio', 'values', 'hits', t)
+
+        self.assertEqual()
+
     def testCrunch(self):
         return False # No longer in use
         # Unique key for every test
