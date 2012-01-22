@@ -85,7 +85,6 @@ class TestHailWhale(unittest.TestCase):
 
         self.assertEqual(plotpoints[t]['hits'][-1][1], 5)
 
->>>>>>> Stashed changes
     def testCrunch(self):
         return False # No longer in use
         # Unique key for every test
