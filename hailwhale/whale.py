@@ -153,9 +153,19 @@ class Whale(object):
             flot_time=flot_time, points_type=points_type)
         def ratio_func(tup):
             dim, mets = tup
+            tgt_iter = points_type is dict and mets[bot].items() or mets[bot]
+            def get_top(dt):
+                if points_type is dict:
+                    return mets[top][dt]
+                else:
+                    idx = i = 0
+                    for dtb,valb in mets[bot]:
+                        if dt == dtb: idx = i
+                        i += 1
+                    return mets[top][idx][1]
             return (dim, dict([(dt,
-                    denom and (mets[top][dt]/denom) or 0)
-                                    for dt,denom in mets[bot].items()]))
+                    denom and (get_top(dt)/denom) or 0)
+                                    for (dt,denom) in tgt_iter]))
         return dict(map(ratio_func, pps.items()))
 
     @classmethod

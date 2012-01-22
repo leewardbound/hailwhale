@@ -46,7 +46,7 @@ class TestHailWhaleHTTP(unittest.TestCase):
         new_totals = self.getTotalsURL(metrics=['counting',])
         self.assertEqual(counting(new_totals), counting(totals) + 15)
         
-class TestHailWHale(unittest.TestCase):
+class TestHailWhale(unittest.TestCase):
     def setUp(self):
         from hail import Hail
         from whale import Whale
@@ -79,9 +79,7 @@ class TestHailWHale(unittest.TestCase):
         t = str(time.time())
 
         self.whale.count_now('test_ratio', t, {'hits': 1, 'values': 5})
-        self.whale.ratio_plotpoints('test_ratio', 'values', 'hits', t)
-
-        self.assertEqual(plot)
+        self.whale.ratio_plotpoints('test_ratio', 'values', 'hits', t, points_type=list)
 
     def testCrunch(self):
         return False # No longer in use
