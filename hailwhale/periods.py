@@ -85,7 +85,9 @@ class Period(object):
     def all_sizes_dict():
         return dict(map(lambda p: ('%sx%s'%(p.interval,p.length),p),
             Period.all_sizes()))
-
+    @staticmethod
+    def get(name):
+        return Period.all_sizes_dict()[name]
     @staticmethod
     def default_size():
         return str(Period.all_sizes()[-4])
