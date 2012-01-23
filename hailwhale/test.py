@@ -1,4 +1,7 @@
-import unittest, urllib, json, time
+import unittest
+import urllib
+import json
+import time
 
 class TestHailWhaleHTTP(unittest.TestCase):
     def setUp(self):
@@ -73,7 +76,7 @@ class TestHailWhale(unittest.TestCase):
         plotpoints = self.whale.plotpoints('test_plotpoints', t, ['hits', 'values'], points_type=list)
 
         self.assertEqual(plotpoints[t]['hits'][-1][1], 5)    
-        self.assertEqual(plotpoints[t]['values'][-1][1], 25)    
+        self.assertEqual(plotpoints[t]['values'][-1][1], 25)
 
         
     def testRatioPlotpoints(self):
@@ -90,27 +93,13 @@ class TestHailWhale(unittest.TestCase):
 
         self.assertEqual(ratio_plotpoints[t][-1][1], 5)
 
-    def testCrunch(self):
-        return False # No longer in use
-        # Unique key for every test
+    def testRankSubDimensionsScalar(self):
         t = str(time.time())
-        # Do it 5 times so we can test values / hit
-        for i in range(5):
-            self.whale.count_now('test_crunch', [t, 'a'],
-                    {'value': 15})
-            self.whale.count_now('test_crunch', [t, 'b'],
-                    {'value': 10})
-            self.whale.count_now('test_crunch', [t, 'c'],
-                    {'value': 25})
+        self.whale.count_now('test_ranksubdimensions_scalar')
+        self.whale.rank_subdimensions_scalar('test_ranksubdimensions_scalar')
 
-        data = self.whale.crunch('test_crunch', [t], ('value', 'hit'))
-        # Data should be:
-        # { [t,'a']: {'value': 15, 'weight': .30},
-        #   [t,'b']: {'value': 10, 'weight': .20},
-        #   [t,'c']: {'value': 25, 'weight': .50}}
-        assert data[[t,'a']]['weight'] == .30
-        assert data[[t,'b']]['weight'] == .20
-        assert data[[t,'c']]['weight'] == .50
+    def testCrunch(self):
+        pass
         
 if __name__ == '__main__':
     unittest.main()

@@ -54,12 +54,12 @@ P.S. don't trust the comments --
 def try_loads(arg):
     try: return json.loads(arg)
     except: return arg
+    
 def maybe_dumps(arg):
     if isinstance(arg, basestring): return arg
     if isinstance(arg, list) and len(arg) == 1: return maybe_dumps(arg[0])
     return json.dumps(arg)
             
-
 def keyify(*args):
     json_args = map(maybe_dumps, map(try_loads, args))
     return DELIM.join([arg if arg not in 
