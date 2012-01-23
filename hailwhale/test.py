@@ -1,7 +1,12 @@
+<<<<<<< HEAD
 import unittest
 import urllib
 import json
 import time
+=======
+import unittest, urllib, json, time
+from whale import maybe_dumps
+>>>>>>> 839fa50a662ee52260c9e22266975191fe9625a8
 
 class TestHailWhaleHTTP(unittest.TestCase):
     def setUp(self):
@@ -77,6 +82,22 @@ class TestHailWhale(unittest.TestCase):
 
         self.assertEqual(plotpoints[t]['hits'][-1][1], 5)    
         self.assertEqual(plotpoints[t]['values'][-1][1], 25)
+        
+    def testPlotpointsDepth(self):
+        t = str(time.time())
+        self.whale.count_now('test_depth', {t: 'a'})
+        self.whale.count_now('test_depth', {t: 'b'})
+        self.whale.count_now('test_depth', {t: {'c': 'child'}})
+        # Test 1 level deep
+        plotpoints = self.whale.plotpoints('test_depth', t, points_type=list, depth=1)
+        self.assertEqual(plotpoints[maybe_dumps([t, 'a'])]['hits'][-1][1], 1)
+        self.assertEqual(plotpoints[maybe_dumps([t, 'b'])]['hits'][-1][1], 1)
+        self.assertEqual(plotpoints[maybe_dumps([t, 'c'])]['hits'][-1][1], 1)
+        self.assertEqual(False, maybe_dumps([t, 'c', 'child']) in plotpoints)
+        # Test 2 levels deep
+        plotpoints = self.whale.plotpoints('test_depth', t, points_type=list, depth=2)
+        self.assertEqual(True, maybe_dumps([t, 'c', 'child']) in plotpoints)
+        self.assertEqual(plotpoints[maybe_dumps([t, 'c', 'child'])]['hits'][-1][1], 1)
 
         
     def testRatioPlotpoints(self):

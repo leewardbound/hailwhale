@@ -142,7 +142,7 @@ class Whale(object):
         if depth > 0:
             for sub in cls.get_subdimensions(pk,dimensions):
                 nonsparse = dict(nonsparse.items() +
-                    cls.plotpoints(pk,sub,metrics,depth-1,period).items())
+                    cls.plotpoints(pk,sub,metrics,depth-1,period,flot_time=flot_time, points_type=points_type).items())
         return nonsparse
     @classmethod
     def ratio_plotpoints(cls, pk, numerator_metric, denomenator_metric='hits',
