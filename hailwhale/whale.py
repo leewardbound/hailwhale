@@ -58,10 +58,20 @@ def try_loads(arg):
 
 def maybe_dumps(arg):
     if isinstance(arg, basestring):
-        return arg
+        return str(arg)
     if isinstance(arg, list) and len(arg) == 1:
         return maybe_dumps(arg[0])
     return json.dumps(arg)
+
+
+def parent(sub):
+    sub = try_loads(sub)
+    if sub == '_':
+        return None
+    elif isinstance(sub, list) and len(sub) > 1:
+        return sub[:-1]
+    else:
+        return '_'
 
 
 def keyify(*args):
@@ -87,12 +97,8 @@ class WhaleRedisDriver(Redis):
             self.sadd(dimension_key, dimension_json)
             self._added_dimensions[dimension_key].append(dimension_json)
         # Store dimensional subdimensions
-        if len(dimension) > 1:
-            parent_dimension = dimension[:-1]
-        else:
-            parent_dimension = '_'
         if(dimension != '_'):
-            subdimension_key = keyify(pk, 'subdimensions', parent_dimension)
+            subdimension_key = keyify(pk, 'subdimensions', parent(dimension))
             if not dimension_json in self._added_subdimensions[subdimension_key]:
                 self.sadd(subdimension_key, dimension_json)
                 self._added_subdimensions[subdimension_key].append(dimension_json)
@@ -154,7 +160,7 @@ class Whale(object):
         if depth > 0:
             for sub in cls.get_subdimensions(pk, dimensions):
                 nonsparse = dict(nonsparse.items() +
-                    cls.plotpoints(pk, sub, metrics, depth - 1, period,
+                    cls.plotpoints(pk, sub, metrics, depth=depth - 1, period=period,
                         flot_time=flot_time, points_type=points_type).items())
         return nonsparse
 
@@ -189,21 +195,24 @@ class Whale(object):
         return dict(map(ratio_func, pps.items()))
 
     @classmethod
-    def totals(cls, pk, dimensions=None, metrics=None):
+    def totals(cls, pk, dimensions=None, metrics=None, periods=None):
+        if not periods:
+            periods = DEFAULT_PERIODS
+        if not isinstance(periods, list):
+            periods = [periods]
         metrics = metrics or ['hits']
         if not isinstance(metrics, list):
             metrics = [metrics]
         d = {}
-        for p in DEFAULT_PERIODS:
-            p_data = cls.whale_driver().retrieve(
-                pk, dimensions, metrics, period=str(p))
+        for p in periods:
+            p_data = cls.plotpoints(pk, dimensions, metrics, period=str(p))
             p_totals = dict()
             for dim, mets in p_data.items():
                 p_totals[dim] = dict()
                 for met, vals in mets.items():
                     p_totals[dim][met] = sum([
                         v for k, v in vals.items()
-                        if p.flatten(k)])
+                        if Period.get(p).flatten(k)])
             d[str(p)] = p_totals
         d['alltime'] = cls.whale_driver().retrieve(
                 pk, dimensions, metrics, period='all')
@@ -248,17 +257,16 @@ class Whale(object):
     def get_subdimensions(cls, pk, dimension='_'):
         if dimension == ['_']:
             dimension = '_'
-        return map(lambda s: map(str, try_loads(s)),
+        subdimensions = map(lambda s: map(str, try_loads(s)),
                 cls.whale_driver().smembers(keyify(pk, 'subdimensions',
                     dimension)))
+        return subdimensions
 
     @classmethod
     def all_subdimensions(cls, pk, dimension='_'):
-        subdimensions = []
+        subdimensions = [dimension]
         for d in cls.get_subdimensions(pk, dimension):
             subdimensions += cls.all_subdimensions(pk, d)
-        if dimension:
-            subdimensions.append(dimension)
         return subdimensions
 
     @classmethod
@@ -291,25 +299,45 @@ class Whale(object):
         for dimension, (period, dt, metric, i) in itertools.product(
             iterate_dimensions(dimensions) + ['_'],
                         generate_increments(metrics, periods, at)):
-            cls._whale_driver.store(pk, dimension, metric, period, dt, i)
+            cls.whale_driver().store(pk, dimension, metric, period, dt, i)
 
     @classmethod
     def rank_subdimensions_scalar(cls, pk, dimension='_', metric='hits', period=None):
         period = period or Period.default_size()
         d_k = keyify(dimension)
-        total = cls.totals(pk, dimension, metric)[period][d_k][metric]
-        print total
+        total = cls.totals(pk, dimension, metric, periods=[period])[period][d_k][metric]
+        ranked = dict()
+
+        def info(sub):
+            pps = cls.plotpoints(pk, sub, metric, period=period)[sub][metric]
+            sub_total = sum(pps.values())
+            return {
+#                'points': pps,
+                'total': sub_total,
+                'important': sub_total > 10 and (sub_total > (total / 10)) or False
+            }
+        for sub in map(maybe_dumps, cls.all_subdimensions(pk, dimension)):
+            ranked[sub] = info(sub)
+        del(ranked[dimension])
+
+        # Prune parents
+        for sub, info in ranked.items():
+            children = map(maybe_dumps, cls.get_subdimensions(pk, sub))
+            children_total = sum(map(lambda s: ranked[s]['total'], children))
+            if info['important'] and (info['total'] - children_total) < (total / 10):
+                info['important'] = False
+        return ranked
 
 
 def iterate_dimensions(dimensions):
     if not dimensions:
-        dimensions = '_'
+        dimensions = []
     if isinstance(dimensions, dict):
         dimensions = list(nested_dict_to_list_of_keys(dimensions))
     elif isinstance(dimensions, basestring):
         dimensions = [dimensions, ]
     elif isinstance(dimensions, list) and len(dimensions) and not isinstance(dimensions[0], list):
-        dimensions = [dimensions, ]
+        dimensions = [dimensions[:n + 1] for n in range(len(dimensions))]
     return dimensions
 
 

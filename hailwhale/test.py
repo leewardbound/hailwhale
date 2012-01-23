@@ -75,6 +75,7 @@ class TestHailWhale(unittest.TestCase):
 
         self.assertEqual(plotpoints[t]['hits'][-1][1], 5)    
         self.assertEqual(plotpoints[t]['values'][-1][1], 25)
+    
     def testPlotpointsDepth(self):
         t = str(time.time())
         self.whale.count_now('test_depth', {t: 'a'})
@@ -105,6 +106,22 @@ class TestHailWhale(unittest.TestCase):
         self.assertEqual(plotpoints[t]['values'][-1][1], 25)    
 
         self.assertEqual(ratio_plotpoints[t][-1][1], 5)
+
+    def testRankSubdimensionsScalar(self):
+        t = str(time.time())
+        self.whale.count_now('test_rank', [t, 'a', 'asub1'], {'value': 1})
+        self.whale.count_now('test_rank', [t, 'a', 'asub2'], {'value': 30})
+        self.whale.count_now('test_rank', [t, 'b'], {'value': 80})
+        self.whale.count_now('test_rank', [t, 'c'], {'value': 10})
+        ranked = self.whale.rank_subdimensions_scalar('test_rank', t, 'value')
+        self.assertEqual(ranked[maybe_dumps([t, 'a'])]['important'], False)
+        self.assertEqual(ranked[maybe_dumps([t, 'a', 'asub1'])]['important'], False)
+        self.assertEqual(ranked[maybe_dumps([t, 'a', 'asub2'])]['important'], True)
+        self.assertEqual(ranked[maybe_dumps([t, 'b'])]['important'], True)
+        self.assertEqual(ranked[maybe_dumps([t, 'c'])]['important'], False)
+
+
+
 
     def testCrunch(self):
         return False # No longer in use
