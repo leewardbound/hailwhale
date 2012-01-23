@@ -50,27 +50,17 @@ P.S. don't trust the comments --
 
 
 def try_loads(arg):
-<<<<<<< HEAD
-    try: return json.loads(arg)
-    except: return arg
-    
-=======
     try:
         return json.loads(arg)
     except:
         return arg
 
-
->>>>>>> da565bc2dc7ba49e2dae4642cd925f481fc9e734
 def maybe_dumps(arg):
     if isinstance(arg, basestring):
         return str(arg)
     if isinstance(arg, list) and len(arg) == 1:
         return maybe_dumps(arg[0])
     return json.dumps(arg)
-<<<<<<< HEAD
-            
-=======
 
 
 def parent(sub):
@@ -277,6 +267,11 @@ class Whale(object):
         subdimensions = [dimension]
         for d in cls.get_subdimensions(pk, dimension):
             subdimensions += cls.all_subdimensions(pk, d)
+<<<<<<< Updated upstream
+=======
+        if dimension:
+            subdimensions.append(dimension)
+>>>>>>> Stashed changes
         return subdimensions
 
     @classmethod
@@ -318,6 +313,7 @@ class Whale(object):
         total = cls.totals(pk, dimension, metric, periods=[period])[period][d_k][metric]
         ranked = dict()
 
+<<<<<<< Updated upstream
         def info(sub):
             pps = cls.plotpoints(pk, sub, metric, period=period)[sub][metric]
             sub_total = sum(pps.values())
@@ -339,6 +335,8 @@ class Whale(object):
         return ranked
 
 
+=======
+>>>>>>> Stashed changes
 def iterate_dimensions(dimensions):
     if not dimensions:
         dimensions = []
