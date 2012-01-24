@@ -146,16 +146,16 @@ class Whale(object):
         period = period or Period.default_size()
         sparse = cls.whale_driver().retrieve(pk, dimensions, metrics, period=period)
         nonsparse = defaultdict(dict)
-        for dimensions, metrics in sparse.items():
-            for metric, points in metrics.items():
+        for dim, mets in sparse.items():
+            for met, points in mets.items():
                 dts = Period(*period.split('x')).datetimes_strs()
-                nonsparse[dimensions][metric] = []
+                nonsparse[dim][met] = []
                 for dt in dts:
                     if flot_time:
                         dt = to_flot_time(Period.parse_dt_str(dt))
                     value = points[dt] if dt in points else 0
-                    nonsparse[dimensions][metric].append([dt, float(value)])
-                nonsparse[dimensions][metric] = points_type(nonsparse[dimensions][metric])
+                    nonsparse[dim][met].append([dt, float(value)])
+                nonsparse[dim][met] = points_type(nonsparse[dim][met])
         if depth > 0:
             for sub in cls.get_subdimensions(pk, dimensions):
                 nonsparse = dict(nonsparse.items() +
@@ -354,10 +354,10 @@ class Whale(object):
             important = sub_bottom_sum > 5 and (difference > .1 or -difference > .1)
 
             return {
-                'points': pps,
-                'ratio_points': ratio_points,
+                #'points': pps,
+                #'ratio_points': ratio_points,
                 'difference': difference,
-                'effect': difference * sub_bottom_sum,
+                'effect': difference * sub_bottom_sum * ratio_total,
                 'important': important
             }
         
