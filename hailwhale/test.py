@@ -120,30 +120,29 @@ class TestHailWhale(unittest.TestCase):
         self.assertEqual(ranked[maybe_dumps([t, 'b'])]['important'], True)
         self.assertEqual(ranked[maybe_dumps([t, 'c'])]['important'], False)
 
-
-
-
-    def testCrunch(self):
-        return False # No longer in use
-        # Unique key for every test
+    def testRankSubdimensionsRatio(self):
         t = str(time.time())
-        # Do it 5 times so we can test values / hit
-        for i in range(5):
-            self.whale.count_now('test_crunch', [t, 'a'],
-                    {'value': 15})
-            self.whale.count_now('test_crunch', [t, 'b'],
-                    {'value': 10})
-            self.whale.count_now('test_crunch', [t, 'c'],
-                    {'value': 25})
+        # OVERALL STATS: 529,994 value, 50,000 visitors, 10.6 value per visitor
 
-        data = self.whale.crunch('test_crunch', [t], ('value', 'hit'))
-        # Data should be:
-        # { [t,'a']: {'value': 15, 'weight': .30},
-        #   [t,'b']: {'value': 10, 'weight': .20},
-        #   [t,'c']: {'value': 25, 'weight': .50}}
-        assert data[[t,'a']]['weight'] == .30
-        assert data[[t,'b']]['weight'] == .20
-        assert data[[t,'c']]['weight'] == .50
-        
+        # Not important, too close to overall
+        self.whale.count_now('test_rank_ratio', [t, 'a', 'asub1'],
+            {'value': 54989, 'visitors': 4999})  # 11 value per visitor
+        # Important, high relative ratio
+        self.whale.count_now('test_rank_ratio', [t, 'a', 'asub2'],
+            {'value': 375000, 'visitors': 25000})  # 15 value per visitor
+        # Important, low relative ratio
+        self.whale.count_now('test_rank_ratio', [t, 'b'],
+            {'value': 100000, 'visitors': 20000})  # 5 value per visitor
+        # Not important, not enough visitors
+        self.whale.count_now('test_rank_ratio', [t, 'c'],
+            {'value': 5, 'visitors': 1})  # 5 value per visitor
+
+        ranked = self.whale.rank_subdimensions_ratio('test_rank_ratio', t, 'value', 'visitors')
+
+        self.assertEqual(ranked[maybe_dumps([t, 'a', 'asub1'])]['important'], False)
+        self.assertEqual(ranked[maybe_dumps([t, 'a', 'asub2'])]['important'], True)
+        self.assertEqual(ranked[maybe_dumps([t, 'b'])]['important'], True)
+        self.assertEqual(ranked[maybe_dumps([t, 'c'])]['important'], False)
+
 if __name__ == '__main__':
     unittest.main()
