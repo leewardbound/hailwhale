@@ -87,7 +87,7 @@ class Period(object):
             Period.all_sizes()))
     @staticmethod
     def get(name):
-        return Period.all_sizes_dict()[name]
+        return Period.all_sizes_dict()[str(name)]
     @staticmethod
     def default_size():
         return str(Period.all_sizes()[-4])

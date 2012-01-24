@@ -1,12 +1,5 @@
-<<<<<<< HEAD
-import unittest
-import urllib
-import json
-import time
-=======
 import unittest, urllib, json, time
 from whale import maybe_dumps
->>>>>>> 839fa50a662ee52260c9e22266975191fe9625a8
 
 class TestHailWhaleHTTP(unittest.TestCase):
     def setUp(self):
@@ -39,14 +32,14 @@ class TestHailWhaleHTTP(unittest.TestCase):
     def testResetCategory(self):
         self.getStandardParamsURL('/reset')
     def testCountingNowCorrectly(self):
-        counting = lambda n: n['alltime']['["empty"]']['counting_now']
+        counting = lambda n: n['alltime']['empty']['counting_now']
         totals = self.getTotalsURL(metrics=['counting_now',])
         for i in range(3):
             self.assertEqual(self.getCountNowURL(metrics={'counting_now': 5}), 'OK')
         new_totals = self.getTotalsURL(metrics=['counting_now',])
         self.assertEqual(counting(new_totals), counting(totals) + 15)
     def testCountingCorrectly(self):
-        counting = lambda n: n['alltime']['["empty"]']['counting']
+        counting = lambda n: n['alltime']['empty']['counting']
         totals = self.getTotalsURL(metrics=['counting',])
         for i in range(3):
             self.assertEqual(self.getCountURL(metrics={'counting': 5}), 'OK')
@@ -82,11 +75,7 @@ class TestHailWhale(unittest.TestCase):
 
         self.assertEqual(plotpoints[t]['hits'][-1][1], 5)    
         self.assertEqual(plotpoints[t]['values'][-1][1], 25)
-<<<<<<< HEAD
-        
-=======
     
->>>>>>> da565bc2dc7ba49e2dae4642cd925f481fc9e734
     def testPlotpointsDepth(self):
         t = str(time.time())
         self.whale.count_now('test_depth', {t: 'a'})
@@ -131,16 +120,29 @@ class TestHailWhale(unittest.TestCase):
         self.assertEqual(ranked[maybe_dumps([t, 'b'])]['important'], True)
         self.assertEqual(ranked[maybe_dumps([t, 'c'])]['important'], False)
 
-
-    def testCrunch(self):
-        return False # No longer in use
-        # Unique key for every test
+    def testRankSubdimensionsRatio(self):
         t = str(time.time())
-        self.whale.count_now('test_ranksubdimensions_scalar')
-        self.whale.rank_subdimensions_scalar('test_ranksubdimensions_scalar')
+        # OVERALL STATS: 529,994 value, 50,000 visitors, 10.6 value per visitor
 
-    def testCrunch(self):
-        pass
-        
+        # Not important, too close to overall
+        self.whale.count_now('test_rank_ratio', [t, 'a', 'asub1'],
+            {'value': 54989, 'visitors': 4999})  # 11 value per visitor
+        # Important, high relative ratio
+        self.whale.count_now('test_rank_ratio', [t, 'a', 'asub2'],
+            {'value': 375000, 'visitors': 25000})  # 15 value per visitor
+        # Important, low relative ratio
+        self.whale.count_now('test_rank_ratio', [t, 'b'],
+            {'value': 100000, 'visitors': 20000})  # 5 value per visitor
+        # Not important, not enough visitors
+        self.whale.count_now('test_rank_ratio', [t, 'c'],
+            {'value': 5, 'visitors': 1})  # 5 value per visitor
+
+        ranked = self.whale.rank_subdimensions_ratio('test_rank_ratio', 'value', 'visitors', t)
+
+        self.assertEqual(ranked[maybe_dumps([t, 'a', 'asub1'])]['important'], False)
+        self.assertEqual(ranked[maybe_dumps([t, 'a', 'asub2'])]['important'], True)
+        self.assertEqual(ranked[maybe_dumps([t, 'b'])]['important'], True)
+        self.assertEqual(ranked[maybe_dumps([t, 'c'])]['important'], False)
+
 if __name__ == '__main__':
     unittest.main()

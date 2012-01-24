@@ -73,7 +73,6 @@ def parent(sub):
         return '_'
 
 
->>>>>>> da565bc2dc7ba49e2dae4642cd925f481fc9e734
 def keyify(*args):
     json_args = map(maybe_dumps, map(try_loads, args))
     return DELIM.join([arg if arg not in
@@ -267,14 +266,6 @@ class Whale(object):
         subdimensions = [dimension]
         for d in cls.get_subdimensions(pk, dimension):
             subdimensions += cls.all_subdimensions(pk, d)
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> Stashed changes
-        if dimension:
-            subdimensions.append(dimension)
->>>>>>> Stashed changes
         return subdimensions
 
     @classmethod
@@ -338,7 +329,7 @@ class Whale(object):
         return ranked
 
     @classmethod
-    def rank_subdimensions_ratio(cls, pk, dimension='_', numerator, denominator='hits'):
+    def rank_subdimensions_ratio(cls, pk, numerator, denominator='hits', dimension='_', period=None):
         top, bottom = numerator, denominator
         period = period or Period.default_size()
         d_k = keyify(dimension)
@@ -349,7 +340,7 @@ class Whale(object):
 
         def info(sub):
             pps = cls.plotpoints(pk, sub, [top, bottom], period=period)[sub]
-            ratio_points = cls.ratio_plotpoints(pk, sub, top, bottom, period=period)[sub]
+            ratio_points = cls.ratio_plotpoints(pk, top, bottom, sub, period=period)[sub]
             top_pps = pps[top]
             bottom_pps = pps[bottom]
 
@@ -363,10 +354,10 @@ class Whale(object):
             important = sub_bottom_sum > 5 and (difference > .1 or -difference > .1)
 
             return {
-                'points': pps
-                'ratio_points': ratio_points
-                'difference': difference
-                'effect': difference * bottom
+                'points': pps,
+                'ratio_points': ratio_points,
+                'difference': difference,
+                'effect': difference * sub_bottom_sum,
                 'important': important
             }
         
