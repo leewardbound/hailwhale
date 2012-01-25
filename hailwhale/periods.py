@@ -86,11 +86,13 @@ class Period(object):
         return dict(map(lambda p: ('%sx%s'%(p.interval,p.length),p),
             Period.all_sizes()))
     @staticmethod
-    def get(name):
+    def get(name=None):
+        if not name:
+            return Period.default_size()
         return Period.all_sizes_dict()[str(name)]
     @staticmethod
     def default_size():
-        return str(Period.all_sizes()[-4])
+        return Period.all_sizes()[-4]
         
     def friendly_name(self):
         return self.name if self.name else '%sx%s'%(

@@ -56,7 +56,7 @@ def try_loads(arg):
         return arg
 
 def maybe_dumps(arg):
-    if isinstance(arg, basestring):
+    if isinstance(arg, (basestring, Period)):
         return str(arg)
     if isinstance(arg, list) and len(arg) == 1:
         return maybe_dumps(arg[0])
@@ -143,13 +143,13 @@ class Whale(object):
         metrics = metrics or ['hits']
         if isinstance(metrics, basestring):
             metrics = [metrics]
-        period = period or Period.default_size()
+        period = Period.get(period)
         sparse = cls.whale_driver().retrieve(pk, dimensions, metrics, period=period)
         nonsparse = defaultdict(dict)
         for dimensions, metrics in sparse.items():
             for metric, points in metrics.items():
-                dts = Period(*period.split('x')).datetimes_strs()
                 nonsparse[dimensions][metric] = []
+                dts = period.datetimes_strs()
                 for dt in dts:
                     if flot_time:
                         dt = to_flot_time(Period.parse_dt_str(dt))
@@ -304,7 +304,7 @@ class Whale(object):
     def rank_subdimensions_scalar(cls, pk, dimension='_', metric='hits', period=None):
         period = period or Period.default_size()
         d_k = keyify(dimension)
-        total = cls.totals(pk, dimension, metric, periods=[period])[period][d_k][metric]
+        total = cls.totals(pk, dimension, metric, periods=[period])[str(period)][d_k][metric]
         ranked = dict()
 
         def info(sub):
@@ -333,8 +333,8 @@ class Whale(object):
         top, bottom = numerator, denominator
         period = period or Period.default_size()
         d_k = keyify(dimension)
-        top_total = cls.totals(pk, dimension, top, periods=[period])[period][d_k][top]
-        bottom_total = cls.totals(pk, dimension, bottom, periods=[period])[period][d_k][bottom]
+        top_total = cls.totals(pk, dimension, top, periods=[period])[str(period)][d_k][top]
+        bottom_total = cls.totals(pk, dimension, bottom, periods=[period])[str(period)][d_k][bottom]
         ratio_total = bottom_total and float(top_total / bottom_total) or 0
         ranked = dict() 
 

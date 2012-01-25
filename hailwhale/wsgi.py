@@ -92,6 +92,7 @@ def plotpoints():
     params = default_params()
     params['depth'] = g('depth', 0)
     params['period'] = g('period', None)
+    params['flot_time'] = True
     return json.dumps(whale.plotpoints(**params))
 
 @route('/graph')

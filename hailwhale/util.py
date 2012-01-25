@@ -24,7 +24,7 @@ def datetimeIterator(from_date=None, to_date=None, use_utc=False, delta=timedelt
     return
 
 def to_flot_time(dt):
-    return float(time.mktime(dt.timetuple()))*1000
+    return int(float(time.mktime(dt.timetuple()))*1000)
 
 def curry_instance_attribute(attr, func_name, instance):
     """ Curries the named attribute to the named function
