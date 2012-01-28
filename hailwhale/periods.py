@@ -54,25 +54,26 @@ class Period(object):
         flat = self.start() + timedelta(seconds=p*self.interval)
         return flat
 
-    def flatten_str(self,dtf):
+    def flatten_str(self, dtf):
         f = self.flatten(dtf)
-        if not f: return False
+        if not f:
+            return False
         return self.format_dt_str(f)
 
     def __unicode__(self):
-      return '%dx%d'%(self.interval, self.length)
+        return '%dx%d' % (self.interval, self.length)
 
     def __str__(self):
-      return '%dx%d'%(self.interval, self.length)
+        return '%dx%d' % (self.interval, self.length)
 
     @staticmethod
     def all_sizes():
         PERIODS = [
-{'name': 'Last year, by 14 days', 'length': 3600*24*365, 'interval': 3600*24*14},
-{'name': 'Last week, by 6 hours', 'length': 3600*24*7, 'interval': 3600*6},
-{'name': 'Last day, by hour', 'length': 3600*24, 'interval': 3600},
-{'name': 'Last 6 hours, by 15 minutes', 'length': 3600*6, 'interval': 60*15},
-{'name': 'Last hour, by 2 minutes', 'length': 3600, 'interval': 60*2},
+{'name': 'Last year, by 14 days', 'length': 3600 * 24 * 365, 'interval': 3600 * 24 * 14},
+{'name': 'Last week, by 6 hours', 'length': 3600 * 24 * 7, 'interval': 3600 * 6},
+{'name': 'Last day, by hour', 'length': 3600 * 24, 'interval': 3600},
+{'name': 'Last 6 hours, by 15 minutes', 'length': 3600 * 6, 'interval': 60 * 15},
+{'name': 'Last hour, by 2 minutes', 'length': 3600, 'interval': 60 * 2},
 {'name': 'Last 5 minutes, by 10 seconds', 'length': 300, 'interval': 10},
 ]
         PERIOD_OBJS = []
@@ -83,17 +84,23 @@ class Period(object):
 
     @staticmethod
     def all_sizes_dict():
-        return dict(map(lambda p: ('%sx%s'%(p.interval,p.length),p),
+        return dict(map(lambda p: ('%sx%s' % (p.interval, p.length), p),
             Period.all_sizes()))
+
     @staticmethod
-    def get(name):
+    def get(name=None):
+        if isinstance(name, Period):
+            return name
+        if not name:
+            name = Period.default_size()
         return Period.all_sizes_dict()[str(name)]
+
     @staticmethod
     def default_size():
         return str(Period.all_sizes()[-4])
-        
+
     def friendly_name(self):
-        return self.name if self.name else '%sx%s'%(
+        return self.name if self.name else '%sx%s' % (
                 self.interval, self.length)
 
 DEFAULT_PERIODS = Period.all_sizes()

@@ -4,24 +4,32 @@ from whale import maybe_dumps
 class TestHailWhaleHTTP(unittest.TestCase):
     def setUp(self):
         self.service_url = 'http://localhost:8085'
+
     def getURL(self, url):
         data = urllib.urlopen(self.service_url + url).read()
-        try: return json.loads(data)
-        except: return data
+        try:
+            return json.loads(data)
+        except:
+            return data
+
     def getCountURL(self, **args):
         return self.getStandardParamsURL('/count', **args)
+
     def getCountNowURL(self, **args):
         return self.getStandardParamsURL('/count_now', **args)
+
     def getPlotpointsURL(self, **args):
         return self.getStandardParamsURL('/plotpoints', **args)
+
     def getTotalsURL(self, **args):
         return self.getStandardParamsURL('/totals', **args)
+
     def getStandardParamsURL(self, stub='/', **kwargs):
         pk = json.dumps(kwargs.pop('pk', 'test'))
-        dimensions = json.dumps(kwargs.pop('dimensions', ['empty',]))
+        dimensions = json.dumps(kwargs.pop('dimensions', ['empty']))
         metrics = json.dumps(kwargs.pop('metrics', {}))
-        params = (stub, pk,dimensions,metrics)
-        url = '%s?pk=%s&dimensions=%s&metrics=%s'%params
+        params = (stub, pk, dimensions, metrics)
+        url = '%s?pk=%s&dimensions=%s&metrics=%s' % params
         return self.getURL(url)
     def testCountService(self):
         """ /count should return 'OK' for successful hits """
@@ -73,9 +81,9 @@ class TestHailWhale(unittest.TestCase):
             self.whale.count_now('test_plotpoints', t, {'hits': 1, 'values': 5})
         plotpoints = self.whale.plotpoints('test_plotpoints', t, ['hits', 'values'], points_type=list)
 
-        self.assertEqual(plotpoints[t]['hits'][-1][1], 5)    
+        self.assertEqual(plotpoints[t]['hits'][-1][1], 5)
         self.assertEqual(plotpoints[t]['values'][-1][1], 25)
-    
+
     def testPlotpointsDepth(self):
         t = str(time.time())
         self.whale.count_now('test_depth', {t: 'a'})
@@ -92,20 +100,18 @@ class TestHailWhale(unittest.TestCase):
         self.assertEqual(True, maybe_dumps([t, 'c', 'child']) in plotpoints)
         self.assertEqual(plotpoints[maybe_dumps([t, 'c', 'child'])]['hits'][-1][1], 1)
 
-        
     def testRatioPlotpoints(self):
         t = str(time.time())
 
         for i in range(5):
-            self.whale.count_now('test_ratio', t, {'hits': 1, 'values': 5})
+            self.whale.count_now('test_ratio', t, {'hit': 1, 'value': 5})
 
-        plotpoints = self.whale.plotpoints('test_ratio', t, ['hits', 'values'], points_type=list)
-        ratio_plotpoints = self.whale.ratio_plotpoints('test_ratio', 'values', 'hits', t, points_type=list)
-        
-        self.assertEqual(plotpoints[t]['hits'][-1][1], 5)    
-        self.assertEqual(plotpoints[t]['values'][-1][1], 25)    
+        plotpoints = self.whale.plotpoints('test_ratio', t, ['hit', 'value', 'value/hit'], points_type=list)
 
-        self.assertEqual(ratio_plotpoints[t][-1][1], 5)
+        self.assertEqual(plotpoints[t]['hit'][-1][1], 5)
+        self.assertEqual(plotpoints[t]['value'][-1][1], 25)
+
+        self.assertEqual(plotpoints[t]['value/hit'][-1][1], 5)
 
     def testRankSubdimensionsScalar(self):
         t = str(time.time())
@@ -122,28 +128,50 @@ class TestHailWhale(unittest.TestCase):
 
     def testRankSubdimensionsRatio(self):
         t = str(time.time())
+        pk = 'test_ratio_rank'
         # OVERALL STATS: 529,994 value, 50,000 visitors, 10.6 value per visitor
-
         # Not important, too close to overall
-        self.whale.count_now('test_rank_ratio', [t, 'a', 'asub1'],
+        self.whale.count_now(pk, [t, 'a', 'asub1'],
             {'value': 54989, 'visitors': 4999})  # 11 value per visitor
         # Important, high relative ratio
-        self.whale.count_now('test_rank_ratio', [t, 'a', 'asub2'],
+        self.whale.count_now(pk, [t, 'a', 'asub2'],
             {'value': 375000, 'visitors': 25000})  # 15 value per visitor
         # Important, low relative ratio
-        self.whale.count_now('test_rank_ratio', [t, 'b'],
+        self.whale.count_now(pk, [t, 'b'],
             {'value': 100000, 'visitors': 20000})  # 5 value per visitor
         # Not important, not enough visitors
-        self.whale.count_now('test_rank_ratio', [t, 'c'],
+        self.whale.count_now(pk, [t, 'c'],
             {'value': 5, 'visitors': 1})  # 5 value per visitor
 
-        ranked = self.whale.rank_subdimensions_ratio('test_rank_ratio', 'value', 'visitors', t)
+        one_level = self.whale.rank_subdimensions_ratio('test_rank_ratio', 'value', 'visitors',
+            t, recursive=False)
 
-        self.assertEqual(ranked[maybe_dumps([t, 'a', 'asub1'])]['important'], False)
-        self.assertEqual(ranked[maybe_dumps([t, 'a', 'asub2'])]['important'], True)
-        self.assertEqual(ranked[maybe_dumps([t, 'b'])]['important'], True)
-        self.assertEqual(ranked[maybe_dumps([t, 'c'])]['important'], False)
+        all_levels = self.whale.rank_subdimensions_ratio(pk, 'value', 'visitors', t)
+        self.assertNotIn(maybe_dumps([t, 'a', 'asub1']), one_level)
+        self.assertEqual(all_levels[maybe_dumps([t, 'a', 'asub1'])]['important'], False)
+        self.assertEqual(all_levels[maybe_dumps([t, 'a', 'asub2'])]['important'], True)
+        self.assertEqual(all_levels[maybe_dumps([t, 'b'])]['important'], True)
+        self.assertEqual(all_levels[maybe_dumps([t, 'c'])]['important'], False)
 
+    def testBasicDecision(self):
+        pk = 'test_basic_decision'
+        decision = str(time.time())
+        # Make a decision, any decision, from no information whatsoever
+        any_one = self.whale.decide(pk, [1, 2, 3], 'random')
+        self.assertIn(any_one, [1, 2, 3])
+
+        # OK, now how about something somewhat informed?
+        # This will be easy. Slogan A makes us huge profit. Products B and C suck.
+        self.whale.count_now([pk, decision, 'a'], None, dict(dollars=5000, visitors=1000))
+        self.whale.count_now([pk, decision, 'b'], None, dict(dollars=0, visitors=2000))
+        self.whale.count_now([pk, decision, 'c'], None, dict(dollars=0, visitors=2000))
+        reasons = self.whale.reasons_for([pk, decision, 'a'], formula='dollars/visitors')
+        print reasons
+        self.assertEqual(reasons['good'], None)
+        self.assertEqual(reasons['bad'], None)
+        self.assertEqual(reasons['base']['difference'], 4.0)
+        which_one = self.whale.decide(pk, ['a', 'b', 'c'], decision, formula='dollars/visitors', bad_idea_threshold=0)
+        self.assertEqual(which_one, 'a')
 
 if __name__ == '__main__':
     unittest.main()

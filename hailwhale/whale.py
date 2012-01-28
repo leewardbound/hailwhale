@@ -88,7 +88,7 @@ class WhaleRedisDriver(Redis):
 
     def store(self, pk, dimension, metric, period, dt, count):
         # Keep a list of graphs per pk
-        key = keyify(pk, dimension, period, metric)
+        key = keyify(pk, dimension, str(period), metric)
         # Store pk dimensions
         dimension_key = keyify(pk, 'dimensions')
         dimension_json = keyify(dimension)
@@ -103,18 +103,14 @@ class WhaleRedisDriver(Redis):
                 self._added_subdimensions[subdimension_key].append(dimension_json)
         return self.hincrby(key, dt, int(count))
 
-    def retrieve(self, pk, dimensions, metrics, period='all', dt=None):
+    def retrieve(self, pk, dimensions, metrics, period=None, dt=None):
         nested = defaultdict(dict)
-        if period == 'all':
-            dt = 'time'
+        period = str(Period.get(period))
         for dimension in map(maybe_dumps, iterate_dimensions(dimensions)):
             for metric in map(maybe_dumps, metrics):
                 hash_key = keyify(pk, dimension, period, metric)
                 value_dict = self.hgetall(hash_key)
-                if period == 'all' and dt == 'time':
-                    nested[dimension][metric] = float(value_dict.get('time', 0))
-                else:
-                    nested[dimension][metric] = dict([
+                nested[dimension][metric] = dict([
                         (k, float(v)) for k, v in value_dict.items()])
         return dict(nested)
 
@@ -138,17 +134,17 @@ class Whale(object):
         return cls._whale_driver
 
     @classmethod
-    def plotpoints(cls, pk, dimensions=None, metrics=None,
+    def scalar_plotpoints(cls, pk, dimensions=None, metrics=None,
             depth=0, period=None, flot_time=False, points_type=dict):
         metrics = metrics or ['hits']
         if isinstance(metrics, basestring):
             metrics = [metrics]
-        period = period or Period.default_size()
+        period = Period.get(period)
         sparse = cls.whale_driver().retrieve(pk, dimensions, metrics, period=period)
         nonsparse = defaultdict(dict)
         for dim, mets in sparse.items():
             for met, points in mets.items():
-                dts = Period(*period.split('x')).datetimes_strs()
+                dts = period.datetimes_strs()
                 nonsparse[dim][met] = []
                 for dt in dts:
                     if flot_time:
@@ -164,11 +160,34 @@ class Whale(object):
         return nonsparse
 
     @classmethod
+    def plotpoints(cls, pk, dimensions=None, metrics=None, **kwargs):
+        """ Combines scalar_plotpoints and ratio_plotpoints into a single func call w/ formula support """
+        combo = defaultdict(dict)
+        scalars = []
+        ratios = {}
+        metrics = metrics or ['hits']
+        if isinstance(metrics, basestring):
+            metrics = [metrics]
+        for met in metrics:
+            top, bottom = parse_formula(met)
+            if not bottom:
+                scalars.append(met)
+            else:
+                ratios[met] = cls.ratio_plotpoints(pk, top, bottom, dimensions, **kwargs)
+
+        combo = cls.scalar_plotpoints(pk, dimensions, scalars, **kwargs)
+        for dim, mets in combo.items():
+            for ratio, points in ratios.items():
+                combo[dim][ratio] = points[dim][ratio]
+        return combo
+
+    @classmethod
     def ratio_plotpoints(cls, pk, numerator_metric, denomenator_metric='hits',
             dimensions=None, depth=0, period=None, flot_time=False, points_type=dict):
         top, bot = numerator_metric, denomenator_metric
-        pps = cls.plotpoints(pk, dimensions, [top, bot], depth=depth, period=period,
+        pps = cls.scalar_plotpoints(pk, dimensions, [top, bot], depth=depth, period=period,
             flot_time=flot_time, points_type=points_type)
+        formula = '%s/%s' % (top, bot)
 
         # The function that makes the ratios
         def ratio_func(tup):
@@ -188,9 +207,9 @@ class Whale(object):
                             idx = i
                         i += 1
                     return mets[top][idx][1]
-            return (dim, points_type([(dt,
-                    denom and (get_top(dt) / denom) or 0)
-                                    for (dt, denom) in tgt_iter]))
+            return (dim, {formula:
+                    points_type([(dt, (denom and (get_top(dt) / denom) or 0))
+                                    for (dt, denom) in tgt_iter])})
         return dict(map(ratio_func, pps.items()))
 
     @classmethod
@@ -202,19 +221,28 @@ class Whale(object):
         metrics = metrics or ['hits']
         if not isinstance(metrics, list):
             metrics = [metrics]
+        ratios = []
+        for metric in metrics:
+            if '/' in metric:
+                metrics.remove(metric)
+                ratios.append(metric)
+                metrics += metric.split('/')
         d = {}
         for p in periods:
             p_data = cls.plotpoints(pk, dimensions, metrics, period=str(p))
             p_totals = dict()
-            for dim, mets in p_data.items():
+            for dim in p_data.keys():
                 p_totals[dim] = dict()
-                for met, vals in mets.items():
+                for met, vals in p_data[dim].items():
                     p_totals[dim][met] = sum([
                         v for k, v in vals.items()
                         if Period.get(p).flatten(k)])
+                for rat in ratios:
+                    top, bot = parse_formula(rat)
+                    topt, bott = p_totals[dim][top], p_totals[dim][bot]
+                    p_totals[dim][rat] = bott and topt / bott or 0
+                    print "total ratio: ", rat
             d[str(p)] = p_totals
-        d['alltime'] = cls.whale_driver().retrieve(
-                pk, dimensions, metrics, period='all')
         return d
 
     @classmethod
@@ -235,8 +263,6 @@ class Whale(object):
                 r.delete(k)
                 continue
             this_p = k.split('||')[2]
-            if this_p == 'all':
-                continue
             if not this_p in ps:
                 r.delete(k)
                 continue
@@ -295,13 +321,15 @@ class Whale(object):
         # [b, x, 1],
         # [b, y],
         # [b, y, 2]
-        for dimension, (period, dt, metric, i) in itertools.product(
+        for pkk, dimension, (period, dt, metric, i) in itertools.product(
+            iterate_dimensions(pk),
             iterate_dimensions(dimensions) + ['_'],
                         generate_increments(metrics, periods, at)):
-            cls.whale_driver().store(pk, dimension, metric, period, dt, i)
+            cls.whale_driver().store(pkk, dimension, metric, period, dt, i)
 
     @classmethod
-    def rank_subdimensions_scalar(cls, pk, dimension='_', metric='hits', period=None):
+    def rank_subdimensions_scalar(cls, pk, dimension='_', metric='hits',
+            period=None, recursive=True, prune_parents=True, points=False):
         period = period or Period.default_size()
         d_k = keyify(dimension)
         total = cls.totals(pk, dimension, metric, periods=[period])[period][d_k][metric]
@@ -310,37 +338,44 @@ class Whale(object):
         def info(sub):
             pps = cls.plotpoints(pk, sub, metric, period=period)[sub][metric]
             sub_total = sum(pps.values())
-            return {
+            data = {
                 'points': pps,
-                'total': sub_total,
-                'important': sub_total > 10 and (sub_total > (total / 10)) or False
+                'score': sub_total,
+                'important': sub_total > 10 and (sub_total > (total / 10)) or False,
+                'effect': total - sub_total,
+                'difference': total - sub_total,
+                'count': sub_total,
+                'dimension': sub
             }
-
-        for sub in map(maybe_dumps, cls.all_subdimensions(pk, dimension)):
+            if not points:
+                del data['points']
+            return data
+        _subs = recursive and cls.all_subdimensions or cls.get_subdimensions
+        for sub in map(maybe_dumps, _subs(pk, dimension)):
             ranked[sub] = info(sub)
-        del(ranked[dimension])
 
         # Prune parents
-        for sub, info in ranked.items():
-            children = map(maybe_dumps, cls.get_subdimensions(pk, sub))
-            children_total = sum(map(lambda s: ranked[s]['total'], children))
-            if info['important'] and (info['total'] - children_total) < (total / 10):
-                info['important'] = False
+        if recursive and prune_parents:
+            for sub, info in ranked.items():
+                children = map(maybe_dumps, cls.get_subdimensions(pk, sub))
+                children_total = sum(map(lambda s: ranked[s]['score'], children))
+                if info['important'] and (info['score'] - children_total) < (total / 10):
+                    info['important'] = False
         return ranked
 
     @classmethod
-    def rank_subdimensions_ratio(cls, pk, numerator, denominator='hits', dimension='_', period=None):
+    def rank_subdimensions_ratio(cls, pk, numerator, denominator='hits',
+            dimension='_', period=None, recursive=True, points=False):
         top, bottom = numerator, denominator
         period = period or Period.default_size()
         d_k = keyify(dimension)
-        top_total = cls.totals(pk, dimension, top, periods=[period])[period][d_k][top]
-        bottom_total = cls.totals(pk, dimension, bottom, periods=[period])[period][d_k][bottom]
+        top_total = cls.totals(pk, dimension, top, periods=[period])[str(period)][d_k][top]
+        bottom_total = cls.totals(pk, dimension, bottom, periods=[period])[str(period)][d_k][bottom]
         ratio_total = bottom_total and float(top_total / bottom_total) or 0
-        ranked = dict() 
+        ranked = dict()
 
         def info(sub):
-            pps = cls.plotpoints(pk, sub, [top, bottom], period=period)[sub]
-            ratio_points = cls.ratio_plotpoints(pk, top, bottom, sub, period=period)[sub]
+            pps = cls.plotpoints(pk, sub, [top, bottom, '%s/%s' % (top, bottom)], period=period)[sub]
             top_pps = pps[top]
             bottom_pps = pps[bottom]
 
@@ -349,24 +384,86 @@ class Whale(object):
 
             ratio = sub_bottom_sum and float(sub_top_sum / sub_bottom_sum) or 0
 
-            difference = (ratio - ratio_total) / ratio_total
+            difference = ratio_total and (ratio - ratio_total) / ratio_total or 0
 
             important = sub_bottom_sum > 5 and (difference > .1 or -difference > .1)
 
-            return {
-                #'points': pps,
-                #'ratio_points': ratio_points,
+            data = {
+                'points': pps,
+                'score': ratio,
                 'difference': difference,
                 'effect': difference * sub_bottom_sum * ratio_total,
-                'important': important
+                'count': sub_bottom_sum,
+                'important': important,
+                'dimension': sub
             }
-        
-        for sub in map(maybe_dumps, cls.all_subdimensions(pk, dimension)):
+            if not points:
+                del data['points']
+            return data
+
+        _subs = recursive and cls.all_subdimensions or cls.get_subdimensions
+
+        for sub in map(maybe_dumps, _subs(pk, dimension)):
             ranked[sub] = info(sub)
-        del(ranked[dimension])
 
-        return ranked  
+        return ranked
 
+    @classmethod
+    def rank(cls, pk, formula, dimension='_', period=None, recursive=True,
+            prune_parents=True, points=False):
+        top, bot = parse_formula(formula)
+        if not bot:
+            return cls.rank_subdimensions_scalar(pk, top, dimension, period, recursive, prune_parents)
+        else:
+            return cls.rank_subdimensions_ratio(pk, top, bot, dimension, period, recursive)
+
+    @classmethod
+    def decide(cls, pk_base, options, decision_name='_', formula='value/hits', known_data=None,
+        period=None, bad_idea_threshold=.05, test_idea_threshold=.05, test_idea_key='hits'):
+        import random
+        good, bad, test = {}, {}, {}
+
+        return random.choice(options)
+
+    @classmethod
+    def reasons_for(cls, pk, formula='value/hits', known_data=None, period=None, recursive=True):
+        metric, denomenator = parse_formula(formula)
+        period = Period.get(period)
+        pk_base, decision, option = pk
+        best = worst = None
+        base = '_'
+        ranks = cls.rank(pk, formula, dimension=base,
+            period=period, recursive=recursive, points=False)
+        overall = cls.rank([pk_base, decision], formula, dimension=base,
+            period=period, recursive=recursive, points=False)
+        parent_score = overall[base]['score']
+
+        def delta(info):
+            diff = info['score'] - parent_score
+            if diff > 0  and info['count'] > 0:
+                info['effect'] += diff * info['count']
+            info['difference'] += diff
+            return info
+        known_dimensions = iterate_dimensions(known_data)
+        for dim, info in ranks.items():
+            ranks[dim] = delta(info)
+            if dim in known_dimensions and info['important']:
+                if info['effect'] > ranks[best]['effect'] or not best:
+                    best = dim
+                if info['effect'] < ranks[worst]['effect'] or not worst:
+                    worst = dim
+        return {'good': best and ranks[best] or None,
+                'bad': best and ranks[worst] or None,
+                'ranks': ranks,
+                'base': ranks[base],
+                'parent': overall[base]}
+
+
+def parse_formula(formula):
+    if not '/' in formula:
+        return (formula, None)
+    else:
+        return formula.split('/')
 
 
 def iterate_dimensions(dimensions):
@@ -393,6 +490,4 @@ def generate_increments(metrics, periods=False, at=False):
     rr = [(str(period), dt, metric, incr_by)
             for (period, dt) in observations
             for metric, incr_by in metrics.items()]
-    for metric, incr_by in metrics.items():
-        rr.append(('all', 'time', metric, incr_by))
     return rr
