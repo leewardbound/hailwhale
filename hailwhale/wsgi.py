@@ -172,7 +172,7 @@ def graph():
     return_string += '''}});'''
 
     return return_string
-        
+
 
 @route('/demo/:filename#.*#')
 def send_static_demo(filename):

@@ -8,7 +8,7 @@ from collections import defaultdict
 from datetime import datetime
 
 from util import to_flot_time, curry_instance_attribute
-from util import nested_dict_to_list_of_keys
+from util import nested_dict_to_list_of_keys, whale_cache
 from periods import DEFAULT_PERIODS, Period
 
 DELIM = '||'
@@ -188,6 +188,11 @@ class Whale(object):
         return combo
 
     @classmethod
+    @whale_cache
+    def cached_plotpoints(cls, *args, **kwargs):
+        return cls.plotpoints(*args, **kwargs)
+
+    @classmethod
     def ratio_plotpoints(cls, pk, numerator_metric, denomenator_metric='hits',
             dimensions=None, depth=0, period=None, flot_time=False, points_type=dict):
         top, bot = numerator_metric, denomenator_metric
@@ -307,7 +312,7 @@ class Whale(object):
         return map(try_loads, subdimensions)
 
     @classmethod
-    def count_now(cls, pk, dimensions, metrics=None, at=False):
+    def count_now(cls, pk, dimensions='_', metrics=None, at=False):
         """ Immediately count a hit, as opposed to logging it into Hail"""
         periods = DEFAULT_PERIODS
 
@@ -430,6 +435,11 @@ class Whale(object):
             return cls.rank_subdimensions_scalar(pk, top, dimension, period, recursive, prune_parents)
         else:
             return cls.rank_subdimensions_ratio(pk, top, bot, dimension, period, recursive)
+    
+    @classmethod
+    @whale_cache
+    def cached_rank(cls, *args, **kwargs):
+        return cls.rank(*args, **kwargs)
 
     @classmethod
     def decide(cls, pk_base, decision_name, options, formula='value/hits', known_data=None,
@@ -486,9 +496,9 @@ class Whale(object):
         pk_base, decision, option = pk
         best = worst = None
         base = '_'
-        ranks = cls.rank(pk, formula, dimension=base,
+        ranks = cls.cached_rank(pk, formula, dimension=base,
             period=period, recursive=recursive, points=False)
-        overall = cls.rank([pk_base, decision], formula, dimension=base,
+        overall = cls.cached_rank([pk_base, decision], formula, dimension=base,
             period=period, recursive=recursive, points=False)
         parent_score = overall[base]['score']
         parent_count = overall[base]['count']

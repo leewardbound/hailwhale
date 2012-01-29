@@ -217,12 +217,30 @@ class TestHailWhale(unittest.TestCase):
         self.assertIn('c', bad.keys())
         self.assertIn('d', test.keys())
         chosen = defaultdict(int)
-        for k in range(50):
+        for k in range(100):
             choose = self.whale.decide(pk, decision, opts, formula='dollars/visitors',
                 known_data={'country': 'uk'}, bad_idea_threshold=0, test_idea_threshold=0)
             chosen[choose] += 1
-        self.assertEqual(True, chosen['b'] > 35,
-            "A decision between weights .15 vs .85 should have around 43 votes for 'b', we got less than 35")
+        self.assertEqual(True, chosen['b'] > 70,
+            """A decision between weights .15 vs .85 should have around 85 votes for 'b',
+                we got less than 70, which is unlikely enough to fail a test, but not definitely
+                indicative of a problem. If this test passes again on the next run, ignore the failure.""")
+
+    def testWhaleCacheWrapper(self):
+        t = str(time.time())
+        count = lambda: self.whale.count_now('test_cached', t)
+        cached_sum = lambda clear=False: sum(self.whale.cached_plotpoints('test_cached',
+                t, period='10x300', unmemoize=clear)[t]['hits'].values())
+
+        # Set hits to 1
+        count()
+        self.assertEqual(cached_sum(), 1)
+
+        # Should stay 1 for a while
+        for i in range(3):
+            count()
+            self.assertEqual(cached_sum(), 1)
+        self.assertEqual(cached_sum(clear=True), 4)
 
 
 def _print_reasons(good, bad, test):
