@@ -123,11 +123,10 @@ class Whale(object):
 
     def curry_whale_instance_methods(self, attr='id'):
         if hasattr(self, attr):
-            curry_instance_attribute(attr, 'plotpoints', self)
-            curry_instance_attribute(attr, 'ratio_plotpoints', self)
-            curry_instance_attribute(attr, 'totals', self)
-            curry_instance_attribute(attr, 'count_now', self)
-            curry_instance_attribute(attr, 'reset', self)
+            for method in ['plotpoints', 'ratio_plotpoints', 'scalar_plotpoints',
+                'totals', 'count_now', 'count_decided_now', 'decide',
+                'weighted_reasons', 'reasons_for']:
+                curry_instance_attribute(attr, method, self)
 
     @classmethod
     def whale_driver(cls):
