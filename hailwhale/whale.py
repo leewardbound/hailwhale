@@ -1,4 +1,5 @@
 import json
+import math
 import itertools
 import collections
 
@@ -54,6 +55,7 @@ def try_loads(arg):
         return json.loads(arg)
     except:
         return arg
+
 
 def maybe_dumps(arg):
     if isinstance(arg, basestring):
@@ -282,9 +284,16 @@ class Whale(object):
     def get_subdimensions(cls, pk, dimension='_'):
         if dimension == ['_']:
             dimension = '_'
-        subdimensions = map(lambda s: map(str, try_loads(s)),
-                cls.whale_driver().smembers(keyify(pk, 'subdimensions',
-                    dimension)))
+        if dimension != '_' and not isinstance(dimension, list):
+            dimension = [dimension]
+        set_members = cls.whale_driver().smembers(keyify(pk, 'subdimensions',
+                    dimension))
+        subdimensions = []
+        for s in set_members:
+            loaded = try_loads(s)
+            if isinstance(loaded, list) and len(loaded):
+                loaded = map(str, loaded)
+            subdimensions.append(loaded)
         return subdimensions
 
     @classmethod
@@ -292,7 +301,7 @@ class Whale(object):
         subdimensions = [dimension]
         for d in cls.get_subdimensions(pk, dimension):
             subdimensions += cls.all_subdimensions(pk, d)
-        return subdimensions
+        return map(try_loads, subdimensions)
 
     @classmethod
     def count_now(cls, pk, dimensions, metrics=None, at=False):
@@ -344,6 +353,7 @@ class Whale(object):
                 'important': sub_total > 10 and (sub_total > (total / 10)) or False,
                 'effect': total - sub_total,
                 'difference': total - sub_total,
+                'value': sub_total,
                 'count': sub_total,
                 'dimension': sub
             }
@@ -386,13 +396,14 @@ class Whale(object):
 
             difference = ratio_total and (ratio - ratio_total) / ratio_total or 0
 
-            important = sub_bottom_sum > 5 and (difference > .1 or -difference > .1)
+            important = sub_bottom_sum > 5 and math.fabs(difference) > .1
 
             data = {
                 'points': pps,
                 'score': ratio,
                 'difference': difference,
                 'effect': difference * sub_bottom_sum * ratio_total,
+                'value': sub_top_sum,
                 'count': sub_bottom_sum,
                 'important': important,
                 'dimension': sub
@@ -418,12 +429,52 @@ class Whale(object):
             return cls.rank_subdimensions_ratio(pk, top, bot, dimension, period, recursive)
 
     @classmethod
-    def decide(cls, pk_base, options, decision_name='_', formula='value/hits', known_data=None,
+    def decide(cls, pk_base, decision_name, options, formula='value/hits', known_data=None,
         period=None, bad_idea_threshold=.05, test_idea_threshold=.05, test_idea_key='hits'):
         import random
-        good, bad, test = {}, {}, {}
 
-        return random.choice(options)
+        def w_choice(reasons):
+            n = random.uniform(0, 1)
+            for item, opts in reasons.items():
+                if n < opts.get('weight', 1):
+                    break
+                n = n - opts.get('weight', 1)
+            return item
+        good, bad, test = cls.weighted_reasons(pk_base, decision_name, options, formula,
+            known_data, period)
+        # if there are tests to be ran, and either
+        # - there are no good or bad choices, or
+        # - the test threshold is triggered randomly
+        if len(test) and ((not len(good) and not len(bad)) or (
+                random.random() < test_idea_threshold)):
+            return w_choice(test)
+        # if there are bad choices and we have hit the badness roulette,
+        # pick a weighted bad idea
+        if random.random() < bad_idea_threshold and len(bad):
+            return w_choice(bad)
+        else:
+            return w_choice(good)
+
+    @classmethod
+    def weighted_reasons(cls, pk_base, decision_name, options, formula='value/hits',
+        known_data=None, period=None, recursive=True):
+        good, bad, test = defaultdict(dict), defaultdict(dict), defaultdict(dict)
+        for o in options:
+            opk = [pk_base, decision_name, o]
+            i = cls.reasons_for(opk, formula, known_data, period)
+            if i['score'] > 1:
+                good[o] = i
+            elif i['score'] < -1:
+                bad[o] = i
+            else:
+                test[o] = i
+        total_goodness = sum(map(lambda g: g['score'], good.values()))
+        total_badness = sum(map(lambda b: b['score'], bad.values()))
+        for opt, g in good.items():
+            good[opt]['weight'] = g['score'] / total_goodness
+        for opt, b in bad.items():
+            bad[opt]['weight'] = b['score'] / total_badness
+        return good, bad, test
 
     @classmethod
     def reasons_for(cls, pk, formula='value/hits', known_data=None, period=None, recursive=True):
@@ -437,26 +488,42 @@ class Whale(object):
         overall = cls.rank([pk_base, decision], formula, dimension=base,
             period=period, recursive=recursive, points=False)
         parent_score = overall[base]['score']
+        parent_count = overall[base]['count']
 
         def delta(info):
             diff = info['score'] - parent_score
-            if diff > 0  and info['count'] > 0:
-                info['effect'] += diff * info['count']
+            info['value_diff'] = info['value'] - overall[base]['value']
             info['difference'] += diff
+            if math.fabs(diff) > 0  and info['count'] > 0:
+                info['effect'] += diff * info['count']
+                info['significance'] = ((.5 * info['effect']) ** 2) / parent_count
+            else:
+                info['effect'] = 0
+                info['significance'] = 0
             return info
         known_dimensions = iterate_dimensions(known_data)
         for dim, info in ranks.items():
-            ranks[dim] = delta(info)
-            if dim in known_dimensions and info['important']:
-                if info['effect'] > ranks[best]['effect'] or not best:
+            ranks[dim] = info = delta(info)
+            if try_loads(dim) in known_dimensions and info['important']:
+                best_score = best and ranks[best]['score'] or parent_score
+                worst_score = worst and ranks[worst]['score'] or parent_score
+                if info['score'] > best_score:
                     best = dim
-                if info['effect'] < ranks[worst]['effect'] or not worst:
+                if info['score'] < worst_score:
                     worst = dim
-        return {'good': best and ranks[best] or None,
-                'bad': best and ranks[worst] or None,
-                'ranks': ranks,
+        i = {'good': best and ranks[best] or {},
+                'bad': worst and ranks[worst] or {},
+                #'ranks': ranks,
                 'base': ranks[base],
                 'parent': overall[base]}
+        i['high'] = i['good'].get('difference', 0)
+        i['high_sig'] = i['good'].get('significance', 0) > 4
+        i['low'] = i['bad'].get('difference', 0)
+        i['low_sig'] = i['bad'].get('significance', 0) > 4
+        i['score'] = (i['high_sig'] and i['high'] or 0
+            ) - (i['low_sig'] and i['low'] or 0) + (
+            i['base']['significance'] > 4 and i['base']['score'] - parent_score or 0)
+        return i
 
 def parse_formula(formula):
     if not '/' in formula:

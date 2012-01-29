@@ -1,4 +1,5 @@
 import unittest, urllib, json, time
+from collections import defaultdict
 from whale import maybe_dumps
 
 class TestHailWhaleHTTP(unittest.TestCase):
@@ -31,47 +32,55 @@ class TestHailWhaleHTTP(unittest.TestCase):
         params = (stub, pk, dimensions, metrics)
         url = '%s?pk=%s&dimensions=%s&metrics=%s' % params
         return self.getURL(url)
+
     def testCountService(self):
         """ /count should return 'OK' for successful hits """
         self.assertEqual(self.getCountURL(), 'OK')
+
     def testCountNowService(self):
         """ /count_now should return 'OK' for successful hits """
         self.assertEqual(self.getCountNowURL(), 'OK')
+
     def testResetCategory(self):
         self.getStandardParamsURL('/reset')
+
     def testCountingNowCorrectly(self):
-        counting = lambda n: n['alltime']['empty']['counting_now']
-        totals = self.getTotalsURL(metrics=['counting_now',])
+        counting = lambda n: n['10x300']['empty']['counting_now']
+        totals = self.getTotalsURL(metrics=['counting_now'])
         for i in range(3):
             self.assertEqual(self.getCountNowURL(metrics={'counting_now': 5}), 'OK')
-        new_totals = self.getTotalsURL(metrics=['counting_now',])
+        new_totals = self.getTotalsURL(metrics=['counting_now'])
         self.assertEqual(counting(new_totals), counting(totals) + 15)
+
     def testCountingCorrectly(self):
-        counting = lambda n: n['alltime']['empty']['counting']
-        totals = self.getTotalsURL(metrics=['counting',])
+        counting = lambda n: n['10x300']['empty']['counting']
+        totals = self.getTotalsURL(metrics=['counting'])
         for i in range(3):
             self.assertEqual(self.getCountURL(metrics={'counting': 5}), 'OK')
         self.assertEqual(self.getURL('/flush_hail'), 'OK')
-        new_totals = self.getTotalsURL(metrics=['counting',])
+        new_totals = self.getTotalsURL(metrics=['counting'])
         self.assertEqual(counting(new_totals), counting(totals) + 15)
-        
+
+
 class TestHailWhale(unittest.TestCase):
     def setUp(self):
         from hail import Hail
         from whale import Whale
         self.hail = Hail()
         self.whale = Whale()
+
     def testGetSubdimensions(self):
         self.whale.count_now('test', {'a': 1, 'b': 2})
         subs = self.whale.get_subdimensions('test')
-        assert(['a',] in subs)
-        assert(['b',] in subs)
+        assert(['a'] in subs)
+        assert(['b'] in subs)
+
     def testGetAllSubdimensions(self):
         self.whale.count_now('test', {'a': 1, 'b': 2})
         subs = self.whale.all_subdimensions('test')
-        assert(['a',] in subs)
+        assert(['a'] in subs)
         assert(['a', '1'] in subs)
-        assert(['b',] in subs)
+        assert(['b'] in subs)
         assert(['b', '2'] in subs)
 
     def testPlotpoints(self):
@@ -157,21 +166,82 @@ class TestHailWhale(unittest.TestCase):
         pk = 'test_basic_decision'
         decision = str(time.time())
         # Make a decision, any decision, from no information whatsoever
-        any_one = self.whale.decide(pk, [1, 2, 3], 'random')
+        any_one = self.whale.decide(pk, 'random', [1, 2, 3])
         self.assertIn(any_one, [1, 2, 3])
 
         # OK, now how about something somewhat informed?
         # This will be easy. Slogan A makes us huge profit. Products B and C suck.
+        # D looks promissing but isn't yet significant
+        opts = ['a', 'b', 'c', 'd']
         self.whale.count_now([pk, decision, 'a'], None, dict(dollars=5000, visitors=1000))
         self.whale.count_now([pk, decision, 'b'], None, dict(dollars=0, visitors=2000))
         self.whale.count_now([pk, decision, 'c'], None, dict(dollars=0, visitors=2000))
+        self.whale.count_now([pk, decision, 'd'], None, dict(dollars=50, visitors=10))
+
         reasons = self.whale.reasons_for([pk, decision, 'a'], formula='dollars/visitors')
-        print reasons
-        self.assertEqual(reasons['good'], None)
-        self.assertEqual(reasons['bad'], None)
-        self.assertEqual(reasons['base']['difference'], 4.0)
-        which_one = self.whale.decide(pk, ['a', 'b', 'c'], decision, formula='dollars/visitors', bad_idea_threshold=0)
+        self.assertEqual(reasons['good'], {})
+        self.assertEqual(reasons['bad'], {})
+        good, bad, test = self.whale.reasons(pk, decision, opts, formula='dollars/visitors')
+        self.assertIn('a', good.keys())
+        self.assertIn('b', bad.keys())
+        self.assertIn('c', bad.keys())
+        self.assertIn('d', test.keys())
+        which_one = self.whale.decide(pk, decision, opts, formula='dollars/visitors',
+            bad_idea_threshold=0, test_idea_threshold=0)
         self.assertEqual(which_one, 'a')
+
+    def testInformedDecision(self):
+        pk = 'test_informed_decision'
+        decision = str(time.time())
+
+        # A is the clear winner, except when country=UK, in which case B wins
+        opts = ['a', 'b', 'c', 'd']
+        self.whale.count_now([pk, decision, 'a'], None, dict(dollars=50000, visitors=10000))
+        self.whale.count_now([pk, decision, 'b'], None, dict(dollars=0, visitors=4000))
+        self.whale.count_now([pk, decision, 'b'], {'country': 'uk'}, dict(dollars=5000, visitors=500))
+        self.whale.count_now([pk, decision, 'c'], None, dict(dollars=0, visitors=7500))
+        self.whale.count_now([pk, decision, 'd'], None, dict(dollars=5, visitors=1))
+
+        # Here's a visitor with no info -- 'A' should win by far.
+        good, bad, test = self.whale.weighted_reasons(pk, decision, opts, formula='dollars/visitors')
+        self.assertIn('a', good.keys())
+        self.assertIn('b', bad.keys())
+        self.assertIn('c', bad.keys())
+        self.assertIn('d', test.keys())
+
+        # How about when we know the country is "UK"?
+        good, bad, test = self.whale.weighted_reasons(pk, decision, opts, formula='dollars/visitors',
+            known_data={'country': 'uk'})
+        self.assertIn('a', good.keys())
+        self.assertIn('b', good.keys())
+        self.assertIn('c', bad.keys())
+        self.assertIn('d', test.keys())
+        chosen = defaultdict(int)
+        for k in range(50):
+            choose = self.whale.decide(pk, decision, opts, formula='dollars/visitors',
+                known_data={'country': 'uk'}, bad_idea_threshold=0, test_idea_threshold=0)
+            chosen[choose] += 1
+        self.assertEqual(True, chosen['b'] > 35,
+            "A decision between weights .15 vs .85 should have around 43 votes for 'b', we got less than 35")
+
+
+def _print_reasons(good, bad, test):
+    print 'Good:', [(k, v['weight']) for k, v in good.items()]
+    for opt, r in good.items():
+        if r['good']:
+            print 'Pro reason: ', opt, r['good']['dimension'], r['good']
+        if r['bad']:
+            print 'Con reason: ', opt, r['bad']['dimension'], r['bad']
+
+    print 'Bad :', [(k, v['weight']) for k, v in bad.items()]
+    for opt, r in bad.items():
+        if r['good']:
+            print 'Pro reason: ', opt, r['good']['dimension'], r['good']
+        if r['bad']:
+            print 'Con reason: ', opt, r['bad']['dimension'], r['bad']
+
+    print 'Test:', test.keys()
+
 
 if __name__ == '__main__':
     unittest.main()
