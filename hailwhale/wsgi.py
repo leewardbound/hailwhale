@@ -95,6 +95,8 @@ def plotpoints():
     params['flot_time'] = True
     return json.dumps(whale.plotpoints(**params))
 
+    '''
+
 @route('/graph')
 def graph():
     whale = Whale()
@@ -118,6 +120,56 @@ def graph():
 
 </script>""" % params
 
+'''
+
+@route('/graph.js')
+def graph():
+    metric = req.GET.get('metrics', None)
+
+    dimension = req.GET.get('dimension', None)
+
+    period = req.GET.get('period', None)
+
+    pk = req.GET.get('pk')
+
+    parent_div = req.GET.get('parent_div', 'hailwhale_graphs')
+
+    hide_table = req.GET.get('hide_table', False)
+    if isinstance(hide_table, basestring):
+        hide_table = hide_table.lower() == 'true'
+
+    return_string = '''
+        $.getScript('http://localhost:8085/js/hailwhale.complete.js', function() {{
+            $('#{parent_div}').append('<div id="hailwhale-{pk}"></div>');
+            hw_host = '';
+            hw = $.hailwhale(hw_host);
+            hw.add_graph($('#hailwhale-{pk} .plot'), {{pk: '{pk}', autoupdate: true}});
+        }});
+    '''.format(pk=pk, parent_div=parent_div)
+
+    if not hide_table:
+        whale = Whale()
+        dimensions = [] #get from whale
+        return_string += '''
+            <table>
+                <tr>
+                    <th></th>
+                    <th>Dimension Name</th>
+                </tr>
+        '''
+
+        for dimension in dimensions:
+            return_string += '''
+                <tr>
+                    <td><input id="" type="checkbox" value="" name=""></td>
+                    <td>{{dimension}}</td>
+                </tr>
+                '''.format()
+
+        return_string += '</table>'
+
+    return return_string
+        
 
 @route('/demo/:filename#.*#')
 def send_static_demo(filename):

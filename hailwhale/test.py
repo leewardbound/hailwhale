@@ -144,5 +144,6 @@ class TestHailWhale(unittest.TestCase):
         self.assertEqual(ranked[maybe_dumps([t, 'b'])]['important'], True)
         self.assertEqual(ranked[maybe_dumps([t, 'c'])]['important'], False)
 
+
 if __name__ == '__main__':
     unittest.main()
