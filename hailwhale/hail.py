@@ -8,8 +8,10 @@ from redis import Redis
 from util import curry_instance_attribute
 from whale import Whale
 
+
 class HailRedisDriver(Redis):
     pass
+
 
 class Hail(object):
     hail_driver_class = HailRedisDriver
@@ -33,26 +35,38 @@ class Hail(object):
         return cls._hail_driver
 
     @classmethod
-    def count(cls, pk, dimensions, metrics, at=False):
+    def count_decided(cls, pk_base, decision, option, *args, **kwargs):
+        return cls.count([pk_base, decision, option], *args, **kwargs)
+
+    @classmethod
+    def count(cls, pk, dimensions='_', metrics=None, at=False):
+        metrics = metrics or {}
+        metrics = isinstance(metrics, list) and dict([(k, 1) for k in metrics]) or metrics
         try:
-            r=cls.hail_driver()
-            if not r: return 0
+            r = cls.hail_driver()
+            if not r:
+                return 0
             set_number_name = 'hail_number'
             set_number = r.get(set_number_name) or 0
-            if not set_number: set_number = r.set(set_number_name, 0)
+            if not set_number:
+                set_number = r.set(set_number_name, 0)
             at = at or datetime.datetime.now()
             if isinstance(at, str):
-                try: at = datetime.datetime.fromtimestamp(float(at))
-                except ValueError: pass # if at is not a float, ignore this
-            if isinstance(at, datetime.datetime): at = at.ctime()
-            if isinstance(pk, cls): 
+                try:
+                    at = datetime.datetime.fromtimestamp(float(at))
+                except ValueError:
+                    pass  # if at is not a float, ignore this
+            if isinstance(at, datetime.datetime):
+                at = at.ctime()
+            if isinstance(pk, cls):
                 pk = pk.getattr(cls.unique_key)
-            hit_key = '%s_%s_%s_%s'%(
-                    cls.__name__,pk,at,random.randint(1,1000))
-            r.sadd('hail_%s'%(set_number), hit_key)
+            hit_key = '%s_%s_%s_%s' % (
+                    cls.__name__, pk, at, random.randint(1, 1000))
+            r.sadd('hail_%s' % (set_number), hit_key)
             r.set(hit_key, json.dumps(
                 (cls.__name__, pk, dimensions, metrics, at)))
-        except Exception as e: return '%s'%e
+        except Exception as e:
+            return '%s' % e
         return 'OK'
 
     @classmethod

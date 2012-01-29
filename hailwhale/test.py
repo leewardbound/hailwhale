@@ -1,6 +1,7 @@
 import unittest, urllib, json, time
 from collections import defaultdict
 from whale import maybe_dumps
+import itertools
 
 class TestHailWhaleHTTP(unittest.TestCase):
     def setUp(self):
@@ -166,7 +167,9 @@ class TestHailWhale(unittest.TestCase):
         pk = 'test_basic_decision'
         decision = str(time.time())
         # Make a decision, any decision, from no information whatsoever
-        any_one = self.whale.decide(pk, 'random', [1, 2, 3])
+        good, bad, test = self.whale.weighted_reasons(pk, 'random', [1,2,3])
+        #_print_reasons(good, bad, test)
+        any_one = self.whale.decide_from_reasons(good, bad, test)
         self.assertIn(any_one, [1, 2, 3])
 
         # OK, now how about something somewhat informed?
@@ -178,10 +181,9 @@ class TestHailWhale(unittest.TestCase):
         self.whale.count_now([pk, decision, 'c'], None, dict(dollars=0, visitors=2000))
         self.whale.count_now([pk, decision, 'd'], None, dict(dollars=50, visitors=10))
 
-        reasons = self.whale.reasons_for([pk, decision, 'a'], formula='dollars/visitors')
-        self.assertEqual(reasons['good'], {})
-        self.assertEqual(reasons['bad'], {})
         good, bad, test = self.whale.weighted_reasons(pk, decision, opts, formula='dollars/visitors')
+        #_print_reasons(good, bad, test)
+
         self.assertIn('a', good.keys())
         self.assertIn('b', bad.keys())
         self.assertIn('c', bad.keys())
@@ -197,13 +199,14 @@ class TestHailWhale(unittest.TestCase):
         # A is the clear winner, except when country=UK, in which case B wins
         opts = ['a', 'b', 'c', 'd']
         self.whale.count_now([pk, decision, 'a'], None, dict(dollars=50000, visitors=10000))
-        self.whale.count_now([pk, decision, 'b'], None, dict(dollars=0, visitors=4000))
-        self.whale.count_now([pk, decision, 'b'], {'country': 'uk'}, dict(dollars=5000, visitors=500))
+        self.whale.count_now([pk, decision, 'b'], None, dict(dollars=0, visitors=2000))
+        self.whale.count_now([pk, decision, 'b'], {'country': 'uk'}, dict(dollars=10000, visitors=2000))
         self.whale.count_now([pk, decision, 'c'], None, dict(dollars=0, visitors=7500))
         self.whale.count_now([pk, decision, 'd'], None, dict(dollars=5, visitors=1))
 
         # Here's a visitor with no info -- 'A' should win by far.
         good, bad, test = self.whale.weighted_reasons(pk, decision, opts, formula='dollars/visitors')
+        #_print_reasons(good, bad, test)
         self.assertIn('a', good.keys())
         self.assertIn('b', bad.keys())
         self.assertIn('c', bad.keys())
@@ -212,19 +215,58 @@ class TestHailWhale(unittest.TestCase):
         # How about when we know the country is "UK"?
         good, bad, test = self.whale.weighted_reasons(pk, decision, opts, formula='dollars/visitors',
             known_data={'country': 'uk'})
+        #_print_reasons(good, bad, test)
         self.assertIn('a', good.keys())
         self.assertIn('b', good.keys())
         self.assertIn('c', bad.keys())
         self.assertIn('d', test.keys())
-        chosen = defaultdict(int)
+        chosen = {'a': 0, 'b': 0}
         for k in range(100):
             choose = self.whale.decide(pk, decision, opts, formula='dollars/visitors',
                 known_data={'country': 'uk'}, bad_idea_threshold=0, test_idea_threshold=0)
             chosen[choose] += 1
         self.assertEqual(True, chosen['b'] > 70,
-            """A decision between weights .15 vs .85 should have around 85 votes for 'b',
-                we got less than 70, which is unlikely enough to fail a test, but not definitely
-                indicative of a problem. If this test passes again on the next run, ignore the failure.""")
+            """A decision made 100 times between weights .15 vs .85 should have around 85 votes for 'b',
+                we got %s, which is unlikely enough to fail a test, but not definitely
+                indicative of a problem. If this test passes again on the next run, ignore the failure.""" % chosen)
+
+    def testTrickyDecision(self):
+        pk = 'test_tricky_decision'
+        decision = str(time.time())
+        opts = ['en', 'sp', 'pt']
+
+        def count(geo, lang, dollars, visitors):
+            self.whale.count_decided_now(pk, decision, lang, geo,
+            {'dollars': dollars, 'visitors': visitors})
+
+        def justify(geo):
+            #print
+            #print 'Picking reasons for ', geo
+            good, bad, test = self.whale.weighted_reasons(pk, decision, opts,
+                'dollars/visitors', geo)
+            #print good.keys(), bad.keys(), test.keys()
+            #_print_reasons(good, bad, test)
+            return self.whale.decide(pk, decision, opts, 'dollars/visitors', geo,
+                bad_idea_threshold=0, test_idea_threshold=0)
+        k = 1000
+        m = k * k
+        # Sure, these results seem predictable to a human
+        # But what will our philosopher whale friend make of it?
+        count('us', 'en', 1.5 * m, 300 * k)  # $5/visitor, alright!
+        count('us', 'sp', 1 * k, 10 * k)  # $.10/visitor, well that is not surprising
+        count('us', 'pt', 300, 5 * k)  # $.06/visitor, :(
+
+        count('mx', 'en', 100 * k, 100 * k)  # $1/visitor, this almost works
+        count('mx', 'sp', 200 * k, 100 * k)  # $2/visitor aww yah!
+        count('mx', 'pt', 200, 10 * k)  # $.02/visitor lol
+
+        count('br', 'en', 300 * k, 100 * k)  # $3/visitor is good
+        count('br', 'sp', 150 * k, 50 * k)   # $3/visitor as well
+        count('br', 'pt', 500 * k, 50 * k)   # $10 JACKPOT
+
+        self.assertEqual('en', justify('us'))
+        self.assertIn(justify('mx'), ['sp', 'en'])
+        self.assertEqual('pt', justify('br'))
 
     def testWhaleCacheWrapper(self):
         t = str(time.time())
@@ -244,22 +286,29 @@ class TestHailWhale(unittest.TestCase):
 
 
 def _print_reasons(good, bad, test):
-    print 'Good:', [(k, v['weight']) for k, v in good.items()]
-    for opt, r in good.items():
-        if r['good']:
-            print 'Pro reason: ', opt, r['good']['dimension'], r['good']
-        if r['bad']:
-            print 'Con reason: ', opt, r['bad']['dimension'], r['bad']
+    print
+    print '*' * 60
+    print
 
-    print 'Bad :', [(k, v['weight']) for k, v in bad.items()]
-    for opt, r in bad.items():
-        if r['good']:
-            print 'Pro reason: ', opt, r['good']['dimension'], r['good']
-        if r['bad']:
-            print 'Con reason: ', opt, r['bad']['dimension'], r['bad']
+    def _p(name, reasons):
+        print
+        print '*' * 20
+        print
+        print name, ':', [(k, v['weight']) for k, v in reasons.items()]
+        for opt, r in reasons.items():
+            print
+            print '  Justification for', opt
+            print '    Option Base:', r['base']
+            print '    Option high/low:', r['high'], r['high_sig'], r['low'], r['low_sig']
+            if r['good']:
+                print '      Pro reason: ', opt, r['good']['dimension'], r['good']
+            if r['bad']:
+                print '      Con reason: ', opt, r['bad']['dimension'], r['bad']
+    print 'Decision Overall:', list(filter(lambda n: n, map(lambda r: r.values(), [good, bad, test])))[0][0]['parent']
 
-    print 'Test:', test.keys()
-
+    _p('Good ideas', good)
+    _p('Bad ideas', bad)
+    _p('Ideas we are not sure about', test)
 
 if __name__ == '__main__':
     unittest.main()

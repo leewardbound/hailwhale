@@ -312,6 +312,10 @@ class Whale(object):
         return map(try_loads, subdimensions)
 
     @classmethod
+    def count_decided_now(cls, pk_base, decision, option, *args, **kwargs):
+        return cls.count_now([pk_base, decision, option], *args, **kwargs)
+
+    @classmethod
     def count_now(cls, pk, dimensions='_', metrics=None, at=False):
         """ Immediately count a hit, as opposed to logging it into Hail"""
         periods = DEFAULT_PERIODS
@@ -403,7 +407,6 @@ class Whale(object):
             ratio = sub_bottom_sum and float(sub_top_sum / sub_bottom_sum) or 0
 
             difference = ratio_total and (ratio - ratio_total) / ratio_total or 0
-
             important = sub_bottom_sum > 5 and math.fabs(difference) > .1
 
             data = {
@@ -435,15 +438,15 @@ class Whale(object):
             return cls.rank_subdimensions_scalar(pk, top, dimension, period, recursive, prune_parents)
         else:
             return cls.rank_subdimensions_ratio(pk, top, bot, dimension, period, recursive)
-    
+
     @classmethod
     @whale_cache
     def cached_rank(cls, *args, **kwargs):
         return cls.rank(*args, **kwargs)
 
     @classmethod
-    def decide(cls, pk_base, decision_name, options, formula='value/hits', known_data=None,
-        period=None, bad_idea_threshold=.05, test_idea_threshold=.05, test_idea_key='hits'):
+    def decide_from_reasons(cls, good, bad, test, bad_idea_threshold=.05,
+        test_idea_threshold=.05):
         import random
 
         def w_choice(reasons):
@@ -453,8 +456,6 @@ class Whale(object):
                     break
                 n = n - opts.get('weight', 1)
             return item
-        good, bad, test = cls.weighted_reasons(pk_base, decision_name, options, formula,
-            known_data, period)
         # if there are tests to be ran, and either
         # - there are no good or bad choices, or
         # - the test threshold is triggered randomly
@@ -463,10 +464,18 @@ class Whale(object):
             return w_choice(test)
         # if there are bad choices and we have hit the badness roulette,
         # pick a weighted bad idea
-        if random.random() < bad_idea_threshold and len(bad):
+        if not len(good) or random.random() < bad_idea_threshold and len(bad):
             return w_choice(bad)
         else:
             return w_choice(good)
+
+    @classmethod
+    def decide(cls, pk_base, decision_name, options, formula='value/hits', known_data=None,
+        period=None, bad_idea_threshold=.05, test_idea_threshold=.05, test_idea_key='hits'):
+        good, bad, test = cls.weighted_reasons(pk_base, decision_name, options, formula,
+            known_data, period)
+        return cls.decide_from_reasons(good, bad, test, bad_idea_threshold,
+            test_idea_threshold)
 
     @classmethod
     def weighted_reasons(cls, pk_base, decision_name, options, formula='value/hits',
@@ -475,18 +484,22 @@ class Whale(object):
         for o in options:
             opk = [pk_base, decision_name, o]
             i = cls.reasons_for(opk, formula, known_data, period)
-            if i['score'] > 1:
+            best = i['good'] or i['base']
+            worst = i['bad'] and i['bad'] or i['base']
+            if best['effect'] > 1 and best['significance'] > 2:
                 good[o] = i
-            elif i['score'] < -1:
+            elif worst['effect'] < -1 or (worst['effect'] < 0 and worst['significance'] > 2):
                 bad[o] = i
             else:
                 test[o] = i
-        total_goodness = sum(map(lambda g: g['score'], good.values()))
-        total_badness = sum(map(lambda b: b['score'], bad.values()))
+        total_goodness = sum(map(lambda g: math.fabs(g['good'].get('effect', 1)), good.values())) or 1
+        total_badness = sum(map(lambda b: math.fabs(b['bad'].get('effect', 1)), bad.values())) or 1
         for opt, g in good.items():
-            good[opt]['weight'] = g['score'] / total_goodness
+            good[opt]['weight'] = math.fabs(g['good'].get('effect', 1) / total_goodness)
         for opt, b in bad.items():
-            bad[opt]['weight'] = b['score'] / total_badness
+            bad[opt]['weight'] = math.fabs(b['bad'].get('effect', 1) / total_badness)
+        for opt, t in test.items():
+            test[opt]['weight'] = 1
         return good, bad, test
 
     @classmethod
@@ -494,14 +507,15 @@ class Whale(object):
         metric, denomenator = parse_formula(formula)
         period = Period.get(period)
         pk_base, decision, option = pk
-        best = worst = None
         base = '_'
+        best = worst = None
         ranks = cls.cached_rank(pk, formula, dimension=base,
             period=period, recursive=recursive, points=False)
         overall = cls.cached_rank([pk_base, decision], formula, dimension=base,
             period=period, recursive=recursive, points=False)
         parent_score = overall[base]['score']
         parent_count = overall[base]['count']
+        ranks[base]['effect'] = ranks[base]['count'] * ranks[base]['difference']
 
         def delta(info):
             diff = info['score'] - parent_score
@@ -518,8 +532,8 @@ class Whale(object):
         for dim, info in ranks.items():
             ranks[dim] = info = delta(info)
             if try_loads(dim) in known_dimensions and info['important']:
-                best_score = best and ranks[best]['score'] or parent_score
-                worst_score = worst and ranks[worst]['score'] or parent_score
+                best_score = best and ranks[best]['score']
+                worst_score = worst and ranks[worst]['score']
                 if info['score'] > best_score:
                     best = dim
                 if info['score'] < worst_score:
@@ -533,9 +547,6 @@ class Whale(object):
         i['high_sig'] = i['good'].get('significance', 0) > 4
         i['low'] = i['bad'].get('difference', 0)
         i['low_sig'] = i['bad'].get('significance', 0) > 4
-        i['score'] = (i['high_sig'] and i['high'] or 0
-            ) - (i['low_sig'] and i['low'] or 0) + (
-            i['base']['significance'] > 4 and i['base']['score'] - parent_score or 0)
         return i
 
 def parse_formula(formula):
