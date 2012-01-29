@@ -29,6 +29,7 @@ $.hailwhale = (@host, @opts) ->
     params['depth'] = extra.depth or 0
     poller = () ->
         $.getJSON url, params, (data, status, xhr) ->
+            console.log data
             lines = []
             colors = extra.colors or ['#000000', '#261AFF','#0ED42F','#E84414','#F5E744','#36B9FF']
             #colors = ['#000000','#4B0046','#FB4A16','#F2C638','#05A6A4','#38F2F1']
@@ -37,7 +38,10 @@ $.hailwhale = (@host, @opts) ->
             max_dim = 0
             dimension_data = {}
             for dimension, metrics of data
-                unpacked = JSON.parse(dimension)
+                try
+                    unpacked = JSON.parse(dimension)
+                catch error
+                    unpacked = [dimension]
                 unpacked = [] if unpacked[0] == "_"
                 min_dim = unpacked.length if unpacked.length < min_dim
                 max_dim = unpacked.length if unpacked.length > max_dim
@@ -88,7 +92,6 @@ $.hailwhale = (@host, @opts) ->
             yaxis_two.label = extra.metric_two
             if extra.metric_two
                 yaxis = [yaxis, yaxis_two]
-                console.log('yaxis:',yaxis)
             plot = $.plot(target, lines, {
                 legend: {show:not extra.hide_legend,position:'sw'},
                 xaxis: {mode: "time"},

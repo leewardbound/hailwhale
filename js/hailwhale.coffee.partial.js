@@ -1,5 +1,159 @@
-(function(){var g,t=Array.prototype.indexOf||function(q){for(var i=0,b=this.length;i<b;i++)if(this[i]===q)return i;return-1};g=jQuery;g.hailwhale=function(q,i){this.host=q;this.opts=i;this.make_params=function(b){return{pk:JSON.stringify(b.pk||b.category||""),dimensions:JSON.stringify(b.dimensions||b.dimension||""),metrics:JSON.stringify(b.metrics||b.metric||""),period:b.period||""}};this.trigger_fake_hits=function(b){var a,j,k,l;l=this.host+"/count_now";j=this.make_params(b);k=function(){return g.ajax({url:l,
-data:j,type:"GET",success:false})};for(a=1;a<=25;a++){b=Math.floor(Math.random()*11);setTimeout(k,75*a*b)}return this};this.add_graph=function(b,a){var j,k,l;l=this.host+"/plotpoints";a=g.extend(a,{pk:a.pk||a.category||false,dimensions:a.dimensions||a.dimension||false,metrics:a.metrics||a.metric||false,metric:a.metrics&&a.metrics[0]||a.metric||false,metric_two:a.metrics&&a.metrics[1]?a.metrics[1]:false,width_factor:a.width_factor||6});j=this.make_params(a);j.depth=a.depth||0;k=function(){return g.getJSON(l,
-j,function(e){var f,c,h,r,s,d,m,p,n,o,u,v;p=[];f=a.colors||["#000000","#261AFF","#0ED42F","#E84414","#F5E744","#36B9FF"];s=0;o=10;c=0;r={};for(h in e){n=e[h];d=JSON.parse(h);if(d[0]==="_")d=[];if(d.length<o)o=d.length;if(d.length>c)c=d.length;r[h]={unpacked:d,length:d.length,metrics:get_keys(n)}}for(h in e){n=e[h];c=r[h];if(!a.metric)a.metric=c.metrics[0];if(!a.metric_two&&c.metrics.length>1)a.metric_two=c.metrics[1];if(u=!a.metric,t.call(c.metrics,u)>=0)break;if(a.depth)if(c.length===o){d="Overall "+
-c.unpacked;m=a.width_factor}else{d=c.unpacked[0];m=a.width_factor/(0.5+(c.length-o))}else{d=c.unpacked[0]||"Overall";m=a.width_factor*3/4}p.push({data:n[a.metric],lines:{show:true,lineWidth:m},color:f[s++%f.length],label:d+" "+a.metric});if(v=a.metric_two,t.call(c.metrics,v)>=0)p.push({data:n[a.metric_two],lines:{show:true,lineWidth:m},color:f[s%f.length],label:d+" "+a.metric_two,yaxis:2})}e={min:0};f=g.extend({},e);f.position="right";if(f.label=a.metric_two){e=[e,f];console.log("yaxis:",e)}return g.plot(b,
-p,{legend:{show:!a.hide_legend,position:"sw"},xaxis:{mode:"time"},yaxes:e})})};k();if(a.autoupdate)return setInterval(k,a.interval||1E3)};return this}}).call(this);
+(function() {
+  var $;
+  var __indexOf = Array.prototype.indexOf || function(item) {
+    for (var i = 0, l = this.length; i < l; i++) {
+      if (this[i] === item) return i;
+    }
+    return -1;
+  };
+  $ = jQuery;
+  $.hailwhale = function(host, opts) {
+    this.host = host;
+    this.opts = opts;
+    this.make_params = function(extra) {
+      var params;
+      return params = {
+        pk: JSON.stringify(extra.pk || extra.category || ''),
+        dimensions: JSON.stringify(extra.dimensions || extra.dimension || ''),
+        metrics: JSON.stringify(extra.metrics || extra.metric || ''),
+        period: extra.period || ''
+      };
+    };
+    this.trigger_fake_hits = function(extra) {
+      var factor, i, params, trigger, url;
+      url = this.host + '/count_now';
+      params = this.make_params(extra);
+      trigger = function() {
+        return $.ajax({
+          url: url,
+          data: params,
+          type: 'GET',
+          success: false
+        });
+      };
+      for (i = 1; i <= 25; i++) {
+        factor = Math.floor(Math.random() * 11);
+        setTimeout(trigger, 75 * i * factor);
+      }
+      return this;
+    };
+    this.add_graph = function(target, extra) {
+      var params, poller, poller_handle, url;
+      url = this.host + '/plotpoints';
+      extra = $.extend(extra, {
+        pk: extra.pk || extra.category || false,
+        dimensions: extra.dimensions || extra.dimension || false,
+        metrics: extra.metrics || extra.metric || false,
+        metric: extra.metrics && extra.metrics[0] || extra.metric || false,
+        metric_two: extra.metrics && extra.metrics[1] ? extra.metrics[1] : false,
+        width_factor: extra.width_factor || 6
+      });
+      params = this.make_params(extra);
+      params['depth'] = extra.depth || 0;
+      poller = function() {
+        return $.getJSON(url, params, function(data, status, xhr) {
+          var colors, d_d, dimension, dimension_data, i, label, line_width, lines, max_dim, metrics, min_dim, plot, unpacked, yaxis, yaxis_two, _ref, _ref2;
+          console.log(data);
+          lines = [];
+          colors = extra.colors || ['#000000', '#261AFF', '#0ED42F', '#E84414', '#F5E744', '#36B9FF'];
+          i = 0;
+          min_dim = 10;
+          max_dim = 0;
+          dimension_data = {};
+          for (dimension in data) {
+            metrics = data[dimension];
+            try {
+              unpacked = JSON.parse(dimension);
+            } catch (error) {
+              unpacked = [dimension];
+            }
+            if (unpacked[0] === "_") {
+              unpacked = [];
+            }
+            if (unpacked.length < min_dim) {
+              min_dim = unpacked.length;
+            }
+            if (unpacked.length > max_dim) {
+              max_dim = unpacked.length;
+            }
+            dimension_data[dimension] = {
+              unpacked: unpacked,
+              length: unpacked.length,
+              metrics: get_keys(metrics)
+            };
+          }
+          for (dimension in data) {
+            metrics = data[dimension];
+            d_d = dimension_data[dimension];
+            if (!extra.metric) {
+              extra.metric = d_d.metrics[0];
+            }
+            if (!extra.metric_two && d_d.metrics.length > 1) {
+              extra.metric_two = d_d.metrics[1];
+            }
+            if (_ref = !extra.metric, __indexOf.call(d_d.metrics, _ref) >= 0) {
+              break;
+            }
+            if (extra.depth) {
+              if (d_d.length === min_dim) {
+                label = 'Overall ' + d_d.unpacked;
+                line_width = extra.width_factor;
+              } else {
+                label = d_d.unpacked[0];
+                line_width = extra.width_factor / (.5 + (d_d.length - min_dim));
+              }
+            } else {
+              label = d_d.unpacked[0] || 'Overall';
+              line_width = extra.width_factor * 3 / 4;
+            }
+            lines.push({
+              data: metrics[extra.metric],
+              lines: {
+                show: true,
+                lineWidth: line_width
+              },
+              color: colors[i++ % colors.length],
+              label: label + ' ' + extra.metric
+            });
+            if (_ref2 = extra.metric_two, __indexOf.call(d_d.metrics, _ref2) >= 0) {
+              lines.push({
+                data: metrics[extra.metric_two],
+                lines: {
+                  show: true,
+                  lineWidth: line_width
+                },
+                color: colors[i % colors.length],
+                label: label + ' ' + extra.metric_two,
+                yaxis: 2
+              });
+            }
+          }
+          yaxis = {
+            min: 0
+          };
+          yaxis_two = $.extend({}, yaxis);
+          yaxis_two.position = 'right';
+          yaxis_two.label = extra.metric_two;
+          if (extra.metric_two) {
+            yaxis = [yaxis, yaxis_two];
+          }
+          return plot = $.plot(target, lines, {
+            legend: {
+              show: !extra.hide_legend,
+              position: 'sw'
+            },
+            xaxis: {
+              mode: "time"
+            },
+            yaxes: yaxis
+          });
+        });
+      };
+      poller();
+      if (extra.autoupdate) {
+        return poller_handle = setInterval(poller, extra.interval || 1000);
+      }
+    };
+    return this;
+  };
+}).call(this);

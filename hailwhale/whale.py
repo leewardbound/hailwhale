@@ -144,15 +144,19 @@ class Whale(object):
         period = Period.get(period)
         sparse = cls.whale_driver().retrieve(pk, dimensions, metrics, period=period)
         nonsparse = defaultdict(dict)
+        if flot_time:
+            points_type = list
         for dim, mets in sparse.items():
             for met, points in mets.items():
                 dts = period.datetimes_strs()
                 nonsparse[dim][met] = []
                 for dt in dts:
                     if flot_time:
-                        dt = to_flot_time(Period.parse_dt_str(dt))
+                        dt_t = to_flot_time(Period.parse_dt_str(dt))
+                    else:
+                        dt_t = dt
                     value = points[dt] if dt in points else 0
-                    nonsparse[dim][met].append([dt, float(value)])
+                    nonsparse[dim][met].append([dt_t, float(value)])
                 nonsparse[dim][met] = points_type(nonsparse[dim][met])
         if depth > 0:
             for sub in cls.get_subdimensions(pk, dimensions):
@@ -243,7 +247,6 @@ class Whale(object):
                     top, bot = parse_formula(rat)
                     topt, bott = p_totals[dim][top], p_totals[dim][bot]
                     p_totals[dim][rat] = bott and topt / bott or 0
-                    print "total ratio: ", rat
             d[str(p)] = p_totals
         return d
 

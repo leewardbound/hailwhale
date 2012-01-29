@@ -181,7 +181,7 @@ class TestHailWhale(unittest.TestCase):
         reasons = self.whale.reasons_for([pk, decision, 'a'], formula='dollars/visitors')
         self.assertEqual(reasons['good'], {})
         self.assertEqual(reasons['bad'], {})
-        good, bad, test = self.whale.reasons(pk, decision, opts, formula='dollars/visitors')
+        good, bad, test = self.whale.weighted_reasons(pk, decision, opts, formula='dollars/visitors')
         self.assertIn('a', good.keys())
         self.assertIn('b', bad.keys())
         self.assertIn('c', bad.keys())
