@@ -117,7 +117,7 @@ def curry_instance_attribute(attr, func_name, instance):
     func = getattr(instance, func_name)
 
     def curried(self, *args, **kwargs):
-        pass_attr = getattr(self, attr)
+        pass_attr = [instance.__class__.__name__, getattr(self, attr)]
         # Can also be callable
         if hasattr(pass_attr, '__call__'):
             pass_attr = pass_attr()
