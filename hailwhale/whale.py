@@ -56,7 +56,7 @@ def try_loads(arg):
         return arg
 
 def maybe_dumps(arg):
-    if isinstance(arg, (basestring, Period)):
+    if isinstance(arg, basestring):
         return str(arg)
     if isinstance(arg, list) and len(arg) == 1:
         return maybe_dumps(arg[0])
@@ -142,17 +142,10 @@ class Whale(object):
         period = Period.get(period)
         sparse = cls.whale_driver().retrieve(pk, dimensions, metrics, period=period)
         nonsparse = defaultdict(dict)
-<<<<<<< HEAD
-        for dimensions, metrics in sparse.items():
-            for metric, points in metrics.items():
-                nonsparse[dimensions][metric] = []
-                dts = period.datetimes_strs()
-=======
         for dim, mets in sparse.items():
             for met, points in mets.items():
                 dts = period.datetimes_strs()
                 nonsparse[dim][met] = []
->>>>>>> ed2d66e14b7389d4213341b0a3650f614a54c8d6
                 for dt in dts:
                     if flot_time:
                         dt = to_flot_time(Period.parse_dt_str(dt))
@@ -218,10 +211,6 @@ class Whale(object):
                     points_type([(dt, (denom and (get_top(dt) / denom) or 0))
                                     for (dt, denom) in tgt_iter])})
         return dict(map(ratio_func, pps.items()))
-
-    @classmethod
-    def find_subdimensions(cls, pk, dimension):
-        pass
 
     @classmethod
     def totals(cls, pk, dimensions=None, metrics=None, periods=None):
@@ -343,7 +332,7 @@ class Whale(object):
             period=None, recursive=True, prune_parents=True, points=False):
         period = period or Period.default_size()
         d_k = keyify(dimension)
-        total = cls.totals(pk, dimension, metric, periods=[period])[str(period)][d_k][metric]
+        total = cls.totals(pk, dimension, metric, periods=[period])[period][d_k][metric]
         ranked = dict()
 
         def info(sub):
@@ -469,13 +458,11 @@ class Whale(object):
                 'base': ranks[base],
                 'parent': overall[base]}
 
-
 def parse_formula(formula):
     if not '/' in formula:
         return (formula, None)
     else:
         return formula.split('/')
-
 
 def iterate_dimensions(dimensions):
     if not dimensions:

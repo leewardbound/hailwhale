@@ -124,7 +124,7 @@ def graph():
 
 @route('/graph.js')
 def graph():
-    metric = req.GET.get('metrics', None)
+    formula = req.GET.get('metrics', 'hits')
 
     dimension = req.GET.get('dimension', None)
 
@@ -144,29 +144,32 @@ def graph():
             hw_host = '';
             hw = $.hailwhale(hw_host);
             hw.add_graph($('#hailwhale-{pk} .plot'), {{pk: '{pk}', autoupdate: true}});
-        }});
     '''.format(pk=pk, parent_div=parent_div)
 
-    if not hide_table:
-        whale = Whale()
-        dimensions = [] #get from whale
+    if not hide_table: 
         return_string += '''
-            <table>
+            $('#{parent_div}').append('<table>
                 <tr>
                     <th></th>
                     <th>Dimension Name</th>
                 </tr>
         '''
 
-        for dimension in dimensions:
+        dimensions = [item['dimension'] for item in Whale().rank(pk, formula).values()]
+        for dimension_counter, dimension in enumerate(dimensions):
+            checked = 'off'
+            if dimension_counter < 10:
+                checked = 'on'
             return_string += '''
                 <tr>
-                    <td><input id="" type="checkbox" value="" name=""></td>
-                    <td>{{dimension}}</td>
+                    <td><input id="" type="checkbox" value="{checked}" name="checkbox-{pk}-{dimension}"></td>
+                    <td>{dimension}</td>
                 </tr>
-                '''.format()
+                '''.format(pk=pk, dimension=dimension, checked=checked)
 
-        return_string += '</table>'
+        return_string += '''</table>');'''
+
+    return_string += '''}});'''
 
     return return_string
         
