@@ -23,15 +23,6 @@ class Hail(object):
             for method in ['count', 'count_decided', 'spy_pos_key',
             'spy_pos', 'spy_key', 'spy_log', 'spy_at_key', 'get_spy']:
                 curry_instance_attribute(attr, method, self)
-        if hasattr(self, 'id'):
-            curry_instance_attribute('id', 'count', self)
-            curry_instance_attribute('id', 'count_decided', self)
-            curry_instance_attribute('id', 'spy_pos_key', self)
-            curry_instance_attribute('id', 'spy_pos', self)
-            curry_instance_attribute('id', 'spy_key', self)
-            curry_instance_attribute('id', 'spy_log', self)
-            curry_instance_attribute('id', 'spy_at_key', self)
-            curry_instance_attribute('id', 'get_spy', self)
 
     @classmethod
     def hail_driver(cls):
@@ -76,15 +67,18 @@ class Hail(object):
 
     @classmethod
     def spy_pos_key(cls, uid):
-        if isinstance(uid, cls): uid = uid.getattr(cls.unique_key)
-        return 'spy_%s_%s_pos'%(cls.__name__, uid)
+        if isinstance(uid, cls):
+            uid = uid.getattr(cls.unique_key)
+        return 'spy_%s_%s_pos' % (cls.__name__, uid)
 
     @classmethod
     def spy_pos(cls, uid):
-        r = cls.hail_driver() 
-        if not r: return 0
+        r = cls.hail_driver()
+        if not r:
+            return 0
         pos_key = cls.spy_pos_key(uid)
-        if not r.get(pos_key): r.set(pos_key, 0)
+        if not r.get(pos_key):
+            r.set(pos_key, 0)
         return int(r.get(pos_key)) % cls.spy_size
 
     @classmethod

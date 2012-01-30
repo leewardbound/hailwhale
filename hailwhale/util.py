@@ -123,7 +123,7 @@ def curry_instance_attribute(attr, func_name, instance):
             pass_attr = pass_attr()
         return func(pass_attr, *args, **kwargs)
 
-    setattr(instance, func_name,
+    setattr(instance, 'this_' + func_name,
             MethodType(curried, instance, instance.__class__))
 
 
