@@ -36,13 +36,6 @@ class Hail(object):
 
     @classmethod
     def count(cls, pk, dimensions='_', metrics=None, at=False):
-        print
-        print 'Counting '
-        print '  pk:',pk
-        print '  d :',dimensions
-        print '  m :',metrics
-        print '  at:',at
-        print
         metrics = metrics or {}
         metrics = isinstance(metrics, list) and dict([(k, 1) for k in metrics]) or metrics
         try:
