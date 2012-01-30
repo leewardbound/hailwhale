@@ -126,7 +126,8 @@ class Whale(object):
             for method in ['plotpoints', 'ratio_plotpoints', 'scalar_plotpoints',
                 'totals', 'count_now', 'count_decided_now', 'decide',
                 'weighted_reasons', 'reasons_for']:
-                curry_instance_attribute(attr, method, self)
+                curry_instance_attribute(attr, method, self,
+                        with_class_name=True)
 
     @classmethod
     def whale_driver(cls):

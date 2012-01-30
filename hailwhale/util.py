@@ -90,7 +90,7 @@ def to_flot_time(dt):
     return int(float(time.mktime(dt.timetuple())) * 1000)
 
 
-def curry_instance_attribute(attr, func_name, instance):
+def curry_instance_attribute(attr, func_name, instance, with_class_name=False):
     """ Curries the named attribute to the named function
     >>> class Person():
     ...     def __init__(self, name):
@@ -117,13 +117,15 @@ def curry_instance_attribute(attr, func_name, instance):
     func = getattr(instance, func_name)
 
     def curried(self, *args, **kwargs):
-        pass_attr = [instance.__class__.__name__, getattr(self, attr)]
+        pass_attr = getattr(self, attr)
         # Can also be callable
         if hasattr(pass_attr, '__call__'):
             pass_attr = pass_attr()
+        if with_class_name:
+            pass_attr = '_'.join(map(str, [instance.__class__.__name__, pass_attr]))
         return func(pass_attr, *args, **kwargs)
 
-    setattr(instance, 'this_' + func_name,
+    setattr(instance, func_name,
             MethodType(curried, instance, instance.__class__))
 
 

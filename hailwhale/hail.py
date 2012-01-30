@@ -22,7 +22,8 @@ class Hail(object):
         if hasattr(self, attr):
             for method in ['count', 'count_decided', 'spy_pos_key',
             'spy_pos', 'spy_key', 'spy_log', 'spy_at_key', 'get_spy']:
-                curry_instance_attribute(attr, method, self)
+                curry_instance_attribute(attr, method, self,
+                        with_class_name=True)
 
     @classmethod
     def hail_driver(cls):
