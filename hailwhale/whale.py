@@ -471,11 +471,11 @@ class Whale(object):
 
     @classmethod
     def decide(cls, pk_base, decision_name, options, formula='value/hits', known_data=None,
-        period=None, bad_idea_threshold=.05, test_idea_threshold=.05, test_idea_key='hits'):
-        good, bad, test = cls.weighted_reasons(pk_base, decision_name, options, formula,
-            known_data, period)
-        return cls.decide_from_reasons(good, bad, test, bad_idea_threshold,
-            test_idea_threshold)
+        period=None, bad_idea_threshold=.05, test_idea_threshold=.05):
+        good, bad, test = cls.weighted_reasons(pk_base, decision_name, options,
+                formula=formula, known_data=known_data, period=period)
+        return cls.decide_from_reasons(good, bad, test, bad_idea_threshold=bad_idea_threshold,
+            test_idea_threshold=test_idea_threshold)
 
     @classmethod
     def weighted_reasons(cls, pk_base, decision_name, options, formula='value/hits',
@@ -483,7 +483,8 @@ class Whale(object):
         good, bad, test = defaultdict(dict), defaultdict(dict), defaultdict(dict)
         for o in options:
             opk = [pk_base, decision_name, o]
-            i = cls.reasons_for(opk, formula, known_data, period)
+            i = cls.reasons_for(opk, formula=formula, known_data=known_data,
+                    period=period)
             best = i['good'] or i['base']
             worst = i['bad'] and i['bad'] or i['base']
             if best['effect'] > 1 and best['significance'] > 2:
