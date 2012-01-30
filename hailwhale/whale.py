@@ -510,9 +510,9 @@ class Whale(object):
         pk_base, decision, option = pk
         base = '_'
         best = worst = None
-        ranks = cls.cached_rank(pk, formula, dimension=base,
+        ranks = cls.cached_rank(pk, formula=formula, dimension=base,
             period=period, recursive=recursive, points=False)
-        overall = cls.cached_rank([pk_base, decision], formula, dimension=base,
+        overall = cls.cached_rank([pk_base, decision], formula=formula, dimension=base,
             period=period, recursive=recursive, points=False)
         parent_score = overall[base]['score']
         parent_count = overall[base]['count']
