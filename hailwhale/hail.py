@@ -36,6 +36,13 @@ class Hail(object):
 
     @classmethod
     def count(cls, pk, dimensions='_', metrics=None, at=False):
+        print
+        print 'Counting '
+        print '  pk:',pk
+        print '  d :',dimensions
+        print '  m :',metrics
+        print '  at:',at
+        print
         metrics = metrics or {}
         metrics = isinstance(metrics, list) and dict([(k, 1) for k in metrics]) or metrics
         try:
@@ -129,7 +136,6 @@ class Hail(object):
         """ Flush hits to Whale and increment """
         # Get the incoming hits from Hail
         
-        whale = Whale()
         r=cls.hail_driver()
         set_number_name = 'hail_number'
         r.setnx(set_number_name, 0)
@@ -154,7 +160,7 @@ class Hail(object):
         for packed in keys_to_update:
             if packed:
                 pk, dimensions, metrics, at = packed
-                whale.count_now(pk, dimensions, metrics, at=at)
+                Whale.count_now(pk, dimensions, metrics, at=at)
 
         # Delete the hits
         map(r.delete, keys_from_hail)
