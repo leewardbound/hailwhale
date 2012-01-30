@@ -472,6 +472,7 @@ class Whale(object):
     @classmethod
     def decide(cls, pk_base, decision_name, options, formula='value/hits', known_data=None,
         period=None, bad_idea_threshold=.05, test_idea_threshold=.05):
+        print 'deciding by ', formula
         good, bad, test = cls.weighted_reasons(pk_base, decision_name, options,
                 formula=formula, known_data=known_data, period=period)
         return cls.decide_from_reasons(good, bad, test, bad_idea_threshold=bad_idea_threshold,
@@ -480,6 +481,7 @@ class Whale(object):
     @classmethod
     def weighted_reasons(cls, pk_base, decision_name, options, formula='value/hits',
         known_data=None, period=None, recursive=True):
+        print 'weighting reasons for ', formula
         good, bad, test = defaultdict(dict), defaultdict(dict), defaultdict(dict)
         for o in options:
             opk = [pk_base, decision_name, o]
@@ -505,6 +507,7 @@ class Whale(object):
 
     @classmethod
     def reasons_for(cls, pk, formula='value/hits', known_data=None, period=None, recursive=True):
+        print 'reasons for ', formula
         metric, denomenator = parse_formula(formula)
         period = Period.get(period)
         pk_base, decision, option = pk
