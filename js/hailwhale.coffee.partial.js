@@ -1,12 +1,9 @@
 (function() {
-  var $;
-  var __indexOf = Array.prototype.indexOf || function(item) {
-    for (var i = 0, l = this.length; i < l; i++) {
-      if (this[i] === item) return i;
-    }
-    return -1;
-  };
+  var $,
+    __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
   $ = jQuery;
+
   $.hailwhale = function(host, opts) {
     this.host = host;
     this.opts = opts;
@@ -67,15 +64,9 @@
             } catch (error) {
               unpacked = [dimension];
             }
-            if (unpacked[0] === "_") {
-              unpacked = [];
-            }
-            if (unpacked.length < min_dim) {
-              min_dim = unpacked.length;
-            }
-            if (unpacked.length > max_dim) {
-              max_dim = unpacked.length;
-            }
+            if (unpacked[0] === "_") unpacked = [];
+            if (unpacked.length < min_dim) min_dim = unpacked.length;
+            if (unpacked.length > max_dim) max_dim = unpacked.length;
             dimension_data[dimension] = {
               unpacked: unpacked,
               length: unpacked.length,
@@ -85,9 +76,7 @@
           for (dimension in data) {
             metrics = data[dimension];
             d_d = dimension_data[dimension];
-            if (!extra.metric) {
-              extra.metric = d_d.metrics[0];
-            }
+            if (!extra.metric) extra.metric = d_d.metrics[0];
             if (!extra.metric_two && d_d.metrics.length > 1) {
               extra.metric_two = d_d.metrics[1];
             }
@@ -134,9 +123,7 @@
           yaxis_two = $.extend({}, yaxis);
           yaxis_two.position = 'right';
           yaxis_two.label = extra.metric_two;
-          if (extra.metric_two) {
-            yaxis = [yaxis, yaxis_two];
-          }
+          if (extra.metric_two) yaxis = [yaxis, yaxis_two];
           return plot = $.plot(target, lines, {
             legend: {
               show: !extra.hide_legend,
@@ -156,4 +143,5 @@
     };
     return this;
   };
+
 }).call(this);

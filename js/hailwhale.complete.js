@@ -86,6 +86,8 @@ _____________________________________________________
 options:
 _____________________________________________________
 
+	fill: 			  bool true => lines get filled
+	fillColor: 		  null or the color that should be used for filling 
 	active:           bool true => plugin can be used
 	show:             bool true => series will be drawn as curved line
 	fit:              bool true => forces the max,mins of the curve to be on the datapoints
@@ -102,6 +104,7 @@ _____________________________________________________
 /* 
  *  v0.1   initial commit
  *  v0.15  negative values should work now (outcommented a negative -> 0 hook hope it does no harm)
+ *  v0.2   added fill option (thanks to monemihir) and multi axis support (thanks to soewono effendi)
  * 
  * 
  */
@@ -113,6 +116,8 @@ _____________________________________________________
     var options = { series: { curvedLines: {  active: false,
     										  show: false,
     										  fit: false,
+    										  fill: false,
+    										  fillColor: null,
     										  lineWidth: 2,
     										  curvePointFactor: 20,
     										  fitPointDist: 0.0001
@@ -134,7 +139,6 @@ _____________________________________________________
         //select the data sets that should be drawn with curved lines and draws them     
         function draw(plot, ctx)  {
         	var series;           
-            var axes = plot.getAxes();
             var sdata = plot.getData();
             var offset = plot.getPlotOffset();
             
@@ -142,18 +146,24 @@ _____________________________________________________
                  series = sdata[i];
                  if (series.curvedLines.show && series.curvedLines.lineWidth > 0) {
                      
-                     axisx = axes.xaxis;
-        			 axisy = axes.yaxis;
+                     axisx = series.xaxis;
+        			 axisy = series.yaxis;
         	        	
 	   	        	 ctx.save();
             		 ctx.translate(offset.left, offset.top);
                      ctx.lineJoin = "round";
 			         ctx.strokeStyle = series.color;
-			         ctx.lineWidth = series.curvedLines.lineWidth;
-            
+                     if(series.curvedLines.fill) {
+                         var fillColor = series.curvedLines.fillColor == null ? series.color : series.curvedLines.fillColor;
+                          var c = $.color.parse(fillColor);
+                          c.a = typeof fill == "number" ? fill : 0.4;
+                          c.normalize();
+			         ctx.fillStyle = c.toString();
+                     }
+			      ctx.lineWidth = series.curvedLines.lineWidth;
         	         
         		     var points = calculateCurvePoints(series.data, series.curvedLines);
-      		         plotLine(ctx, points, axisx, axisy);     		         
+      		         plotLine(ctx, points, axisx, axisy, series.curvedLines.fill);     		         
       		         ctx.restore();	
         		}
             }
@@ -162,13 +172,14 @@ _____________________________________________________
         
         //nearly the same as in the core library
         //only ps is adjusted to 2
-		function plotLine(ctx, points, axisx, axisy) {
+		function plotLine(ctx, points, axisx, axisy, fill) {
 			
 			var ps = 2;
             var prevx = null;
             var prevy = null;
+            var firsty = 0;
 
-            ctx.beginPath();        	
+            ctx.beginPath();
             
             for (var i = ps; i < points.length; i += ps) {
                  var x1 = points[i - ps], y1 = points[i - ps + 1];
@@ -235,12 +246,21 @@ _____________________________________________________
                  }
 
                  if (x1 != prevx || y1 != prevy)
-                     ctx.moveTo(axisx.p2c(x1), axisy.p2c(y1));
+                     ctx.lineTo(axisx.p2c(x1), axisy.p2c(y1));
 
+                 if (prevx == null) {
+                     firsty = y2;
+                 }
                  prevx = x2;
                  prevy = y2;
-                 ctx.lineTo(axisx.p2c(x2), axisy.p2c(y2));
+                ctx.lineTo(axisx.p2c(x2), axisy.p2c(y2));
              }
+              if (fill) {
+                  ctx.lineTo(axisx.p2c(axisx.max), axisy.p2c(axisy.min));
+                  ctx.lineTo(axisx.p2c(axisx.min), axisy.p2c(axisy.min));
+                  ctx.lineTo(axisx.p2c(axisx.min), axisy.p2c(firsty));
+                  ctx.fill();
+              }
              ctx.stroke();
 		}
 
@@ -375,7 +395,7 @@ _____________________________________________________
         init: init,
         options: options,
         name: 'curvedLines',
-        version: '0.1'
+        version: '0.2'
     });
     
     
@@ -392,14 +412,11 @@ get_keys = function (obj)
   return keys;
 }
 (function() {
-  var $;
-  var __indexOf = Array.prototype.indexOf || function(item) {
-    for (var i = 0, l = this.length; i < l; i++) {
-      if (this[i] === item) return i;
-    }
-    return -1;
-  };
+  var $,
+    __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
   $ = jQuery;
+
   $.hailwhale = function(host, opts) {
     this.host = host;
     this.opts = opts;
@@ -460,15 +477,9 @@ get_keys = function (obj)
             } catch (error) {
               unpacked = [dimension];
             }
-            if (unpacked[0] === "_") {
-              unpacked = [];
-            }
-            if (unpacked.length < min_dim) {
-              min_dim = unpacked.length;
-            }
-            if (unpacked.length > max_dim) {
-              max_dim = unpacked.length;
-            }
+            if (unpacked[0] === "_") unpacked = [];
+            if (unpacked.length < min_dim) min_dim = unpacked.length;
+            if (unpacked.length > max_dim) max_dim = unpacked.length;
             dimension_data[dimension] = {
               unpacked: unpacked,
               length: unpacked.length,
@@ -478,9 +489,7 @@ get_keys = function (obj)
           for (dimension in data) {
             metrics = data[dimension];
             d_d = dimension_data[dimension];
-            if (!extra.metric) {
-              extra.metric = d_d.metrics[0];
-            }
+            if (!extra.metric) extra.metric = d_d.metrics[0];
             if (!extra.metric_two && d_d.metrics.length > 1) {
               extra.metric_two = d_d.metrics[1];
             }
@@ -527,9 +536,7 @@ get_keys = function (obj)
           yaxis_two = $.extend({}, yaxis);
           yaxis_two.position = 'right';
           yaxis_two.label = extra.metric_two;
-          if (extra.metric_two) {
-            yaxis = [yaxis, yaxis_two];
-          }
+          if (extra.metric_two) yaxis = [yaxis, yaxis_two];
           return plot = $.plot(target, lines, {
             legend: {
               show: !extra.hide_legend,
@@ -549,4 +556,5 @@ get_keys = function (obj)
     };
     return this;
   };
+
 }).call(this);

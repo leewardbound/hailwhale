@@ -122,38 +122,41 @@ def graph():
 
 '''
 
+@route('/autograph')
+def autograph():
+    return static_file('autograph.html', root=here(''))
+
 @route('/graph.js')
 def graph():
     formula = req.GET.get('metrics', 'hits')
-
     dimension = req.GET.get('dimension', None)
-
     period = req.GET.get('period', None)
-
     pk = req.GET.get('pk')
-
     parent_div = req.GET.get('parent_div', 'hailwhale_graphs')
-
     hide_table = req.GET.get('hide_table', False)
+    title = req.GET.get('period', 'HailWhale Graph for {dimension} ({pk})'.format(dimension=dimension, pk=pk))
+    period = req.GET.get('period', '10x300')
+    length, interval = [int(part) for part in period.split('x')]
+
     if isinstance(hide_table, basestring):
         hide_table = hide_table.lower() == 'true'
 
     return_string = '''
-        $.getScript('http://localhost:8085/js/hailwhale.complete.js', function() {{
+        $.getScript('http://localhost:8085/js/highcharts.graph.js', function() {{
             $('#{parent_div}').append('<div id="hailwhale-{pk}"></div>');
-            hw_host = '';
-            hw = $.hailwhale(hw_host);
-            hw.add_graph($('#hailwhale-{pk} .plot'), {{pk: '{pk}', autoupdate: true}});
-    '''.format(pk=pk, parent_div=parent_div)
+            hailwhale_graph("This is the title", 300, 10);
+            
+            
+    '''.format(pk=pk, parent_div=parent_div, period=period)
 
-    if not hide_table: 
+    if hide_table: 
         return_string += '''
             $('#{parent_div}').append('<table>
                 <tr>
                     <th></th>
                     <th>Dimension Name</th>
                 </tr>
-        '''
+        '''.strip()
 
         dimensions = [item['dimension'] for item in Whale().rank(pk, formula).values()]
         for dimension_counter, dimension in enumerate(dimensions):
@@ -169,9 +172,11 @@ def graph():
 
         return_string += '''</table>');'''
 
-    return_string += '''}});'''
 
-    return return_string
+
+    return_string += '''});'''
+
+    return return_string.replace('\n', '')
 
 
 @route('/demo/:filename#.*#')
