@@ -86,6 +86,8 @@ _____________________________________________________
 options:
 _____________________________________________________
 
+	fill: 			  bool true => lines get filled
+	fillColor: 		  null or the color that should be used for filling 
 	active:           bool true => plugin can be used
 	show:             bool true => series will be drawn as curved line
 	fit:              bool true => forces the max,mins of the curve to be on the datapoints
@@ -102,6 +104,7 @@ _____________________________________________________
 /* 
  *  v0.1   initial commit
  *  v0.15  negative values should work now (outcommented a negative -> 0 hook hope it does no harm)
+ *  v0.2   added fill option (thanks to monemihir) and multi axis support (thanks to soewono effendi)
  * 
  * 
  */
@@ -113,6 +116,8 @@ _____________________________________________________
     var options = { series: { curvedLines: {  active: false,
     										  show: false,
     										  fit: false,
+    										  fill: false,
+    										  fillColor: null,
     										  lineWidth: 2,
     										  curvePointFactor: 20,
     										  fitPointDist: 0.0001
@@ -134,7 +139,6 @@ _____________________________________________________
         //select the data sets that should be drawn with curved lines and draws them     
         function draw(plot, ctx)  {
         	var series;           
-            var axes = plot.getAxes();
             var sdata = plot.getData();
             var offset = plot.getPlotOffset();
             
@@ -142,18 +146,24 @@ _____________________________________________________
                  series = sdata[i];
                  if (series.curvedLines.show && series.curvedLines.lineWidth > 0) {
                      
-                     axisx = axes.xaxis;
-        			 axisy = axes.yaxis;
+                     axisx = series.xaxis;
+        			 axisy = series.yaxis;
         	        	
 	   	        	 ctx.save();
             		 ctx.translate(offset.left, offset.top);
                      ctx.lineJoin = "round";
 			         ctx.strokeStyle = series.color;
-			         ctx.lineWidth = series.curvedLines.lineWidth;
-            
+                     if(series.curvedLines.fill) {
+                         var fillColor = series.curvedLines.fillColor == null ? series.color : series.curvedLines.fillColor;
+                          var c = $.color.parse(fillColor);
+                          c.a = typeof fill == "number" ? fill : 0.4;
+                          c.normalize();
+			         ctx.fillStyle = c.toString();
+                     }
+			      ctx.lineWidth = series.curvedLines.lineWidth;
         	         
         		     var points = calculateCurvePoints(series.data, series.curvedLines);
-      		         plotLine(ctx, points, axisx, axisy);     		         
+      		         plotLine(ctx, points, axisx, axisy, series.curvedLines.fill);     		         
       		         ctx.restore();	
         		}
             }
@@ -162,13 +172,14 @@ _____________________________________________________
         
         //nearly the same as in the core library
         //only ps is adjusted to 2
-		function plotLine(ctx, points, axisx, axisy) {
+		function plotLine(ctx, points, axisx, axisy, fill) {
 			
 			var ps = 2;
             var prevx = null;
             var prevy = null;
+            var firsty = 0;
 
-            ctx.beginPath();        	
+            ctx.beginPath();
             
             for (var i = ps; i < points.length; i += ps) {
                  var x1 = points[i - ps], y1 = points[i - ps + 1];
@@ -235,12 +246,21 @@ _____________________________________________________
                  }
 
                  if (x1 != prevx || y1 != prevy)
-                     ctx.moveTo(axisx.p2c(x1), axisy.p2c(y1));
+                     ctx.lineTo(axisx.p2c(x1), axisy.p2c(y1));
 
+                 if (prevx == null) {
+                     firsty = y2;
+                 }
                  prevx = x2;
                  prevy = y2;
-                 ctx.lineTo(axisx.p2c(x2), axisy.p2c(y2));
+                ctx.lineTo(axisx.p2c(x2), axisy.p2c(y2));
              }
+              if (fill) {
+                  ctx.lineTo(axisx.p2c(axisx.max), axisy.p2c(axisy.min));
+                  ctx.lineTo(axisx.p2c(axisx.min), axisy.p2c(axisy.min));
+                  ctx.lineTo(axisx.p2c(axisx.min), axisy.p2c(firsty));
+                  ctx.fill();
+              }
              ctx.stroke();
 		}
 
@@ -375,7 +395,7 @@ _____________________________________________________
         init: init,
         options: options,
         name: 'curvedLines',
-        version: '0.1'
+        version: '0.2'
     });
     
     
