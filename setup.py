@@ -28,6 +28,6 @@ setup(name='hailwhale',
       long_description=LONG_DESCRIPTION,
       platforms=['any'],
       classifiers=CLASSIFIERS,
-      install_requires = [],
+      install_requires = ['bottle', 'redis'],
       version='1.3.3',
 )

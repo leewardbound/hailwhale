@@ -1,6 +1,7 @@
 import bottle
 import json
 import os
+import hashlib
 
 from datetime import datetime
 from bottle import run, route, request as req, static_file
@@ -95,62 +96,27 @@ def plotpoints():
     params['flot_time'] = True
     return whale.plotpoints(**params)
 
-    '''
 
-@route('/graph')
-def graph():
-    whale = Whale()
-    points = whale.plotpoints(**default_params())
-    params = {'script_tag': util.JS_TAG,
-              'flotpoints': json.dumps(points),
-              'random_name': 'graph_psuedorandom',
-              }
-    return """
-<div id="%(random_name)s" style="width:97%%;height:97%%;">&nbsp;</div>
-%(script_tag)s
-<script type="text/javascript">
-  dimensions = %(flotpoints)s;
-  first_dimension = get_keys(dimensions)[0];
-  first_metric = get_keys(dimensions[first_dimension])[0];
-  //data = dimensions['[\"empty\"]']['hits'];
-  data = dimensions[first_dimension][first_metric];
-  $.plot($("#%(random_name)s"), [
-    {data: data, lines: {show: true}},
-  ], { xaxis: { mode: "time" } });
-
-</script>""" % params
-
-'''
-
-@route('/autograph')
-def autograph():
-    return static_file('autograph.html', root=here(''))
 
 @route('/graph.js')
 def graph():
-    formula = req.GET.get('metrics', 'hits')
-    dimension = req.GET.get('dimension', None)
-    period = req.GET.get('period', None)
-    pk = req.GET.get('pk')
-    parent_div = req.GET.get('parent_div', 'hailwhale_graphs')
-    hide_table = req.GET.get('hide_table', False)
-    title = req.GET.get('period', 'HailWhale Graph for {dimension} ({pk})'.format(dimension=dimension, pk=pk))
-    period = req.GET.get('period', '10x300')
+    params = {'pk': g('pk', '_'), 'dimension': g('dimension', '_'), 'metric': 'hits'}
+    pk = params['pk']
+    dimension = params['dimension']
+    period = g('period', '10x300')
+    parent_div = g('parent_div', 'hailwhale_graphs')
+    hide_table = g('hide_table', False)
+    params['title'] = g('title', 'HailWhale Graph for {dimension} ({pk})'.format(dimension=dimension, pk=pk))
     length, interval = [int(part) for part in period.split('x')]
 
     if isinstance(hide_table, basestring):
         hide_table = hide_table.lower() == 'true'
-
-    return_string = '''
-        $.getScript('http://localhost:8085/js/highcharts.graph.js', function() {{
-            $('#{parent_div}').append('<div id="hailwhale-{pk}"></div>');
-            hailwhale_graph("This is the title", 300, 10);
-            
-            
-    '''.format(pk=pk, parent_div=parent_div, period=period)
-
+    hwurl = 'http://localhost:8085' # don't hardcode this
+    params['autoupdate'] = g('live', True)
+    include_string = \
+"document.write(\"<scr\" + \"ipt type='text/javascript' src='%s/js/jquery.min.js'></script>\");"%hwurl
     if hide_table: 
-        return_string += '''
+        table_str = '''
             $('#{parent_div}').append('<table>
                 <tr>
                     <th></th>
@@ -163,20 +129,49 @@ def graph():
             checked = 'off'
             if dimension_counter < 10:
                 checked = 'on'
-            return_string += '''
+            table_str += '''
                 <tr>
                     <td><input id="" type="checkbox" value="{checked}" name="checkbox-{pk}-{dimension}"></td>
                     <td>{dimension}</td>
                 </tr>
                 '''.format(pk=pk, dimension=dimension, checked=checked)
 
-        return_string += '''</table>');'''
+        table_str += '''</table>');'''
+    else:
+        table_str = ''
 
-
-
-    return_string += '''});'''
-
-    return return_string.replace('\n', '')
+    return_string = '''
+appended=false;\n
+function jqinit() {{\n
+    if(typeof(jQuery) == 'undefined') {{\n
+        if(!appended) {{\n
+            appended = true;\n
+            console.log('getting jquery');\n
+            {include_string}\n
+        }}\n
+        setTimeout(jqinit, 250);\n
+    }} else {{\n
+        $(function() {{\n
+            // Nest a few of these, very poor form \n
+            $.getScript('{hwurl}/js/highcharts.src.js', function() {{\n
+            $.getScript('{hwurl}/js/hailwhale.coffee.partial.js', function() {{\n
+                console.log('building graphzors');\n
+                $('#{parent_div}').append('<div id="{id}"></div>');\n
+                $.hailwhale('{hwurl}').add_graph('{id}', {options});\n
+                {table_str}
+            }});\n
+            }});\n
+        }});\n
+    }}
+}}
+jqinit();\n
+    
+    
+    '''.format(parent_div=parent_div, include_string=include_string,
+            hwurl=hwurl, table_str=table_str,
+            id=hashlib.md5(str(params)).hexdigest(),
+            options=json.dumps(params))
+    return return_string
 
 
 @route('/demo/:filename#.*#')
@@ -186,6 +181,10 @@ def send_static_demo(filename):
 @route('/js/:filename#.*#')
 def send_static_js(filename):
     return static_file(filename, root=here('../js'))
+
+@route('/autographs/:filename#.*#')
+def send_static_js(filename):
+    return static_file(filename, root=here('../autographs'))
 
 
 if __name__ == '__main__':
