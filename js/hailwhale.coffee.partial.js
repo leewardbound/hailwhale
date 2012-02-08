@@ -19,7 +19,7 @@
     };
     this.add_graph = function(target, extra) {
       var params, poller, poller_handle, url;
-      url = this.host + '/plotpoints';
+      url = this.host + 'plotpoints';
       extra = $.extend(extra, {
         pk: extra.pk || extra.category || false,
         dimensions: extra.dimensions || extra.dimension || false,

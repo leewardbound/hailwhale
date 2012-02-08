@@ -111,10 +111,10 @@ def graph():
 
     if isinstance(hide_table, basestring):
         hide_table = hide_table.lower() == 'true'
-    hwurl = 'http://localhost:8085' # don't hardcode this
+    hwurl = '/' # don't hardcode this
     params['autoupdate'] = g('live', True)
     include_string = \
-"document.write(\"<scr\" + \"ipt type='text/javascript' src='%s/js/jquery.min.js'></script>\");"%hwurl
+"document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/jquery.min.js'></script>\");"%hwurl
     if hide_table: 
         table_str = '''
             $('#{parent_div}').append('<table>
@@ -153,8 +153,8 @@ function jqinit() {{\n
     }} else {{\n
         $(function() {{\n
             // Nest a few of these, very poor form \n
-            $.getScript('{hwurl}/js/highcharts.src.js', function() {{\n
-            $.getScript('{hwurl}/js/hailwhale.coffee.partial.js', function() {{\n
+            $.getScript('{hwurl}js/highcharts.src.js', function() {{\n
+            $.getScript('{hwurl}js/hailwhale.coffee.partial.js', function() {{\n
                 console.log('building graphzors');\n
                 $('#{parent_div}').append('<div id="{id}"></div>');\n
                 $.hailwhale('{hwurl}').add_graph('{id}', {options});\n
