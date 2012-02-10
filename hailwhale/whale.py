@@ -344,7 +344,7 @@ class Whale(object):
         # [b, y, 2]
         for pkk, dimension, (period, dt, metric, i) in itertools.product(
             iterate_dimensions(pk),
-            iterate_dimensions(dimensions) + ['_'],
+            iterate_dimensions(dimensions, add_root=True),
                         generate_increments(metrics, periods, at)):
             cls.whale_driver().store(pkk, dimension, metric, period, dt, i)
 
@@ -556,7 +556,7 @@ def parse_formula(formula):
     else:
         return formula.split('/')
 
-def iterate_dimensions(dimensions):
+def iterate_dimensions(dimensions, add_root=False):
     if not dimensions:
         dimensions = []
     if isinstance(dimensions, dict):
@@ -565,6 +565,8 @@ def iterate_dimensions(dimensions):
         dimensions = [dimensions, ]
     elif isinstance(dimensions, list) and len(dimensions) and not isinstance(dimensions[0], list):
         dimensions = [dimensions[:n + 1] for n in range(len(dimensions))]
+    if add_root and not '_' in dimensions and not ['_'] in dimensions:
+        dimensions.append('_')
     return dimensions
 
 
