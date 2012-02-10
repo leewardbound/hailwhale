@@ -105,10 +105,12 @@ def plotpoints():
 def graph():
     params = {'pk': g('pk', '_'), 
             'dimension': g('dimension', '_'),
-            'metric': g('metric', 'hits')}
+            'metric': g('metric', 'hits'),
+            'period': g('period', '3600x86400')
+            }
     pk = params['pk']
     dimension = params['dimension']
-    period = g('period', '10x300')
+    period = params['period']
     parent_div = g('parent_div', 'hailwhale_graphs')
     hide_table = g('hide_table', False)
     params['title'] = g('title', '')
