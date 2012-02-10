@@ -108,7 +108,7 @@ def graph():
     period = g('period', '10x300')
     parent_div = g('parent_div', 'hailwhale_graphs')
     hide_table = g('hide_table', False)
-    params['title'] = g('title', False)
+    params['title'] = g('title', '')
     if not params['title']:
         pkname = g('pk', '')
         dimname = g('dimension', 'Overall')
