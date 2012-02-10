@@ -71,17 +71,19 @@ class TestHailWhale(unittest.TestCase):
         self.whale = Whale()
 
     def testGetSubdimensions(self):
-        self.whale.count_now('test', {'a': 1, 'b': 2})
-        subs = self.whale.get_subdimensions('test')
-        assert(['a'] in subs)
-        assert(['b'] in subs)
+        t = 'subs_%s' % str(time.time())
+        self.whale.count_now(t, {'a': 1, 'b': 2})
+        subs = self.whale.get_subdimensions(t)
+        assert('a' in subs)
+        assert('b' in subs)
 
     def testGetAllSubdimensions(self):
-        self.whale.count_now('test', {'a': 1, 'b': 2})
-        subs = self.whale.all_subdimensions('test')
-        assert(['a'] in subs)
+        t = 'all_subs_%s' % str(time.time())
+        self.whale.count_now(t, {'a': 1, 'b': 2})
+        subs = self.whale.all_subdimensions(t)
+        assert('a' in subs)
         assert(['a', '1'] in subs)
-        assert(['b'] in subs)
+        assert('b' in subs)
         assert(['b', '2'] in subs)
 
     def testPlotpoints(self):
