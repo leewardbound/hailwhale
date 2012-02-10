@@ -111,7 +111,7 @@ def graph():
 
     if isinstance(hide_table, basestring):
         hide_table = hide_table.lower() == 'true'
-    hwurl = '/' # don't hardcode this
+    hwurl = req.url.replace('/graph.js', '/')
     params['autoupdate'] = g('live', True)
     include_string = \
 "document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/jquery.min.js'></script>\");"%hwurl
