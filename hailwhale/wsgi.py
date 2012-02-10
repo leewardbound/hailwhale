@@ -4,7 +4,7 @@ import os
 import hashlib
 
 from datetime import datetime
-from bottle import run, route, request as req, static_file
+from bottle import hook, response, run, route, request as req, static_file
 
 import util
 
@@ -16,6 +16,9 @@ project_dir = os.path.dirname(os.path.abspath(__file__))
 here = lambda * x: os.path.join(os.path.abspath(os.path.dirname(__file__)), *x)
 
 bottle.debug(True)
+@hook('after_request')
+def enable_cors():
+    response.headers['Access-Control-Allow-Origin'] = '*'
 
 def g(name, default=None, coerce_to=True):
     val = req.GET.get(name, default)
