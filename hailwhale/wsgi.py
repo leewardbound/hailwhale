@@ -151,6 +151,7 @@ def graph():
 
     return_string = '''
 appended=false;\n
+document.write('<div id="{id}"></div>');\n
 function jqinit() {{\n
     if(typeof(jQuery) == 'undefined') {{\n
         if(!appended) {{\n
@@ -163,7 +164,6 @@ function jqinit() {{\n
             // Nest a few of these, very poor form \n
             $.getScript('{hwurl}js/highcharts.src.js', function() {{\n
             $.getScript('{hwurl}js/hailwhale.coffee.partial.js', function() {{\n
-                document.write('<div id="{id}"></div>');\n
                 $.hailwhale('{hwurl}').add_graph('{id}', {options});\n
                 {table_str}
             }});\n
