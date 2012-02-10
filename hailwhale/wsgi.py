@@ -100,18 +100,24 @@ def plotpoints():
 
 @route('/graph.js')
 def graph():
-    params = {'pk': g('pk', '_'), 'dimension': g('dimension', '_'), 'metric': 'hits'}
+    params = {'pk': g('pk', '_'), 
+            'dimension': g('dimension', '_'),
+            'metric': g('metric', 'hits')}
     pk = params['pk']
     dimension = params['dimension']
     period = g('period', '10x300')
     parent_div = g('parent_div', 'hailwhale_graphs')
     hide_table = g('hide_table', False)
-    params['title'] = g('title', 'HailWhale Graph for {dimension} ({pk})'.format(dimension=dimension, pk=pk))
+    params['title'] = g('title', False)
+    if not params['title']:
+        pkname = g('pk', '')
+        dimname = g('dimension', 'Overall')
+        params['title'] = '%s[%s]'%(pkname, dimname)
     length, interval = [int(part) for part in period.split('x')]
 
     if isinstance(hide_table, basestring):
         hide_table = hide_table.lower() == 'true'
-    hwurl = req.url.replace('/graph.js', '/')
+    hwurl = req.url.split('graph.js')[0]
     params['autoupdate'] = g('live', True)
     include_string = \
 "document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/jquery.min.js'></script>\");"%hwurl
@@ -146,7 +152,6 @@ function jqinit() {{\n
     if(typeof(jQuery) == 'undefined') {{\n
         if(!appended) {{\n
             appended = true;\n
-            console.log('getting jquery');\n
             {include_string}\n
         }}\n
         setTimeout(jqinit, 250);\n
@@ -155,8 +160,7 @@ function jqinit() {{\n
             // Nest a few of these, very poor form \n
             $.getScript('{hwurl}js/highcharts.src.js', function() {{\n
             $.getScript('{hwurl}js/hailwhale.coffee.partial.js', function() {{\n
-                console.log('building graphzors');\n
-                $('#{parent_div}').append('<div id="{id}"></div>');\n
+                document.write('<div id="{id}"></div>');\n
                 $.hailwhale('{hwurl}').add_graph('{id}', {options});\n
                 {table_str}
             }});\n
