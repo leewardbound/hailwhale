@@ -49,17 +49,20 @@ Ubuntu 11.10::
     sudo python setup.py
     python hailwhale/wsgi.py
 
-Ubuntu 10.04::
-    Before following the 11.10 instructions, you need the latest redis package which probably isn't in your sources.
-    We can download it directly, but we also need to get two dependencies
-    i386:
+Ubuntu 10.04
+
+Before following the 11.10 instructions, you need the latest redis package which probably isn't in your sources.
+We can download it directly, but we also need to get two dependencies
+
+i386::
         wget -O redis.deb http://ftp.us.debian.org/debian/pool/main/r/redis/redis-server_2.4.5-1_i386.deb
         wget -O libjemalloc-dev.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc-dev_2.2.5-1_i386.deb
         wget -O libjemalloc1.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc1_2.2.5-1_i386.deb
         env().sudo('dpkg -i libjemalloc1.deb')
         env().sudo('dpkg -i libjemalloc-dev.deb')
         env().sudo('dpkg -i redis.deb')
-    amd64:
+
+amd64::
         wget -O redis.deb http://ftp.us.debian.org/debian/pool/main/r/redis/redis-server_2.4.5-1_amd64.deb
         wget -O libjemalloc-dev.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc-dev_2.2.5-1_amd64.deb
         wget -O libjemalloc1.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc1_2.2.5-1_amd64.deb
