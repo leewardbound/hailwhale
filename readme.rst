@@ -33,7 +33,7 @@ On the backend, Hailwhale is composed of two servers --
 Test Server
 ===========
 Currently only tested on my macbook pro and Ubuntu servers.
-OSX:
+OSX::
 
     brew install redis
     git clone github.com/linked/hailwhale.git
@@ -41,7 +41,7 @@ OSX:
     sudo python setup.py
     python hailwhale/wsgi.py
 
-Ubuntu 11.10:
+Ubuntu 11.10::
  
     sudo apt-get install redis
     git clone github.com/linked/hailwhale.git
@@ -49,11 +49,10 @@ Ubuntu 11.10:
     sudo python setup.py
     python hailwhale/wsgi.py
 
-Ubuntu 10.04: 
-
+Ubuntu 10.04::
     Before following the 11.10 instructions, you need the latest redis package which probably isn't in your sources.
-    We can download it directly, but we also need to get two dependencies --
-    i386: 
+    We can download it directly, but we also need to get two dependencies
+    i386:
         wget -O redis.deb http://ftp.us.debian.org/debian/pool/main/r/redis/redis-server_2.4.5-1_i386.deb
         wget -O libjemalloc-dev.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc-dev_2.2.5-1_i386.deb
         wget -O libjemalloc1.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc1_2.2.5-1_i386.deb
@@ -70,7 +69,7 @@ Ubuntu 10.04:
 
 Deployment
 ==========
-Ubuntu:
+Ubuntu::
 
     pip install supervisor
     sudo vim /etc/supervisord.conf
@@ -92,7 +91,6 @@ Ubuntu:
       upstream hailwhale {
           server 127.0.0.1:8085 fail_timeout=1;
       }
-  
       server {
           listen 80; 
           server_name  hw.lwb.co;
@@ -100,15 +98,12 @@ Ubuntu:
           location / { 
             // Fix the host name for hailwhale
             proxy_set_header Host $host;
-  
             // Sites you want to be able to include cross-domain hailwhale graphs from
             proxy_set_header Access-Control-Allow-Origin http://hw.lwb.co;
             proxy_set_header Access-Control-Allow-Origin http://lwb.co;
-  
             // If you set too many sites above, you have to increase these numbers below
             proxy_headers_hash_max_size 1024;
             proxy_headers_hash_bucket_size 256;
-  
             proxy_pass http://hailwhale;
             break;
           }   
