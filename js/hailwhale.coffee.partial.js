@@ -17,13 +17,31 @@
         period: extra.period || ''
       };
     };
+    this.trigger_fake_hits = function(extra) {
+      var factor, i, params, trigger, url;
+      url = this.host + '/count_now';
+      params = this.make_params(extra);
+      trigger = function() {
+        return $.ajax({
+          url: url,
+          data: params,
+          type: 'GET',
+          success: false
+        });
+      };
+      for (i = 1; i <= 25; i++) {
+        factor = Math.floor(Math.random() * 11);
+        setTimeout(trigger, 75 * i * factor);
+      }
+      return this;
+    };
     this.add_graph = function(target, extra) {
       var params, poller, poller_handle, url;
       //
       // Get the jquery object of the target
       if(typeof(target) == 'string' && target[0] != '#')
           target='#'+target;
-      target = $(target)
+      target = $(target)[0];
       url = this.host + 'plotpoints';
       extra = $.extend(extra, {
         pk: extra.pk || extra.category || false,
