@@ -19,7 +19,7 @@
     };
     this.trigger_fake_hits = function(extra) {
       var factor, i, params, trigger, url;
-      url = this.host + '/count_now';
+      url = this.host + 'count_now';
       params = this.make_params(extra);
       trigger = function() {
         return $.ajax({
