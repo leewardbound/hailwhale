@@ -49,29 +49,29 @@ Ubuntu 11.10::
     sudo python setup.py
     python hailwhale/wsgi.py
 
-Ubuntu 10.04
+Ubuntu 10.04 i386::
 
-Before following the 11.10 instructions, you need the latest redis package which probably isn't in your sources.
-We can download it directly, but we also need to get two dependencies
-
-i386::
         wget -O redis.deb http://ftp.us.debian.org/debian/pool/main/r/redis/redis-server_2.4.5-1_i386.deb
         wget -O libjemalloc-dev.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc-dev_2.2.5-1_i386.deb
         wget -O libjemalloc1.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc1_2.2.5-1_i386.deb
         env().sudo('dpkg -i libjemalloc1.deb')
         env().sudo('dpkg -i libjemalloc-dev.deb')
         env().sudo('dpkg -i redis.deb')
+        # Continue 11.10 instructions
 
-amd64::
+Ubuntu 10.04 amd64::
+
         wget -O redis.deb http://ftp.us.debian.org/debian/pool/main/r/redis/redis-server_2.4.5-1_amd64.deb
         wget -O libjemalloc-dev.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc-dev_2.2.5-1_amd64.deb
         wget -O libjemalloc1.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc1_2.2.5-1_amd64.deb
         env().sudo('dpkg -i libjemalloc1.deb')
         env().sudo('dpkg -i libjemalloc-dev.deb')
         env().sudo('dpkg -i redis.deb')
+        # Continue 11.10 instructions
 
 Deployment
 ==========
+
 Ubuntu::
 
     pip install supervisor
@@ -88,9 +88,10 @@ Ubuntu::
         startsecs = 5
         stopwaitsecs = 5
 
-    Done :) if port 8085 is exposed, you can access hailwhale from it.
-    If 8085 is not exposed, you should setup a local reverse proxy. I like to use
-    the following nginx config inside my server {} block --
+Done :) if port 8085 is exposed, you can access hailwhale from it.
+If 8085 is not exposed, you should setup a local reverse proxy. I like to use
+the following nginx config inside my server {} block::
+
       upstream hailwhale {
           server 127.0.0.1:8085 fail_timeout=1;
       }
