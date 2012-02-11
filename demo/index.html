@@ -25,9 +25,10 @@ $(function() {
   pk=demo_name='countOne';
   $(function() {
       debug = true;
-    hw.add_graph($('#countOne .plot'), {pk: 'countOne', autoupdate: debug});
+    hw.add_graph($('#countOne .plot'), {pk: 'countOne', autoupdate: debug,
+        period:'10x300'});
     hw.add_graph($('#countMany .plot'), {pk: 'countMany', depth: 1,
-        autoupdate: debug});
+        autoupdate: debug, period: '10x300'});
     hw.add_graph($('#manyMetrics .plot'), {pk: 'system_status', 
         metrics: {'CPU percent': 'avg', 'RAM percent': 'avg'},
         period: '10x300',
