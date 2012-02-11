@@ -54,9 +54,9 @@ Ubuntu 10.04 i386::
         wget -O redis.deb http://ftp.us.debian.org/debian/pool/main/r/redis/redis-server_2.4.5-1_i386.deb
         wget -O libjemalloc-dev.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc-dev_2.2.5-1_i386.deb
         wget -O libjemalloc1.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc1_2.2.5-1_i386.deb
-        env().sudo('dpkg -i libjemalloc1.deb')
-        env().sudo('dpkg -i libjemalloc-dev.deb')
-        env().sudo('dpkg -i redis.deb')
+        sudo dpkg -i libjemalloc1.deb
+        sudo dpkg -i libjemalloc-dev.deb
+        sudo dpkg -i redis.deb
         # Continue 11.10 instructions
 
 Ubuntu 10.04 amd64::
@@ -64,9 +64,9 @@ Ubuntu 10.04 amd64::
         wget -O redis.deb http://ftp.us.debian.org/debian/pool/main/r/redis/redis-server_2.4.5-1_amd64.deb
         wget -O libjemalloc-dev.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc-dev_2.2.5-1_amd64.deb
         wget -O libjemalloc1.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc1_2.2.5-1_amd64.deb
-        env().sudo('dpkg -i libjemalloc1.deb')
-        env().sudo('dpkg -i libjemalloc-dev.deb')
-        env().sudo('dpkg -i redis.deb')
+        sudo dpkg -i libjemalloc1.deb
+        sudo dpkg -i libjemalloc-dev.deb
+        sudo dpkg -i redis.deb
         # Continue 11.10 instructions
 
 Deployment
