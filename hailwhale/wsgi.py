@@ -107,6 +107,7 @@ def graph():
     params = {'pk': g('pk', '_'), 
             'dimension': g('dimension', '_'),
             'metric': g('metric', 'hits'),
+            'depth': g('depth', 0),
             'period': g('period', '3600x86400')
             }
     pk = params['pk']
