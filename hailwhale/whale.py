@@ -451,7 +451,8 @@ class Whale(object):
         import random
 
         def w_choice(reasons):
-            n = random.uniform(0, 1)
+            weights = map(lambda k: k.get('weight', 1), reasons.values())
+            n = random.uniform(0, sum(weights))
             for item, opts in reasons.items():
                 if n < opts.get('weight', 1):
                     break
