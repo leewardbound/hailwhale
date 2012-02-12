@@ -2,6 +2,7 @@ import bottle
 import json
 import os
 import hashlib
+import times
 
 from datetime import datetime
 from bottle import hook, response, run, route, request as req, static_file
@@ -70,7 +71,7 @@ def reset():
 @route('/count_now')
 def count_now():
     whale = Whale()
-    val = whale.count_now(at=datetime.now(), **default_params())
+    val = whale.count_now(at=times.now(), **default_params())
     return 'OK'
 
 @route('/flush_hail')

@@ -1,6 +1,7 @@
 import json
 import datetime
 import time
+import times
 import random
 
 from redis import Redis
@@ -47,7 +48,7 @@ class Hail(object):
             set_number = r.get(set_number_name) or 0
             if not set_number:
                 set_number = r.set(set_number_name, 0)
-            at = at or datetime.datetime.now()
+            at = at or times.now()
             if isinstance(at, str):
                 try:
                     at = datetime.datetime.fromtimestamp(float(at))

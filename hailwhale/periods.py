@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
 import time
+import times
 class Period(object):
     def __init__(self, interval, length, name=False):
         self.interval = int(interval)
         self.length = int(length)
         self.name = name
     def start(self):
-        dt= (datetime.now() -
+        dt= (times.now() -
                 timedelta(seconds=self.length))
         if self.interval < 60:
             interval_seconds = self.interval
@@ -38,7 +39,7 @@ class Period(object):
         from util import datetimeIterator
         return (dt for dt in datetimeIterator(
             start or self.start(), 
-            end or datetime.now(),
+            end or times.now(),
             delta=self.delta()))
 
     def datetimes_strs(self, start=False, end=False):

@@ -2,6 +2,7 @@ import json
 import math
 import itertools
 import collections
+import times
 
 from redis import Redis
 from collections import defaultdict
@@ -573,7 +574,7 @@ def iterate_dimensions(dimensions, add_root=False):
 def generate_increments(metrics, periods=False, at=False):
     periods = periods or DEFAULT_PERIODS
     observations = set()
-    at = at or datetime.now()
+    at = at or times.now()
     for period in periods:
         dt = period.flatten_str(at)
         if not dt:

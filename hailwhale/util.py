@@ -1,5 +1,6 @@
 from datetime import timedelta, datetime
 import time
+import times
 import json
 from types import *
 
@@ -74,10 +75,10 @@ def nested_dict_to_list_of_keys(d):
             yield [k, f]
 
 
-def datetimeIterator(from_date=None, to_date=None, use_utc=False, delta=timedelta(days=1)):
+def datetimeIterator(from_date=None, to_date=None, use_utc=True, delta=timedelta(days=1)):
     if not from_date:
         if use_utc:
-            from_date = datetime.utcnow()
+            from_date = times.now()
         else:
             from_date = datetime.now()
     while to_date is None or from_date <= to_date:
@@ -136,7 +137,7 @@ def period_points(self, metric=False, period_str='60x86400',
     interval, length = period_str.split('x')
     period = GraphPeriod(interval, length)
     if not start:
-        start = datetime.now() - (timedelta(seconds=int(interval)) * 15)
+        start = times.now() - (timedelta(seconds=int(interval)) * 15)
     for dt in period.datetimes(start, end):
         dtf = '%sx%s-%s' % (interval, length, period.flatten_str(dt))
         v = {}
