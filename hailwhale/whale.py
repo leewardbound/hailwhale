@@ -173,10 +173,16 @@ class Whale(object):
         scalars = []
         ratios = {}
         metrics = metrics or ['hits']
-        metrics = isinstance(metrics, list) and metrics or [metrics,]
+        if isinstance(metrics, basestring):
+            metrics = [metrics,]
         sort = kwargs.pop('sort', None)
         if not sort:
-            sort = '-'+metrics[0]
+            if isinstance(metrics, list):
+                sort = '-'+metrics[0]
+            elif isinstance(metrics, dict):
+                sort = '-'+metrics.keys()[0]
+            else:
+                sort = '-hits'
         limit = kwargs.pop('limit', 0)
         reverse = False
         if sort[0] == '-': 
@@ -219,9 +225,8 @@ class Whale(object):
         if limit:
             scores = scores[:limit]
         high_scores = dict(scores)
-
         return dict([(d,m) for d,m in combo.items()
-            if d in high_scores
+            if d in high_scores or d in iterate_dimensions(dimensions)
             ])
 
     @classmethod
