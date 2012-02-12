@@ -37,6 +37,7 @@
     };
     this.add_graph = function(target, extra) {
       var params, poller, poller_handle, url;
+      var our_chart = this.chart;
       //
       // Get the jquery object of the target
       if(typeof(target) == 'string' && target[0] != '#')
@@ -91,15 +92,17 @@
 
           // OK, now if any of the dimensions changed, we have to re-render the graph
           var re_render = false;
-          if(!this.chart)
+          if(!our_chart)
+          {
               re_render = true;
+          }
           else
           {
               for(dimension in data)
-                  if(!this.chart.get(dimension))
+                  if(!our_chart.get(dimension))
                       re_render = true;
-              for(index in this.chart.series)
-                  if(!data[this.chart.series[index]])
+              for(index in our_chart.series)
+                  if(!data[our_chart.series[index]])
                       re_render = true;
           }
 
@@ -193,11 +196,11 @@
               yaxis_two.position = 'right';
               yaxis_two.label = extra.metric_two;
               if (extra.metric_two) yaxis = [yaxis, yaxis_two];
-              this.chart = new Highcharts.Chart(render_options);
+              our_chart = new Highcharts.Chart(render_options);
           }
 
           // Now update the plotpoints!
-          $.each(this.chart.series, function(index, series) {
+          $.each(our_chart.series, function(index, series) {
             dimension = series.options.id;
             console.log('updating data for',dimension,extra.metric);
             series.setData(data[dimension][extra.metric]);
