@@ -174,7 +174,9 @@ class Whale(object):
         ratios = {}
         metrics = metrics or ['hits']
         metrics = isinstance(metrics, list) and metrics or [metrics,]
-        sort = kwargs.pop('sort', '-'+metrics[0])
+        sort = kwargs.pop('sort', None)
+        if not sort:
+            sort = '-'+metrics[0]
         limit = kwargs.pop('limit', 0)
         reverse = False
         if sort[0] == '-': 
