@@ -173,6 +173,17 @@ class Whale(object):
         scalars = []
         ratios = {}
         metrics = metrics or ['hits']
+        metrics = isinstance(metrics, list) and metrics or [metrics,]
+        sort = kwargs.pop('sort', '-'+metrics[0])
+        limit = kwargs.pop('limit', 0)
+        reverse = False
+        if sort[0] == '-': 
+            sort = sort[1:]
+            reverse = True
+        if not sort in metrics:
+            metrics.append(sort)
+
+        # Figure out which ones are ratios and pre-fetch
         if isinstance(metrics, basestring):
             metrics = [metrics]
         for met in metrics:
@@ -182,11 +193,32 @@ class Whale(object):
             else:
                 ratios[met] = cls.ratio_plotpoints(pk, top, bottom, dimensions, **kwargs)
 
+        # Now get the scalars
         combo = cls.scalar_plotpoints(pk, dimensions, scalars, **kwargs)
+        # and merge them
         for dim, mets in combo.items():
             for ratio, points in ratios.items():
                 combo[dim][ratio] = points[dim][ratio]
-        return combo
+
+        # Begin Sorting and trimming fun
+
+        # Get the values from either a dict or a list
+        if kwargs.get('points_type', None) == list:
+            _vals = lambda pts: map(lambda (x,y): y, pts)
+        else:
+            _vals = lambda pts: pts.values()
+        # Get the total from the points
+        _tot = lambda dim: sum(_vals(combo[dim][sort]))
+        # Now tally the scores
+        scores = sorted([(dim, _tot(dim)) for dim in combo.keys()],
+            key=lambda tup: tup[1], reverse=reverse)
+        if limit:
+            scores = scores[:limit]
+        high_scores = dict(scores)
+
+        return dict([(d,m) for d,m in combo.items()
+            if d in high_scores
+            ])
 
     @classmethod
     @whale_cache

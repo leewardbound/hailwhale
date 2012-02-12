@@ -100,17 +100,25 @@ class TestHailWhale(unittest.TestCase):
         t = str(time.time())
         self.whale.count_now('test_depth', {t: 'a'})
         self.whale.count_now('test_depth', {t: 'b'})
+        self.whale.count_now('test_depth', {t: 'b'})
         self.whale.count_now('test_depth', {t: {'c': 'child'}})
         # Test 1 level deep
         plotpoints = self.whale.plotpoints('test_depth', t, points_type=list, depth=1)
         self.assertEqual(plotpoints[maybe_dumps([t, 'a'])]['hits'][-1][1], 1)
-        self.assertEqual(plotpoints[maybe_dumps([t, 'b'])]['hits'][-1][1], 1)
+        self.assertEqual(plotpoints[maybe_dumps([t, 'b'])]['hits'][-1][1], 2)
         self.assertEqual(plotpoints[maybe_dumps([t, 'c'])]['hits'][-1][1], 1)
         self.assertEqual(False, maybe_dumps([t, 'c', 'child']) in plotpoints)
         # Test 2 levels deep
         plotpoints = self.whale.plotpoints('test_depth', t, points_type=list, depth=2)
         self.assertEqual(True, maybe_dumps([t, 'c', 'child']) in plotpoints)
         self.assertEqual(plotpoints[maybe_dumps([t, 'c', 'child'])]['hits'][-1][1], 1)
+
+        # Test ranking and limiting
+        plotpoints = self.whale.plotpoints('test_depth', t, points_type=list,
+                depth=1, limit=2)
+        self.assertEqual(plotpoints[maybe_dumps([t, 'b'])]['hits'][-1][1], 2)
+        self.assertNotIn(maybe_dumps([t, 'a']), plotpoints)
+        self.assertNotIn(maybe_dumps([t, 'c']), plotpoints)
 
     def testRatioPlotpoints(self):
         t = str(time.time())

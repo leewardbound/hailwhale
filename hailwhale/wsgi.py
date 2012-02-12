@@ -97,6 +97,8 @@ def plotpoints():
     params = default_params()
     params['depth'] = g('depth', 0)
     params['period'] = g('period', None)
+    params['sort'] = g('sort', None)
+    params['limit'] = g('limit', 10)
     params['flot_time'] = True
     return whale.plotpoints(**params)
 
