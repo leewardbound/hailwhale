@@ -7,7 +7,7 @@
   $.hailwhale = function(host, opts) {
     this.host = host;
     this.opts = opts;
-    this.chart = false;
+    this.charts = {};
     this.make_params = function(extra) {
       var params;
       return params = {
@@ -37,13 +37,16 @@
     };
     this.add_graph = function(target, extra) {
       var params, poller, poller_handle, url;
-      var our_chart = this.chart;
       //
       // Get the jquery object of the target
       if(typeof(target) == 'string' && target[0] != '#')
           target='#'+target;
+      id = target;
       target = $(target)[0];
       url = this.host + 'plotpoints';
+      var charts = this.charts;
+      var our_chart_id = 0;
+      var our_chart = charts[our_chart_id];
       extra = $.extend(extra, {
         pk: extra.pk || extra.category || false,
         dimensions: extra.dimensions || extra.dimension || false,
@@ -65,6 +68,7 @@
           root_dimension = '_';
           dimension_data = {};
           ordered_dimensions = []
+          our_chart = charts[our_chart_id];
           // Data comes back as JSON in the following format:
           // { 'dimension_str_or_list': {'metric': [[x, y], ... ] , 'metric2': ...} }
           // First, let's look at the dimensions and gather some info
@@ -103,16 +107,29 @@
           var re_render = false;
           if(!our_chart)
           {
+              console.log('need to render chart');
               re_render = true;
           }
           else
           {
               for(dimension in data)
-                  if(!our_chart.get(dimension))
+              {
+                  if(our_chart.get(dimension) == null)
+                  {
+                      console.log('our data has a line not in chart: ',dimension, our_chart_id)
                       re_render = true;
+                  }
+              }
               for(index in our_chart.series)
-                  if(!data[our_chart.series[index]])
+              {
+                  if(data[our_chart.series[index].options.id] == null)
+                  {
+                      console.log('our chart wants to render: ',dimension, our_chart.series[index].options.id, data)
                       re_render = true;
+                  }
+              }
+              if(re_render)
+                  console.log('something changed, need to render chart');
           }
 
           if(re_render) {
@@ -185,7 +202,7 @@
                     lineWidth: line_width
                   },
                   color: colors[i++ % colors.length],
-                  name: label + ' ' + extra.metric,
+                  name: label + (extra.metric_two && (' ' + extra.metric) || ''),
                   id: dimension
                 });
                 // Second metric if necessary
@@ -200,6 +217,7 @@
                     color: colors[i % colors.length],
                     name: label + ' ' + extra.metric_two,
                     yaxis: 2,
+                    id: dimension+'||'+metric
                   });
                 }
               }
@@ -211,13 +229,19 @@
               yaxis_two.label = extra.metric_two;
               if (extra.metric_two) yaxis = [yaxis, yaxis_two];
               our_chart = new Highcharts.Chart(render_options);
+              our_chart_id = our_chart.container.id;
+              charts[our_chart_id] = our_chart;
           }
 
           // Now update the plotpoints!
           $.each(our_chart.series, function(index, series) {
-            dimension = series.options.id;
-            console.log('updating data for',dimension,extra.metric);
-            series.setData(data[dimension][extra.metric]);
+            id_extra = series.options.id.split('||');
+            if(id_extra.length == 2)
+               metric = id_extra[1];
+            else
+               metric = extra.metric;
+            dimension = id_extra[0]
+            series.setData(data[dimension][metric]);
           });
         });
       };
