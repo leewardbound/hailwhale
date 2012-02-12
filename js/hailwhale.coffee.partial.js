@@ -62,12 +62,15 @@
           i = 0;
           min_dim = 10;
           max_dim = 0;
+          root_dimension = '_';
           dimension_data = {};
+          ordered_dimensions = []
           // Data comes back as JSON in the following format:
           // { 'dimension_str_or_list': {'metric': [[x, y], ... ] , 'metric2': ...} }
           // First, let's look at the dimensions and gather some info
           for (dimension in data) {
             metrics = data[dimension];
+            ordered_dimensions.push(dimension);
 
             // Decipher dimension's name
             try {
@@ -76,7 +79,11 @@
               unpacked = [dimension];
             }
             if (unpacked[0] === "_") unpacked = [];
-            if (unpacked.length < min_dim) min_dim = unpacked.length;
+            if (unpacked.length < min_dim) 
+            {
+                root_dimension = dimension;
+                min_dim = unpacked.length;
+            }
             if (unpacked.length > max_dim) max_dim = unpacked.length;
 
             // Keep some extra info about each dimension around
@@ -89,6 +96,8 @@
                 dimension_data[dimension].metrics.push(i);
             }
           }
+          ordered_dimensions = ordered_dimensions.sort(function(a,b) {
+              return dimension_data[a].length - dimension_data[b].length;});
 
           // OK, now if any of the dimensions changed, we have to re-render the graph
           var re_render = false;
@@ -124,6 +133,7 @@
                 yAxis: {
                   minPadding: 0.2,
                   maxPadding: 0.2,
+                  min: 0,
                   title: {
                     margin: 20
                   }
@@ -132,8 +142,12 @@
               }
 
               // Now we loop dimensions and find our relevant plotpoints
-              for (dimension in data) {
+              for (idx in ordered_dimensions) {
+                dimension = ordered_dimensions[idx];
                 metrics = data[dimension];
+                console.debug(dimension)
+                if(typeof(metrics) == 'undefined')
+                    continue;
                 d_d = dimension_data[dimension];
 
                 // If no metric specified, default to the first one
@@ -154,7 +168,7 @@
                     label = 'Overall ' + d_d.unpacked;
                     line_width = extra.width_factor;
                   } else {
-                    label = d_d.unpacked[0];
+                    label = d_d.unpacked[d_d.length-1];
                     line_width = extra.width_factor / (.5 + (d_d.length - min_dim));
                   }
                 } else {
