@@ -205,10 +205,12 @@ class Whale(object):
         # Begin Sorting and trimming fun
 
         # Get the values from either a dict or a list
-        if kwargs.get('points_type', None) == list:
-            _vals = lambda pts: map(lambda (x,y): y, pts)
-        else:
-            _vals = lambda pts: pts.values()
+        def _vals(pts):
+            if isinstance(pts, list):
+                return map(lambda (x,y): y, pts)
+            elif isinstance(pts, dict):
+                return pts.values()
+            return []
         # Get the total from the points
         _tot = lambda dim: sum(_vals(combo[dim][sort]))
         # Now tally the scores
