@@ -10,11 +10,13 @@
     this.charts = {};
     this.make_params = function(extra) {
       var params;
+      d = new Date();
       return params = {
         pk: JSON.stringify(extra.pk || extra.category || ''),
         dimensions: JSON.stringify(extra.dimensions || extra.dimension || ''),
         metrics: JSON.stringify(extra.metrics || extra.metric || ''),
-        period: extra.period || ''
+        period: extra.period || '',
+        tzoffset: extra.tzoffset || d.getTimezoneOffset()/60
       };
     };
     this.trigger_fake_hits = function(extra) {

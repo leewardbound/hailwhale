@@ -173,6 +173,7 @@ class Whale(object):
         scalars = []
         ratios = {}
         metrics = metrics or ['hits']
+        tzoffset = kwargs.pop('tzoffset', 0.0)
         if isinstance(metrics, basestring):
             metrics = [metrics,]
         sort = kwargs.pop('sort', None)
@@ -207,6 +208,24 @@ class Whale(object):
         for dim, mets in combo.items():
             for ratio, points in ratios.items():
                 combo[dim][ratio] = points[dim][ratio]
+
+        # now adjust for tzoffset
+        if tzoffset:
+            def convert(tzs):
+                if isinstance(tzs, basestring):
+                    return times.format(tzs, tzoffset)
+                elif isinstance(tzs, int):
+                    return tzs + int(3600*tzoffset*1000)
+                elif isinstance(tzs, list):
+                    return map(convert, tzs)
+            for dim, mets in combo.items():
+                for met, points in mets.items():
+                    if isinstance(points, dict):
+                        tzs = convert(points.keys())
+                        combo[dim][met] = dict(zip(tzs, points.items()))
+                    if isinstance(points, list):
+                        tzs = convert(map(lambda (x,y): x, points))
+                        combo[dim][met] = zip(tzs, map(lambda (x,y): y, points))
 
         # Begin Sorting and trimming fun
 

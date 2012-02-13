@@ -99,6 +99,7 @@ def plotpoints():
     params['period'] = g('period', None)
     params['sort'] = g('sort', None)
     params['limit'] = g('limit', 10)
+    params['tzoffset'] = g('tzoffset', 0.0)
     params['flot_time'] = True
     return whale.plotpoints(**params)
 
@@ -110,6 +111,7 @@ def graph():
             'dimension': g('dimension', '_'),
             'metric': g('metric', 'hits'),
             'depth': g('depth', 0),
+            'tzoffset': g('tzoffset', 0.0),
             'period': g('period', '3600x86400')
             }
     pk = params['pk']
