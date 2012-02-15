@@ -104,15 +104,15 @@ def plotpoints():
     return whale.plotpoints(**params)
 
 
-
 @route('/graph.js')
 def graph():
-    params = {'pk': g('pk', '_'), 
+    params = {'pk': g('pk', '_'),
             'dimension': g('dimension', '_'),
             'metric': g('metric', 'hits'),
             'depth': g('depth', 0),
             'tzoffset': g('tzoffset', 0.0),
-            'period': g('period', '3600x86400')
+            'period': g('period', '3600x86400'),
+            'area': g('area', False)
             }
     pk = params['pk']
     dimension = params['dimension']
@@ -123,7 +123,7 @@ def graph():
     if not params['title']:
         pkname = g('pk', '')
         dimname = g('dimension', 'Overall')
-        params['title'] = '%s[%s]'%(pkname, dimname)
+        params['title'] = '%s[%s]' % (pkname, dimname)
     length, interval = [int(part) for part in period.split('x')]
 
     if isinstance(hide_table, basestring):

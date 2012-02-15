@@ -58,7 +58,9 @@
         width_factor: extra.width_factor || 6
       });
       params = this.make_params(extra);
-      params['depth'] = extra.depth || 0;
+      params['depth'] = (extra.depth || 0);
+      if(params['area'])
+        params['depth'] = 1;
       poller = function() {
         return $.getJSON(url, params, function(data, status, xhr) {
           var colors, d_d, dimension, dimension_data, i, label, line_width, lines, max_dim, metrics, min_dim, plot, unpacked, yaxis, yaxis_two, _ref, _ref2;
@@ -69,7 +71,7 @@
           max_dim = 0;
           root_dimension = '_';
           dimension_data = {};
-          ordered_dimensions = []
+          ordered_dimensions = [];
           our_chart = charts[our_chart_id];
           // Data comes back as JSON in the following format:
           // { 'dimension_str_or_list': {'metric': [[x, y], ... ] , 'metric2': ...} }
@@ -139,7 +141,7 @@
               var render_options = {
                 chart: {
                   renderTo: target, // don't hardcode this
-                  defaultSeriesType: 'spline',
+                  defaultSeriesType: extra.area && 'area' || 'spline',
                 },
                 title: {
                   text: extra.title
@@ -186,6 +188,12 @@
                   if (d_d.length === min_dim) {
                     label = 'Overall ' + d_d.unpacked;
                     line_width = extra.width_factor;
+                    // But if this is an area graph, skip now
+                    // and don't add the line to the chart
+                    if(extra.area)
+                    {
+                      continue;
+                    }
                   } else {
                     label = d_d.unpacked[d_d.length-1];
                     line_width = extra.width_factor / (.5 + (d_d.length - min_dim));
@@ -223,6 +231,18 @@
                   });
                 }
               }
+              if(extra.area)
+                render_options.plotOptions = {
+                  area: {
+                        stacking: extra.area == 'percent' && 'percent' || 'normal',
+                        lineColor: '#ffffff',
+                        lineWidth: 1,
+                        marker: {
+                           lineWidth: 1,
+                           lineColor: '#ffffff'
+                       }
+                    }
+                }
               yaxis = {
                 min: 0
               };

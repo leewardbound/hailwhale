@@ -29,6 +29,8 @@ $(function() {
         period:'10x300'});
     hw.add_graph($('#countMany .plot'), {pk: 'countMany', depth: 1,
         autoupdate: debug, period: '10x300'});
+    hw.add_graph($('#countMany .areaplot'), {pk: 'countMany', depth: 1,
+        autoupdate: debug, period: '10x300', area: true});
     hw.add_graph($('#manyMetrics .plot'), {pk: 'system_status', 
         metrics: { 'CPU percent':'hits', 'RAM (GB)':'hits' },
         period: '10x300',
@@ -160,6 +162,7 @@ $(function() {
                 })})})
             </script>
             <div class="plot"></div>
+            <div class="areaplot"></div>
       </div>
       <div class="doc-section" id="manyMetrics">
             <h3>Track different kinds of data</h3>
