@@ -10,6 +10,7 @@ from datetime import datetime
 
 from util import to_flot_time, curry_instance_attribute
 from util import nested_dict_to_list_of_keys, whale_cache
+from util import TIME_MATRIX
 from periods import DEFAULT_PERIODS, Period
 
 DELIM = '||'
@@ -151,12 +152,25 @@ class Whale(object):
             for met, points in mets.items():
                 dts = period.datetimes_strs()
                 nonsparse[dim][met] = []
+                const_value = False
+                if met in TIME_MATRIX:
+                    print met, period.interval, TIME_MATRIX[met]
+                    const_value = float(period.interval / TIME_MATRIX[met])
+                    print const_value
+                # Try to parse static metrics too
+                try:
+                    const_value = float(met)
+                except:
+                    pass
                 for dt in dts:
                     if flot_time:
                         dt_t = to_flot_time(Period.parse_dt_str(dt))
                     else:
                         dt_t = dt
-                    value = points[dt] if dt in points else 0
+                    if const_value:
+                        value = const_value
+                    else:
+                        value = points[dt] if dt in points else 0
                     nonsparse[dim][met].append([dt_t, float(value)])
                 nonsparse[dim][met] = points_type(nonsparse[dim][met])
         if depth > 0:
@@ -172,10 +186,15 @@ class Whale(object):
         combo = defaultdict(dict)
         scalars = []
         ratios = {}
-        metrics = metrics or ['hits']
+        metrics = metrics or ['hits',]
+        only_metric = False
         tzoffset = kwargs.pop('tzoffset', 0.0)
         if isinstance(metrics, basestring):
             metrics = [metrics,]
+        if isinstance(metrics, dict):
+            metrics = ['%s%s' % (k,v != 1 and '/'+v or '') for k,v in metrics.items()]
+        if len(metrics) == 1:
+            only_metric = metrics[0]
         sort = kwargs.pop('sort', None)
         if not sort:
             if isinstance(metrics, list):
@@ -189,12 +208,8 @@ class Whale(object):
         if sort[0] == '-': 
             sort = sort[1:]
             reverse = True
-        if not sort in metrics:
-            metrics.append(sort)
 
         # Figure out which ones are ratios and pre-fetch
-        if isinstance(metrics, basestring):
-            metrics = [metrics]
         for met in metrics:
             top, bottom = parse_formula(met)
             if not bottom:
@@ -244,8 +259,10 @@ class Whale(object):
         if limit:
             scores = scores[:limit]
         high_scores = dict(scores)
-        return dict([(d,m) for d,m in combo.items()
-            if d in high_scores or d in iterate_dimensions(dimensions)
+        return dict([(d,
+                dict([(m, ps) for m, ps in ms.items() if (m == only_metric or not only_metric)])
+                ) for d,ms in combo.items()
+            if  (d in high_scores or d in iterate_dimensions(dimensions))
             ])
 
     @classmethod
@@ -256,6 +273,8 @@ class Whale(object):
     @classmethod
     def ratio_plotpoints(cls, pk, numerator_metric, denomenator_metric='hits',
             dimensions=None, depth=0, period=None, flot_time=False, points_type=dict):
+        if flot_time:
+            points_type = list
         top, bot = numerator_metric, denomenator_metric
         pps = cls.scalar_plotpoints(pk, dimensions, [top, bot], depth=depth, period=period,
             flot_time=flot_time, points_type=points_type)
@@ -283,6 +302,11 @@ class Whale(object):
                     points_type([(dt, (denom and (get_top(dt) / denom) or 0))
                                     for (dt, denom) in tgt_iter])})
         return dict(map(ratio_func, pps.items()))
+
+    @classmethod
+    @whale_cache
+    def cached_totals(cls, *args, **kwargs):
+        return cls.totals(*args, **kwargs)
 
     @classmethod
     def totals(cls, pk, dimensions=None, metrics=None, periods=None):
@@ -414,7 +438,7 @@ class Whale(object):
             period=None, recursive=True, prune_parents=True, points=False):
         period = period or Period.default_size()
         d_k = keyify(dimension)
-        total = cls.totals(pk, dimension, metric, periods=[period])[period][d_k][metric]
+        total = cls.cached_totals(pk, dimension, metric, periods=[period])[period][d_k][metric]
         ranked = dict()
 
         def info(sub):
@@ -452,8 +476,8 @@ class Whale(object):
         top, bottom = numerator, denominator
         period = period or Period.default_size()
         d_k = keyify(dimension)
-        top_total = cls.totals(pk, dimension, top, periods=[period])[str(period)][d_k][top]
-        bottom_total = cls.totals(pk, dimension, bottom, periods=[period])[str(period)][d_k][bottom]
+        top_total = cls.cached_totals(pk, dimension, top, periods=[period])[str(period)][d_k][top]
+        bottom_total = cls.cached_totals(pk, dimension, bottom, periods=[period])[str(period)][d_k][bottom]
         ratio_total = bottom_total and float(top_total / bottom_total) or 0
         ranked = dict()
 

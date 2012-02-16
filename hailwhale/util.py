@@ -4,6 +4,14 @@ import times
 import json
 from types import *
 
+TIME_MATRIX = {
+    'seconds': 1,
+    'minutes': 1,
+    'hours': 3600,
+    'days': 86400,
+    'weeks': 86400*7,
+    'years': 86400*365.25
+        }
 
 class whale_cache(object):
     """
