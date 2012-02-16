@@ -120,6 +120,10 @@
               {
                   if(our_chart.get(dimension) == null)
                   {
+                      // Unless it's an area chart and this is the root dimension
+                      
+                      if(extra.area && dimension == root_dimension)
+                          continue;
                       console.log('our data has a line not in chart: ',dimension, our_chart_id)
                       re_render = true;
                   }
