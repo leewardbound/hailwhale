@@ -112,7 +112,7 @@ def graph():
             'depth': g('depth', 0),
             'tzoffset': g('tzoffset', 0.0),
             'period': g('period', '3600x86400'),
-            'area': g('area', False, str)
+            'area': g('area', '')
             }
     pk = params['pk']
     dimension = params['dimension']
