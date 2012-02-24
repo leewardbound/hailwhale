@@ -112,13 +112,14 @@ def graph():
             'depth': g('depth', 0),
             'tzoffset': g('tzoffset', 0.0),
             'period': g('period', '3600x86400'),
-            'area': g('area', '')
+            'area': g('area', ''),
             }
     pk = params['pk']
     dimension = params['dimension']
     period = params['period']
     parent_div = g('parent_div', 'hailwhale_graphs')
     hide_table = g('hide_table', False)
+    height = g('height', 400)
     params['title'] = g('title', '')
     if not params['title']:
         pkname = g('pk', '')
@@ -159,7 +160,7 @@ def graph():
 
     return_string = '''
 appended=false;\n
-document.write('<div id="{id}"></div>');\n
+document.write('<div id="{id}" style="height: {height}"></div>');\n
 function jqinit() {{\n
     if(typeof(jQuery) == 'undefined') {{\n
         if(!appended) {{\n
@@ -185,7 +186,7 @@ jqinit();\n
     
     
     '''.format(parent_div=parent_div, include_string=include_string,
-            hwurl=hwurl, table_str=table_str,
+            hwurl=hwurl, table_str=table_str, height=height,
             id=hashlib.md5(str(params)).hexdigest(),
             options=json.dumps(params))
     return return_string
