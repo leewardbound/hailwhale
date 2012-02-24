@@ -119,7 +119,7 @@ def graph():
     period = params['period']
     parent_div = g('parent_div', 'hailwhale_graphs')
     hide_table = g('hide_table', False)
-    height = g('height', 400)
+    height = g('height', '400px')
     params['title'] = g('title', '')
     if not params['title']:
         pkname = g('pk', '')
