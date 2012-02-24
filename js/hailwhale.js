@@ -80,6 +80,7 @@
           var colors, d_d, dimension, dimension_data, i, label, line_width, lines, max_dim, metrics, min_dim, plot, unpacked, yaxis, yaxis_two, _ref, _ref2;
           lines = [];
           colors = extra.colors || ['#000000', '#261AFF', '#0ED42F', '#E84414', '#F5E744', '#36B9FF'];
+          colors = extra.colors || ['#000000', '#98A942', '#4C1B33', '#D2A825', '#EFE672', '#DE2B5B', '#2D6960'];
           i = 0;
           min_dim = 10;
           max_dim = 0;
