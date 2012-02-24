@@ -171,9 +171,11 @@ function jqinit() {{\n
         $(function() {{\n
             // Nest a few of these, very poor form \n
             $.getScript('{hwurl}js/highcharts.src.js', function() {{\n
-            $.getScript('{hwurl}js/hailwhale.coffee.partial.js', function() {{\n
+            $.getScript('{hwurl}js/d3.js', function() {{\n
+            $.getScript('{hwurl}js/hailwhale.js', function() {{\n
                 $.hailwhale('{hwurl}').add_graph('{id}', {options});\n
                 {table_str}
+            }});\n
             }});\n
             }});\n
         }});\n

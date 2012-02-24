@@ -154,9 +154,7 @@ class Whale(object):
                 nonsparse[dim][met] = []
                 const_value = False
                 if met in TIME_MATRIX:
-                    print met, period.interval, TIME_MATRIX[met]
                     const_value = float(period.interval / TIME_MATRIX[met])
-                    print const_value
                 # Try to parse static metrics too
                 try:
                     const_value = float(met)
@@ -414,10 +412,9 @@ class Whale(object):
             except Exception as e:
                 print e
         if not metrics:
-            metrics = list()
+            metrics = list('hits')
         if type(metrics) == list:
             metrics = dict([(k, 1) for k in metrics])
-        metrics['hits'] = 1
         # Dimensions: {a: 5, b: {x: 1, y: 2}} --> will increment each of:
         # [_], (overall)
         # [a],

@@ -7,7 +7,7 @@
   $.hailwhale = function(host, opts) {
     this.host = host;
     this.opts = opts;
-    this.charts = {};
+    this.charts = [];
     this.make_params = function(extra) {
       var params;
       d = new Date();
@@ -43,24 +43,37 @@
       // Get the jquery object of the target
       if(typeof(target) == 'string' && target[0] != '#')
           target='#'+target;
-      id = target;
       target = $(target)[0];
+      
       url = this.host + 'plotpoints';
-      var charts = this.charts;
-      var our_chart_id = 0;
+      var charts = this.charts || [];
+      var charts_on_page = charts.length || 0;
+      var our_chart_id = charts_on_page+1;
       var our_chart = charts[our_chart_id];
+      var w = $(target).width(),
+          h = $(target).height();
+      this.charts.push(our_chart);
       extra = $.extend(extra, {
         pk: extra.pk || extra.category || false,
         dimensions: extra.dimensions || extra.dimension || false,
         metrics: extra.metrics || extra.metric || false,
         metric: extra.metrics && extra.metrics[0] || extra.metric || false,
         metric_two: extra.metrics && extra.metrics[1] ? extra.metrics[1] : false,
-        width_factor: extra.width_factor || 6
+        width_factor: extra.width_factor || 6,
+        d3: extra.d3 || false
       });
       params = this.make_params(extra);
       params['depth'] = (extra.depth || 0);
-      if(params['area'])
+      if(extra.area) {
         params['depth'] = 1;
+        if(extra.area == 'wiggle' || extra.area == 'expand' || extra.area == 'zero' || extra.area == 'silhouette')
+        {
+          extra.d3 = extra.area;
+          var stack_func = d3.layout.stack().offset(extra.d3);
+          var area = d3.svg.area();
+          our_chart = charts[our_chart_id] = d3.select(target).append("svg");
+        }
+      }
       poller = function() {
         return $.getJSON(url, params, function(data, status, xhr) {
           var colors, d_d, dimension, dimension_data, i, label, line_width, lines, max_dim, metrics, min_dim, plot, unpacked, yaxis, yaxis_two, _ref, _ref2;
@@ -87,7 +100,7 @@
               unpacked = [dimension];
             }
             if (unpacked[0] === "_") unpacked = [];
-            if (unpacked.length < min_dim) 
+            if (unpacked.length < min_dim)
             {
                 root_dimension = dimension;
                 min_dim = unpacked.length;
@@ -108,31 +121,33 @@
               return dimension_data[a].length - dimension_data[b].length;});
 
           // OK, now if any of the dimensions changed, we have to re-render the graph
+          // Also, always re-render d3
           var re_render = false;
-          if(!our_chart)
+          if(extra.d3)
           {
-              console.log('need to render chart');
+            re_render = true;
+          }
+          else if(!our_chart)
+          {
               re_render = true;
           }
           else
           {
-              for(dimension in data)
+              for(var this_d in data)
               {
-                  if(our_chart.get(dimension) == null)
+                  if(our_chart.get(this_d) === null)
                   {
                       // Unless it's an area chart and this is the root dimension
                       
-                      if(extra.area && dimension == root_dimension)
+                      if(extra.area && this_d == root_dimension)
                           continue;
-                      console.log('our data has a line not in chart: ',dimension, our_chart_id)
                       re_render = true;
                   }
               }
-              for(index in our_chart.series)
+              for(var index in our_chart.series)
               {
-                  if(data[our_chart.series[index].options.id] == null)
+                  if(data[our_chart.series[index].options.id] === null)
                   {
-                      console.log('our chart wants to render: ',dimension, our_chart.series[index].options.id, data)
                       re_render = true;
                   }
               }
@@ -140,12 +155,12 @@
                   console.log('something changed, need to render chart');
           }
 
-          if(re_render) {
-              console.log('re-drawing graph at ',target);
+          if(re_render && extra.d3 === false) {
+              console.log('re-drawing highcharts graph at ',target);
               var render_options = {
                 chart: {
                   renderTo: target, // don't hardcode this
-                  defaultSeriesType: extra.area && 'area' || 'spline',
+                  defaultSeriesType: extra.area && 'area' || 'spline'
                 },
                 title: {
                   text: extra.title
@@ -164,13 +179,12 @@
                   }
                 },
                 series: []
-              }
+              };
 
               // Now we loop dimensions and find our relevant plotpoints
-              for (idx in ordered_dimensions) {
+              for (var idx in ordered_dimensions) {
                 dimension = ordered_dimensions[idx];
                 metrics = data[dimension];
-                console.debug(dimension)
                 if(typeof(metrics) == 'undefined')
                     continue;
                 d_d = dimension_data[dimension];
@@ -186,7 +200,7 @@
                 if (_ref = !extra.metric, __indexOf.call(d_d.metrics, _ref) >= 0) {
                   break;
                 }
-                // Did we ask for a nested graph? 
+                // Did we ask for a nested graph?
                 if (extra.depth) {
                   // If so, let's give parent a fat line and all the kids skiny ones
                   if (d_d.length === min_dim) {
@@ -236,6 +250,7 @@
                 }
               }
               if(extra.area)
+              {
                 render_options.plotOptions = {
                   area: {
                         stacking: extra.area == 'percent' && 'percent' || 'normal',
@@ -246,7 +261,8 @@
                            lineColor: '#ffffff'
                        }
                     }
-                }
+                };
+              }
               yaxis = {
                 min: 0
               };
@@ -257,18 +273,60 @@
               our_chart = new Highcharts.Chart(render_options);
               our_chart_id = our_chart.container.id;
               charts[our_chart_id] = our_chart;
+          };
+          if (extra.d3) {
+            console.log('drawing d3', target, extra.d3);
+            extra.metric = extra.metric || 'hits';
+            var lines = our_chart.selectAll("path");
+            var datapoints = d3.range(ordered_dimensions.length).map(function(d, n) {
+                  var this_d = ordered_dimensions[n];
+                  if(this_d === '_')
+                    return [];
+                  var pps = data[this_d][extra.metric];
+                  return d3.range(pps.length).map(function(idx) {
+                    return {x: idx, y: pps[idx][1], at: pps[idx][0], metric: extra.metric};
+                });
+            }).filter(function(d,n) {return d.length >= 1})
+            var stack = stack_func(datapoints);
+            var n = datapoints.length,
+                m = datapoints[0].length,
+                colors_arr = d3.scale.category20c();
+                color_sets = [
+            extra.colors,
+            ['#52e430'],
+            ['#006ac2'],
+            
+            ];
+            var
+                mx = m - 1,
+                my = d3.max(stack, function(d) {
+                  return d3.max(d, function(d) {
+                    return d.y0 + d.y;
+                  });
+                }) || 1;
+            area.x(function(d) { return d.x * w / mx; })
+                .y0(function(d) { return h - d.y0 * h / my; })
+                .y1(function(d) { return h - (d.y + d.y0) * h / my; });
+            our_chart.attr("width", w)
+                .attr("height", h);
+            entry = lines.data(stack).attr("d", area).enter()
+                .append("path").style("fill", function(line, i) {
+                  return colors[i+1]; }).attr("d", area);
           }
-
-          // Now update the plotpoints!
-          $.each(our_chart.series, function(index, series) {
-            id_extra = series.options.id.split('||');
-            if(id_extra.length == 2)
-               metric = id_extra[1];
-            else
-               metric = extra.metric;
-            dimension = id_extra[0]
-            series.setData(data[dimension][metric]);
-          });
+          
+          if(extra.d3 === false)
+          {
+            // Highcharts? Update the plotpoints!
+            $.each(our_chart.series, function(index, series) {
+              id_extra = series.options.id.split('||');
+              if(id_extra.length == 2)
+                 metric = id_extra[1];
+              else
+                 metric = extra.metric;
+              dimension = id_extra[0];
+              series.setData(data[dimension][metric]);
+            });
+          }
         });
       };
       poller();
