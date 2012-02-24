@@ -60,6 +60,7 @@
         metric: extra.metrics && extra.metrics[0] || extra.metric || false,
         metric_two: extra.metrics && extra.metrics[1] ? extra.metrics[1] : false,
         width_factor: extra.width_factor || 6,
+        area: extra.area || false,
         d3: extra.d3 || false
       });
       params = this.make_params(extra);
