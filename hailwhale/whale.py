@@ -3,6 +3,7 @@ import math
 import itertools
 import collections
 import times
+import urllib
 
 from redis import Redis
 from collections import defaultdict
@@ -130,13 +131,26 @@ class Whale(object):
                 'weighted_reasons', 'reasons_for', 'graph_tag']:
                 curry_instance_attribute(attr, method, self,
                         with_class_name=True)
-    @classmethod
-    def graph_tag(cls, pk, extra='', host=''):
-        return "<script src='%s/graph.js?pk=%s&%s'></script>" % (host, pk, extra)
 
     @classmethod
-    def class_graph_tag(cls, extra='', host=''):
-        return cls.graph_tag(cls.__name__, extra, host)
+    def graph_tag(cls, pk, dimension=None, metric=None, extra=None, host=''):
+        if not extra:
+            extra = {}
+        extra['pk'] = maybe_dumps(pk)
+        if dimension:
+            extra['dimension'] = maybe_dumps(dimension)
+        if metric:
+            extra['metric'] = maybe_dumps(metric)
+        if not 'title' in extra:
+            extra['title'] = cls.__name__
+        if not 'area' in extra:
+            extra['area'] = 'true'
+            extra['depth'] = 1
+        return "<script src='%s/graph.js?%s'></script>" % (host, urllib.urlencode(extra.items()))
+
+    @classmethod
+    def class_graph_tag(cls, *args, **kwargs):
+        return cls.graph_tag(cls.__name__, *args, **kwargs)
 
     @classmethod
     def whale_driver(cls):
