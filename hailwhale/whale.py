@@ -127,9 +127,18 @@ class Whale(object):
         if hasattr(self, attr):
             for method in ['plotpoints', 'ratio_plotpoints', 'scalar_plotpoints',
                 'totals', 'count_now', 'count_decided_now', 'decide',
-                'weighted_reasons', 'reasons_for']:
+                'weighted_reasons', 'reasons_for', 'graph_tag']:
                 curry_instance_attribute(attr, method, self,
                         with_class_name=True)
+        self.__class__.class_graph_tag = Whale.class_graph_tag
+
+    @classmethod
+    def graph_tag(cls, pk, extra='', host=''):
+        return "<script src='%s/graph.js?pk=%s&%s'></script>" % (pk, extra, host)
+
+    @classmethod
+    def class_graph_tag(cls, extra='', host=''):
+        return cls.graph_tag(cls.__name__, extra, host)
 
     @classmethod
     def whale_driver(cls):

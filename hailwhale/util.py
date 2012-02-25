@@ -131,7 +131,7 @@ def curry_instance_attribute(attr, func_name, instance, with_class_name=False):
         if hasattr(pass_attr, '__call__'):
             pass_attr = pass_attr()
         if with_class_name:
-            pass_attr = '_'.join(map(str, [instance.__class__.__name__, pass_attr]))
+            pass_attr = map(str, [instance.__class__.__name__, pass_attr])
         return func(pass_attr, *args, **kwargs)
 
     setattr(instance, func_name,
