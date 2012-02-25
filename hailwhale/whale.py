@@ -130,8 +130,6 @@ class Whale(object):
                 'weighted_reasons', 'reasons_for', 'graph_tag']:
                 curry_instance_attribute(attr, method, self,
                         with_class_name=True)
-        self.__class__.class_graph_tag = Whale.class_graph_tag
-
     @classmethod
     def graph_tag(cls, pk, extra='', host=''):
         return "<script src='%s/graph.js?pk=%s&%s'></script>" % (host, pk, extra)
