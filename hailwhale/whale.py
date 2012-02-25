@@ -134,7 +134,7 @@ class Whale(object):
 
     @classmethod
     def graph_tag(cls, pk, extra='', host=''):
-        return "<script src='%s/graph.js?pk=%s&%s'></script>" % (pk, extra, host)
+        return "<script src='%s/graph.js?pk=%s&%s'></script>" % (host, pk, extra)
 
     @classmethod
     def class_graph_tag(cls, extra='', host=''):
