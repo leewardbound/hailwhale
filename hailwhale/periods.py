@@ -71,6 +71,7 @@ class Period(object):
     def all_sizes():
         PERIODS = [
 {'name': 'Last year, by 14 days', 'length': 3600 * 24 * 365, 'interval': 3600 * 24 * 14},
+{'name': 'Last 30 day month, by day', 'length': 3600 * 24 * 30, 'interval': 3600 * 24},
 {'name': 'Last week, by 6 hours', 'length': 3600 * 24 * 7, 'interval': 3600 * 6},
 {'name': 'Last day, by hour', 'length': 3600 * 24, 'interval': 3600},
 {'name': 'Last 6 hours, by 15 minutes', 'length': 3600 * 6, 'interval': 60 * 15},
