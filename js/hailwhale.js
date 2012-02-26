@@ -282,7 +282,7 @@
             var lines = our_chart.selectAll("path");
             var datapoints = d3.range(ordered_dimensions.length).map(function(d, n) {
                   var this_d = ordered_dimensions[n];
-                  if(this_d === '_')
+                  if(dimension_data[this_d].length == min_dim)
                     return [];
                   var pps = data[this_d][extra.metric];
                   return d3.range(pps.length).map(function(idx) {
