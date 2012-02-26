@@ -203,7 +203,7 @@
                   break;
                 }
                 // Did we ask for a nested graph?
-                if (extra.depth) {
+                if (params['depth']) {
                   // If so, let's give parent a fat line and all the kids skiny ones
                   if (d_d.length === min_dim) {
                     label = 'Overall ' + d_d.unpacked;
