@@ -9,12 +9,8 @@ from redis import Redis
 from collections import defaultdict
 from datetime import datetime
 
-from util import to_flot_time, curry_instance_attribute
-from util import nested_dict_to_list_of_keys, whale_cache
-from util import TIME_MATRIX
+from util import *
 from periods import DEFAULT_PERIODS, Period
-
-DELIM = '||'
 
 """
 Ahoy, traveler!
@@ -51,38 +47,6 @@ P.S. don't trust the comments --
     they are as sparse as they are outdated
 
 """
-
-
-def try_loads(arg):
-    try:
-        return json.loads(arg)
-    except:
-        return arg
-
-
-def maybe_dumps(arg):
-    if isinstance(arg, basestring):
-        return str(arg)
-    if isinstance(arg, list) and len(arg) == 1:
-        return maybe_dumps(arg[0])
-    return json.dumps(arg)
-
-
-def parent(sub):
-    sub = try_loads(sub)
-    if sub == '_':
-        return None
-    elif isinstance(sub, list) and len(sub) > 1:
-        return sub[:-1]
-    else:
-        return '_'
-
-
-def keyify(*args):
-    json_args = map(maybe_dumps, map(try_loads, args))
-    return DELIM.join([arg if arg not in
-        [None, False, '[null]', [], ['_'], '', '""', '"_"', '\"\"', '["_"]']
-        else '_' for arg in json_args])
 
 
 class WhaleRedisDriver(Redis):
@@ -159,72 +123,31 @@ class Whale(object):
         return cls._whale_driver
 
     @classmethod
-    def scalar_plotpoints(cls, pk, dimensions=None, metrics=None,
-            depth=0, period=None, flot_time=False, points_type=dict):
-        metrics = metrics or ['hits']
-        if isinstance(metrics, basestring):
-            metrics = [metrics]
-        period = Period.get(period)
-        sparse = cls.whale_driver().retrieve(pk, dimensions, metrics, period=period)
-        nonsparse = defaultdict(dict)
-        if flot_time:
-            points_type = list
-        for dim, mets in sparse.items():
-            for met, points in mets.items():
-                dts = period.datetimes_strs()
-                nonsparse[dim][met] = []
-                const_value = False
-                if met in TIME_MATRIX:
-                    const_value = float(period.interval / TIME_MATRIX[met])
-                # Try to parse static metrics too
-                try:
-                    const_value = float(met)
-                except:
-                    pass
-                for dt in dts:
-                    if flot_time:
-                        dt_t = to_flot_time(Period.parse_dt_str(dt))
-                    else:
-                        dt_t = dt
-                    if const_value:
-                        value = const_value
-                    else:
-                        value = points[dt] if dt in points else 0
-                    nonsparse[dim][met].append([dt_t, float(value)])
-                nonsparse[dim][met] = points_type(nonsparse[dim][met])
-        if depth > 0:
-            for sub in cls.get_subdimensions(pk, dimensions):
-                nonsparse = dict(nonsparse.items() +
-                    cls.plotpoints(pk, sub, metrics, depth=depth - 1, period=period,
-                        flot_time=flot_time, points_type=points_type).items())
-        return nonsparse
-
-    @classmethod
     def plotpoints(cls, pk, dimensions=None, metrics=None, **kwargs):
         """ Combines scalar_plotpoints and ratio_plotpoints into a single func call w/ formula support """
         combo = defaultdict(dict)
         scalars = []
         ratios = {}
-        metrics = metrics or ['hits',]
+        metrics = metrics or ['hits']
         only_metric = False
         tzoffset = kwargs.pop('tzoffset', 0.0)
         if isinstance(metrics, basestring):
-            metrics = [metrics,]
+            metrics = [metrics]
         if isinstance(metrics, dict):
-            metrics = ['%s%s' % (k,v != 1 and '/'+v or '') for k,v in metrics.items()]
+            metrics = ['%s%s' % (k, v != 1 and '/' + v or '') for k, v in metrics.items()]
         if len(metrics) == 1:
             only_metric = metrics[0]
         sort = kwargs.pop('sort', None)
         if not sort:
             if isinstance(metrics, list):
-                sort = '-'+metrics[0]
+                sort = '-' + metrics[0]
             elif isinstance(metrics, dict):
-                sort = '-'+metrics.keys()[0]
+                sort = '-' + metrics.keys()[0]
             else:
                 sort = '-hits'
         limit = kwargs.pop('limit', 0)
         reverse = False
-        if sort[0] == '-': 
+        if sort[0] == '-':
             sort = sort[1:]
             reverse = True
 
@@ -288,6 +211,47 @@ class Whale(object):
     @whale_cache
     def cached_plotpoints(cls, *args, **kwargs):
         return cls.plotpoints(*args, **kwargs)
+
+    @classmethod
+    def scalar_plotpoints(cls, pk, dimensions=None, metrics=None,
+            depth=0, period=None, flot_time=False, points_type=dict):
+        metrics = metrics or ['hits']
+        if isinstance(metrics, basestring):
+            metrics = [metrics]
+        period = Period.get(period)
+        sparse = cls.whale_driver().retrieve(pk, dimensions, metrics, period=period)
+        nonsparse = defaultdict(dict)
+        if flot_time:
+            points_type = list
+        for dim, mets in sparse.items():
+            for met, points in mets.items():
+                dts = period.datetimes_strs()
+                nonsparse[dim][met] = []
+                const_value = False
+                if met in TIME_MATRIX:
+                    const_value = float(period.interval / TIME_MATRIX[met])
+                # Try to parse static metrics too
+                try:
+                    const_value = float(met)
+                except:
+                    pass
+                for dt in dts:
+                    if flot_time:
+                        dt_t = to_flot_time(Period.parse_dt_str(dt))
+                    else:
+                        dt_t = dt
+                    if const_value:
+                        value = const_value
+                    else:
+                        value = points[dt] if dt in points else 0
+                    nonsparse[dim][met].append([dt_t, float(value)])
+                nonsparse[dim][met] = points_type(nonsparse[dim][met])
+        if depth > 0:
+            for sub in cls.get_subdimensions(pk, dimensions):
+                nonsparse = dict(nonsparse.items() +
+                    cls.plotpoints(pk, sub, metrics, depth=depth - 1, period=period,
+                        flot_time=flot_time, points_type=points_type).items())
+        return nonsparse
 
     @classmethod
     def ratio_plotpoints(cls, pk, numerator_metric, denomenator_metric='hits',
@@ -437,7 +401,7 @@ class Whale(object):
             except Exception as e:
                 print e
         if not metrics:
-            metrics = list('hits')
+            metrics = ['hits']
         if type(metrics) == list:
             metrics = dict([(k, 1) for k in metrics])
         # Dimensions: {a: 5, b: {x: 1, y: 2}} --> will increment each of:

@@ -4,70 +4,49 @@ import times
 import json
 from types import *
 
+
+DELIM = '||'
+
+def try_loads(arg):
+    try:
+        return json.loads(arg)
+    except:
+        return arg
+
+
+def maybe_dumps(arg):
+    if isinstance(arg, basestring):
+        return str(arg)
+    if isinstance(arg, list) and len(arg) == 1:
+        return maybe_dumps(arg[0])
+    return json.dumps(arg)
+
+
+def parent(sub):
+    sub = try_loads(sub)
+    if sub == '_':
+        return None
+    elif isinstance(sub, list) and len(sub) > 1:
+        return sub[:-1]
+    else:
+        return '_'
+
+
+def keyify(*args):
+    json_args = map(maybe_dumps, map(try_loads, args))
+    return DELIM.join([arg if arg not in
+        [None, False, '[null]', [], ['_'], '', '""', '"_"', '\"\"', '["_"]']
+        else '_' for arg in json_args])
+
 TIME_MATRIX = {
     'seconds': 1,
     'minutes': 1,
     'hours': 3600,
     'days': 86400,
-    'weeks': 86400*7,
-    'years': 86400*365.25
+    'weeks': 86400 * 7,
+    'years': 86400 * 365.25
         }
 
-class whale_cache(object):
-    """
-    Decorator that caches a function's return value each time it is called.
-    If called later with the same arguments, the cached value is returned, and
-    not re-evaluated.
-    """
-    def __init__(self, func):
-        self.func = func
-        self.cache = None
-
-    def get_cache(self):
-        from whale import Whale
-        self.cache = Whale.whale_driver()
-        return self.cache
-
-    def keyify(self, args, kwargs):
-        return json.dumps((args, kwargs))
-
-    def __call__(self, *args, **kwargs):
-        from whale import Whale
-        if len(args) and args[0] == Whale or issubclass(args[0], Whale):
-            args = args[1:]
-        clear_cache = kwargs.pop('unmemoize', False)
-        self.get_cache()
-        if 'period' in kwargs:
-            kwargs['period'] = str(kwargs['period'])
-            ttl = int(kwargs['period'].split('x')[0]) * 2
-        else:
-            ttl = 60
-
-        key_name = self.keyify(args, kwargs)
-
-        if clear_cache:
-            self.cache.delete(key_name)
-
-        try:
-            return json.loads(self.cache[key_name])
-        except KeyError:
-            value = self.func(Whale, *args, **kwargs)
-            self.cache[key_name] = json.dumps(value)
-            self.cache.expire(key_name, ttl)
-            return value
-        except TypeError:
-            # uncachable -- for instance, passing a list as an argument.
-            # Better to not cache than to blow up entirely.
-            return self.func(Whale, *args, **kwargs)
-
-    def __repr__(self):
-        """Return the function's docstring."""
-        return self.func.__doc__
-
-    def __get__(self, obj, objtype):
-        """Support instance methods."""
-        import functools
-        return functools.partial(self.__call__, obj)
 
 JS_URL = '/js.js'
 JS_TAG = '<script type="text/javascript" src="%s"></script>' % JS_URL
@@ -131,7 +110,7 @@ def curry_instance_attribute(attr, func_name, instance, with_class_name=False):
         if hasattr(pass_attr, '__call__'):
             pass_attr = pass_attr()
         if with_class_name:
-            pass_attr = map(str, [instance.__class__.__name__, pass_attr])
+            pass_attr = map(str, maybe_dumps([instance.__class__.__name__, pass_attr]))
         return func(pass_attr, *args, **kwargs)
 
     setattr(instance, func_name,
@@ -157,6 +136,64 @@ def period_points(self, metric=False, period_str='60x86400',
             else:
                 v = 0
         yield dt, v
+
+
+class whale_cache(object):
+    """
+    Decorator that caches a function's return value each time it is called.
+    If called later with the same arguments, the cached value is returned, and
+    not re-evaluated.
+    """
+    def __init__(self, func):
+        self.func = func
+        self.cache = None
+
+    def get_cache(self):
+        from whale import Whale
+        self.cache = Whale.whale_driver()
+        return self.cache
+
+    def keyify(self, args, kwargs):
+        return json.dumps((args, kwargs))
+
+    def __call__(self, *args, **kwargs):
+        from whale import Whale
+        if len(args) and args[0] == Whale or issubclass(args[0], Whale):
+            args = args[1:]
+        clear_cache = kwargs.pop('unmemoize', False)
+        self.get_cache()
+        if 'period' in kwargs:
+            kwargs['period'] = str(kwargs['period'])
+            ttl = int(kwargs['period'].split('x')[0]) * 2
+        else:
+            ttl = 60
+
+        key_name = self.keyify(args, kwargs)
+
+        if clear_cache:
+            self.cache.delete(key_name)
+
+        try:
+            return json.loads(self.cache[key_name])
+        except KeyError:
+            value = self.func(Whale, *args, **kwargs)
+            self.cache[key_name] = json.dumps(value)
+            self.cache.expire(key_name, ttl)
+            return value
+        except TypeError:
+            # uncachable -- for instance, passing a list as an argument.
+            # Better to not cache than to blow up entirely.
+            return self.func(Whale, *args, **kwargs)
+
+    def __repr__(self):
+        """Return the function's docstring."""
+        return self.func.__doc__
+
+    def __get__(self, obj, objtype):
+        """Support instance methods."""
+        import functools
+        return functools.partial(self.__call__, obj)
+
 
 if __name__ == "__main__":
     import doctest
