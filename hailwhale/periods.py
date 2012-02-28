@@ -33,26 +33,35 @@ class Period(object):
         return t.strftime('%c')
     @staticmethod
     def parse_dt_str(t):
-        return datetime.strptime(t, '%c')
+        try:
+            return datetime.strptime(t, '%c')
+        except ValueError:
+            return None
 
     def datetimes(self, start=False, end=False):
         from util import datetimeIterator
         return (dt for dt in datetimeIterator(
-            start or self.start(), 
+            start or self.start(),
             end or times.now(),
             delta=self.delta()))
 
     def datetimes_strs(self, start=False, end=False):
         return (Period.format_dt_str(dt) for dt in
-                self.datetimes(start=start,end=end))
-        
-    def flatten(self, dtf):
-        if type(dtf) in (str, unicode): dtf = self.parse_dt_str(dtf)
+                self.datetimes(start=start, end=end))
+
+    def flatten(self, dtf=None):
+        if not dtf:
+            dtf = datetime.now()
+        if type(dtf) in (str, unicode):
+            dtf = self.parse_dt_str(dtf)
+        if not dtf:
+            return False
         diff_delta = dtf - self.start()
-        diff = diff_delta.seconds + diff_delta.days*86400
-        if diff < 0: return False
+        diff = diff_delta.seconds + (diff_delta.days * 86400)
+        if diff < 0:
+            return False
         p = int(diff / self.interval)
-        flat = self.start() + timedelta(seconds=p*self.interval)
+        flat = self.start() + timedelta(seconds=p * self.interval)
         return flat
 
     def flatten_str(self, dtf):

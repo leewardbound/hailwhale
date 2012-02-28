@@ -128,7 +128,7 @@ class Whale(object):
         if hasattr(self, attr):
             for method in ['plotpoints', 'ratio_plotpoints', 'scalar_plotpoints',
                 'totals', 'count_now', 'count_decided_now', 'decide',
-                'weighted_reasons', 'reasons_for', 'graph_tag']:
+                'weighted_reasons', 'reasons_for', 'graph_tag', 'today']:
                 curry_instance_attribute(attr, method, self,
                         with_class_name=True)
 
@@ -326,6 +326,10 @@ class Whale(object):
     @whale_cache
     def cached_totals(cls, *args, **kwargs):
         return cls.totals(*args, **kwargs)
+
+    @classmethod
+    def today(cls, pk, metric, dimension='_'):
+        return cls.plotpoints(pk, dimension, metric, period='86400x%s' % (86400 * 30), points_type=list)[dimension][metric][-1][1]
 
     @classmethod
     def totals(cls, pk, dimensions=None, metrics=None, periods=None):
