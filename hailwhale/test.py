@@ -1,7 +1,7 @@
 import unittest, urllib, json, time
 from collections import defaultdict
 from whale import maybe_dumps
-import itertools
+
 
 class TestHailWhaleHTTP(unittest.TestCase):
     def setUp(self):
