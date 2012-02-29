@@ -6,7 +6,7 @@ import random
 
 from redis import Redis
 
-from util import curry_instance_attribute
+from util import curry_instance_attribute, curry_related_dimensions
 from whale import Whale
 
 
@@ -25,6 +25,8 @@ class Hail(object):
             'spy_pos', 'spy_key', 'spy_log', 'spy_at_key', 'get_spy']:
                 curry_instance_attribute(attr, method, self,
                         with_class_name=True)
+            for method in ['count', 'count_decided']:
+                curry_related_dimensions(attr, method, self, with_class_name=True)
 
     @classmethod
     def hail_driver(cls):

@@ -22,15 +22,11 @@ def enable_cors():
     response.headers['Access-Control-Allow-Origin'] = '*'
 
 def g(name, default=None, coerce_to=True):
-    val = req.GET.get(name, default)
-    try: 
-        val = json.loads(val)
-    except Exception as e:
-        pass
-    try: 
+    val = util.try_loads(req.GET.get(name, default))
+    try:
         if coerce_to is True:
             coerce_to = type(default)
-        if coerce_to: 
+        if coerce_to:
             if coerce_to is list and isinstance(val, basestring):
                 val = [val, ]
             elif coerce_to is list and type(val) == dict:
@@ -43,14 +39,14 @@ def g(name, default=None, coerce_to=True):
         return default
     return val
 
-def g_tup(k, v):
-    return (k, g(k, v))
+def g_tup(k, v, coerce_to=True):
+    return (k, g(k, v, coerce_to))
 
 def default_params():
     return dict([
-            g_tup('pk', '_'), 
-            g_tup('dimensions', ['_',]),
-            g_tup('metrics', dict(hits=1))])
+            g_tup('pk', '_', False),
+            g_tup('dimensions', ['_'], False),
+            g_tup('metrics', dict(hits=1), False)])
 
 
 @route('/count')
@@ -106,9 +102,9 @@ def plotpoints():
 
 @route('/graph.js')
 def graph():
-    params = {'pk': g('pk', '_'),
-            'dimension': g('dimension', '_'),
-            'metric': g('metric', 'hits'),
+    params = {'pk': g('pk', '_', False),
+            'dimension': g('dimension', '_', False),
+            'metric': g('metric', 'hits', False),
             'depth': g('depth', 0),
             'tzoffset': g('tzoffset', 0.0),
             'period': g('period', '3600x86400'),
@@ -123,10 +119,10 @@ def graph():
     params['title'] = g('title', '')
     if not params['title']:
         pkname = g('pk', '')
-        dimname = g('dimension', 'Overall')
-        params['title'] = '%s[%s]' % (pkname, dimname)
+        dimname = util.try_loads(g('dimension', 'Overall'))
+        dimname = isinstance(dimname, list) and dimname[-1] or dimname
+        params['title'] = '%s [%s]' % (util.maybe_dumps(pkname), util.maybe_dumps(dimname))
     length, interval = [int(part) for part in period.split('x')]
-
     if isinstance(hide_table, basestring):
         hide_table = hide_table.lower() == 'true'
     hwurl = req.url.split('graph.js')[0]
@@ -188,7 +184,7 @@ jqinit();\n
     '''.format(parent_div=parent_div, include_string=include_string,
             hwurl=hwurl, table_str=table_str, height=height,
             id=hashlib.md5(str(params)).hexdigest(),
-            options=json.dumps(params))
+            options=util.maybe_dumps(params))
     return return_string
 
 

@@ -75,11 +75,11 @@ class WhaleRedisDriver(Redis):
     def retrieve(self, pk, dimensions, metrics, period=None, dt=None):
         nested = defaultdict(dict)
         period = str(Period.get(period))
-        for dimension in map(maybe_dumps, iterate_dimensions(dimensions)):
-            for metric in map(maybe_dumps, metrics):
+        for dimension in iterate_dimensions(dimensions):
+            for metric in metrics:
                 hash_key = keyify(pk, dimension, period, metric)
                 value_dict = self.hgetall(hash_key)
-                nested[dimension][metric] = dict([
+                nested[maybe_dumps(dimension)][maybe_dumps(metric)] = dict([
                         (k, float(v)) for k, v in value_dict.items()])
         return dict(nested)
 
@@ -95,6 +95,10 @@ class Whale(object):
                 'weighted_reasons', 'reasons_for', 'graph_tag', 'today']:
                 curry_instance_attribute(attr, method, self,
                         with_class_name=True)
+            # Currying for related models as 
+            for method in ['plotpoints', 'graph_tag', 'count_now', 'totals']:
+                curry_related_dimensions(attr, method, self, with_class_name=True)
+
 
     @classmethod
     def graph_tag(cls, pk, dimension=None, metric=None, extra=None, host=''):

@@ -30,7 +30,7 @@ class Period(object):
         return timedelta(seconds=self.interval)
     @staticmethod
     def format_dt_str(t):
-        return t.strftime('%c')
+        return t.strftime('%a %b %d %H:%M:%S %Y')
     @staticmethod
     def parse_dt_str(t):
         try:

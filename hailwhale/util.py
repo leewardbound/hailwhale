@@ -8,17 +8,33 @@ from types import *
 DELIM = '||'
 
 def try_loads(arg):
-    try:
-        return json.loads(arg)
-    except:
-        return arg
+    if isinstance(arg, basestring) and len(arg) and arg[0] in ['[', '{', '"', "'"]:
+        try:
+            arg = json.loads(arg.replace("'", '"'))
+        except Exception as e:
+            pass
+    if isinstance(arg, list):
+        if len(arg) == 1:
+            return arg[0]
+    return arg
 
 
-def maybe_dumps(arg):
+def maybe_dumps(arg, dump_dicts=True):
+    if isinstance(arg, basestring):
+        arg = try_loads(arg)
     if isinstance(arg, basestring):
         return str(arg)
-    if isinstance(arg, list) and len(arg) == 1:
-        return maybe_dumps(arg[0])
+    if isinstance(arg, list):
+        if len(arg) == 1:
+            return maybe_dumps(arg[0])
+        return json.dumps(map(maybe_dumps, arg))
+    if isinstance(arg, dict):
+        d = dict([
+            (maybe_dumps(k), maybe_dumps(v, dump_dicts=False)) for k, v in arg.items()
+            ])
+        if dump_dicts:
+            d = json.dumps(d)
+        return d
     return json.dumps(arg)
 
 
@@ -104,17 +120,41 @@ def curry_instance_attribute(attr, func_name, instance, with_class_name=False):
 
     func = getattr(instance, func_name)
 
-    def curried(self, *args, **kwargs):
+    def hailwhale_pk_curried(self, *args, **kwargs):
         pass_attr = getattr(self, attr)
         # Can also be callable
         if hasattr(pass_attr, '__call__'):
             pass_attr = pass_attr()
         if with_class_name:
-            pass_attr = map(str, maybe_dumps([instance.__class__.__name__, pass_attr]))
+            pass_attr = [instance.__class__.__name__, '%s' % pass_attr]
         return func(pass_attr, *args, **kwargs)
 
     setattr(instance, func_name,
-            MethodType(curried, instance, instance.__class__))
+            MethodType(hailwhale_pk_curried, instance, instance.__class__))
+
+
+def curry_related_dimensions(attr, func_name, instance, with_class_name=False):
+    func = getattr(instance, func_name)
+
+    def related_curry_func(self, relation, *args, **kwargs):
+        pk = getattr(self, attr)
+        # Can also be callable
+        if hasattr(pk, '__call__'):
+            pk = pk()
+        pk = with_class_name and [self.class_name(), str(pk)] or [str(pk)]
+        if isinstance(relation, basestring):
+            relation = getattr(self, relation)
+        rel_type, rel_pk = relation.class_name(), str(relation.id)
+        nest = lambda d: d and {rel_type: {rel_pk: d}} or {rel_type: rel_pk}
+
+        if 'dimension' in kwargs:
+            kwargs['dimension'] = nest(kwargs['dimension'])
+        else:
+            kwargs['dimensions'] = nest(kwargs.pop('dimensions', None))
+        return func(*args, **kwargs)
+
+    setattr(instance, func_name + '_related',
+            MethodType(related_curry_func, instance, instance.__class__))
 
 
 def period_points(self, metric=False, period_str='60x86400',
