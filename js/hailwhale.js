@@ -296,11 +296,8 @@
                 color_sets = [
             extra.colors,
             ['#52e430'],
-            ['#006ac2'],
-            
-            ];
-            var
-                mx = m - 1,
+            ['#006ac2']];
+            var mx = m - 1,
                 my = d3.max(stack, function(d) {
                   return d3.max(d, function(d) {
                     return d.y0 + d.y;

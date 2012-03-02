@@ -113,6 +113,7 @@ def graph():
     pk = params['pk']
     dimension = params['dimension']
     period = params['period']
+    debug = g('debug', False)
     parent_div = g('parent_div', 'hailwhale_graphs')
     hide_table = g('hide_table', False)
     height = g('height', '400px')
@@ -154,7 +155,7 @@ def graph():
     else:
         table_str = ''
 
-    return_string = '''
+    debug_return_string = '''
 appended=false;\n
 document.write('<div id="{id}" style="height: {height}"></div>');\n
 function jqinit() {{\n
@@ -185,7 +186,34 @@ jqinit();\n
             hwurl=hwurl, table_str=table_str, height=height,
             id=hashlib.md5(str(params)).hexdigest(),
             options=util.maybe_dumps(params))
-    return return_string
+    include_string = \
+"document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/hailwhale.min.js'></script>\");"%hwurl
+
+    return_string = '''
+appended=false;\n
+document.write('<div id="{id}" style="height: {height}"></div>');\n
+function jqinit() {{\n
+    if(typeof(jQuery) == 'undefined' || typeof(jQuery.hailwhale) == 'undefined') {{\n
+        if(!appended) {{\n
+            appended = true;\n
+            {include_string}\n
+        }}\n
+        setTimeout(jqinit, 250);\n
+    }} else {{\n
+        $(function() {{\n
+                $.hailwhale('{hwurl}').add_graph('{id}', {options});\n
+                {table_str}
+        }});\n
+    }}
+}}
+jqinit();\n
+    
+    
+    '''.format(parent_div=parent_div, include_string=include_string,
+            hwurl=hwurl, table_str=table_str, height=height,
+            id=hashlib.md5(str(params)).hexdigest(),
+            options=util.maybe_dumps(params))
+    return debug and debug_return_string or return_string
 
 
 @route('/demo/:filename#.*#')
