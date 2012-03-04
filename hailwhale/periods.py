@@ -34,7 +34,7 @@ class Period(object):
     @staticmethod
     def parse_dt_str(t):
         try:
-            return datetime.strptime(t, '%c')
+            return datetime.strptime(t, '%a %b %d %H:%M:%S %Y')
         except ValueError:
             return None
 

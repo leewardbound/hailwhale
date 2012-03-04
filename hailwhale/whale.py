@@ -361,7 +361,7 @@ class Whale(object):
             # Cleanup empty key
             if (len(val) - deleted) == 0:
                 r.delete(k)
-                print 'Key empty, deleting --', k, v
+                print 'Key empty, deleting --', k, r[k]
             elif deleted > 0:
                 print 'Deleted', deleted, 'old keys from', k
 
