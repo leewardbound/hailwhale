@@ -360,8 +360,8 @@ class Whale(object):
                     print 'Flatten invalid', dt, ps[this_p]
             # Cleanup empty key
             if (len(val) - deleted) == 0:
-                r.delete(k)
                 print 'Key empty, deleting --', k, r[k]
+                r.delete(k)
             elif deleted > 0:
                 print 'Deleted', deleted, 'old keys from', k
 
