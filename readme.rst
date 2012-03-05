@@ -10,9 +10,9 @@ Fire GET requests to log **Events**. Events can be optionally tagged with **Dime
 For example, let's say you need to count today's revenue from various income streams and put a fancy graph in your admin panel. From the proper points in your sales and services software, you insert HTTP calls to send Events like these::
 
     # Sold $200 in services
-    http://.../count?dimension=services&metric={"dollars": 200} 
+    http://.../count?dimensions=services&metrics={"dollars": 200} 
     # Bought $2000 in advertising
-    http://.../count?dimension=advertising&metric={"dollars": -2000} 
+    http://.../count?dimensions=advertising&metrics={"dollars": -2000} 
     # Sold a $product_id for $500
     http://.../count?dimensions={"sales": $product_id}&metric={"dollars": 500}
 
@@ -36,7 +36,7 @@ Currently only tested on my macbook pro and Ubuntu servers.
 OSX::
 
     brew install redis
-    git clone github.com/linked/hailwhale.git
+    git clone git://github.com/linked/hailwhale.git
     cd hailwhale
     sudo python setup.py
     python hailwhale/wsgi.py
@@ -44,7 +44,7 @@ OSX::
 Ubuntu 11.10::
  
     sudo apt-get install redis
-    git clone github.com/linked/hailwhale.git
+    git clone git://github.com/linked/hailwhale.git
     cd hailwhale
     sudo python setup.py
     python hailwhale/wsgi.py
