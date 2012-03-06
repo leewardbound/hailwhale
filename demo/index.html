@@ -28,11 +28,11 @@ $(function() {
       debug = true;
     hw.add_graph($('#countOne .plot'), {pk: 'countOne', autoupdate: debug,
         period:'10x300'});
-    hw.add_graph($('#countMany .plot'), {pk: 'countMany', depth: 1,
+    hw.add_graph($('#countManyNums .plot'), {pk: 'countManyNums', depth: 1,
         autoupdate: debug, period: '10x300'});
-    hw.add_graph($('#countMany .areaplot'), {pk: 'countMany', depth: 1,
+    hw.add_graph($('#countManyNums .areaplot'), {pk: 'countManyNums', depth: 1,
         autoupdate: debug, period: '10x300', area: true});
-    hw.add_graph($('#countMany .wiggleplot'), {pk: 'countMany', depth: 1,
+    hw.add_graph($('#countManyNums .wiggleplot'), {pk: 'countManyNums', depth: 1,
         autoupdate: debug, period: '10x300', area: 'silhouette'});
     hw.add_graph($('#manyMetrics .plot'), {pk: 'system_status', 
         metrics: { 'CPU percent':'hits', 'RAM (GB)':'hits' },
@@ -80,7 +80,7 @@ $(function() {
             <ul>
               <li><a href="#whatAndWhy">What &amp; Why</a></li>
               <li><a href="#countOne">Count One Thing</a></li>
-              <li><a href="#countMany">Count Many Things</a></li>
+              <li><a href="#countManyNums">Count Many Things</a></li>
               <li><a href="#manyMetrics">Many Metrics</a></li>
               <li><a href="#manyUses">Many Uses</a></li>
               <li><a href="#veryFast">Very Fast</a></li>
@@ -154,13 +154,13 @@ $(function() {
             </script>
             <div class="plot"></div>
       </div>
-      <div class="doc-section" id="countMany">
+      <div class="doc-section" id="countManyNums">
             <h3>Counting Many Things</h3>
-            <button class="countMany" id='red' style="color: red">Send fake events</button>
-            <button class="countMany" id='blue' style="color: blue">Send fake events</button>
-            <button class="countMany" id='green' style="color: green">Send fake events</button>
-            <script>$(function() { $('.countMany').click( function() {
-                hw.trigger_fake_hits({pk: 'countMany',
+            <button class="countManyNums" id='event 1'>Send #1</button>
+            <button class="countManyNums" id='event 2'>Send #2</button>
+            <button class="countManyNums" id='event 3'>Send #3</button>
+            <script>$(function() { $('.countManyNums').click( function() {
+                hw.trigger_fake_hits({pk: 'countManyNums',
                     dimension: $(this).attr('id'),
                 })})})
             </script>
@@ -170,7 +170,6 @@ $(function() {
       </div>
       <div class="doc-section" id="manyMetrics">
             <h3>Track different kinds of data</h3>
-            <div class="plot"></div>
       </div>
       
     </div>
