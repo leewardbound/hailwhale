@@ -89,7 +89,7 @@ class Whale(object):
     whale_driver_settings = {}
 
     def curry_whale_instance_methods(self, attr='id'):
-        if hasattr(self, attr):
+        if hasattr(self, attr) and not hasattr(self, '_hw_curried'):
             for method in ['plotpoints', 'ratio_plotpoints', 'scalar_plotpoints',
                 'totals', 'count_now', 'count_decided_now', 'decide',
                 'weighted_reasons', 'reasons_for', 'graph_tag', 'today']:
@@ -98,6 +98,7 @@ class Whale(object):
             # Currying for related models as 
             for method in ['plotpoints', 'graph_tag', 'count_now', 'totals']:
                 curry_related_dimensions(attr, method, self, with_class_name=True)
+            self._hw_curried = True
 
 
     @classmethod
