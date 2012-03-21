@@ -8,7 +8,7 @@ from types import *
 DELIM = '||'
 
 def try_loads(arg):
-    if isinstance(arg, basestring) and len(arg) and arg[0] in ['[', '{', '"', "'"]:
+    if isinstance(arg, basestring) and arg and arg[0] in ['[', '{', '"', "'"]:
         try:
             arg = json.loads(arg.replace("'", '"'))
         except Exception as e:
