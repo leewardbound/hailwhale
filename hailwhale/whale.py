@@ -75,7 +75,7 @@ class WhaleRedisDriver(Redis):
     def retrieve(self, pk, dimensions, metrics, period=None, dt=None):
         nested = defaultdict(dict)
         period = str(Period.get(period))
-        for dimension in iterate_dimensions(dimensions):
+        for dimension in iterate_dimensions(dimensions)+['_']:
             for metric in metrics:
                 hash_key = keyify(pk, dimension, period, metric)
                 value_dict = self.hgetall(hash_key)
