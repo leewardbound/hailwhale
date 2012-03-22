@@ -103,7 +103,7 @@ class Whale(object):
 
     @classmethod
     def graph_tag(cls, pk, dimension=None, metric=None, extra=None, host=''):
-        if extra is None:
+        if not extra:
             extra = {}
         extra['pk'] = maybe_dumps(pk)
         if dimension:
