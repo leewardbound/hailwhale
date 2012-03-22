@@ -65,7 +65,7 @@ class WhaleRedisDriver(Redis):
             self.sadd(dimension_key, dimension_json)
             self._added_dimensions[dimension_key].append(dimension_json)
         # Store dimensional subdimensions
-        if(dimension != '_'):
+        if dimension != '_':
             subdimension_key = keyify(pk, 'subdimensions', parent(dimension))
             if not dimension_json in self._added_subdimensions[subdimension_key]:
                 self.sadd(subdimension_key, dimension_json)
@@ -103,7 +103,7 @@ class Whale(object):
 
     @classmethod
     def graph_tag(cls, pk, dimension=None, metric=None, extra=None, host=''):
-        if not extra:
+        if extra is None:
             extra = {}
         extra['pk'] = maybe_dumps(pk)
         if dimension:
@@ -404,7 +404,7 @@ class Whale(object):
                     at = datetime.strptime(at, '%c')
                 else:
                     at = float(at)
-            except Exception as e:
+            except Exception, e:
                 print e
         if not metrics:
             metrics = ['hits']
@@ -439,7 +439,7 @@ class Whale(object):
             data = {
                 'points': pps,
                 'score': sub_total,
-                'important': sub_total > 10 and (sub_total > (total / 10)) or False,
+                'important': sub_total > 10 and (sub_total > (total / 10)),
                 'effect': total - sub_total,
                 'difference': total - sub_total,
                 'value': sub_total,
@@ -631,8 +631,7 @@ class Whale(object):
 def parse_formula(formula):
     if not '/' in formula:
         return (formula, None)
-    else:
-        return formula.split('/')
+    return formula.split('/')
 
 def iterate_dimensions(dimensions, add_root=False):
     if not dimensions:
