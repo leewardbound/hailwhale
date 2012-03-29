@@ -126,7 +126,7 @@ def graph():
     length, interval = [int(part) for part in period.split('x')]
     if isinstance(hide_table, basestring):
         hide_table = hide_table.lower() == 'true'
-    hwurl = req.url.split('graph.js')[0]
+    hwurl = req.GET.get('hwurl', req.url.split('graph.js')[0])
     params['autoupdate'] = g('live', True)
     include_string = \
 "document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/jquery.min.js'></script>\");"%hwurl
