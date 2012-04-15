@@ -125,6 +125,12 @@ class Whale(object):
     def whale_driver(cls):
         if not hasattr(cls, '_whale_driver'):
             cls._whale_driver = cls.whale_driver_class(**cls.whale_driver_settings)
+        elif not isinstance(cls._whale_driver, WhaleRedisDriver) and \
+                isinstance(cls._whale_driver, Redis):
+            cls._whale_driver.store = WhaleRedisDriver.store
+            cls._whale_driver.retrieve = WhaleRedisDriver.retrieve
+            cls._whale_driver._added_dimensions = collections.defaultdict(list)
+            cls._whale_driver._added_subdimensions = collections.defaultdict(list)
         return cls._whale_driver
 
     @classmethod
