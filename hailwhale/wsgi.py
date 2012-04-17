@@ -102,12 +102,13 @@ def plotpoints():
 
 @route('/graph.js')
 def graph():
+    from periods import Period
     params = {'pk': g('pk', '_', False),
             'dimension': g('dimension', '_', False),
             'metric': g('metric', 'hits', False),
             'depth': g('depth', 0),
             'tzoffset': g('tzoffset', 0.0),
-            'period': g('period', '3600x86400'),
+            'period': g('period', str(Period.get(None))),
             'area': g('area', ''),
             }
     pk = params['pk']
