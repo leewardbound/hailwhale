@@ -446,7 +446,7 @@ class Whale(object):
                 iterate_dimensions(pk),
                 iterate_dimensions(dimensions, add_root=True),
                 metrics.iteritems()):
-            n = i - cls.total(pk, metric, dimension, period, at)
+            n = float(i) - cls.total(pk, metric, dimension, period, at)
             if not n > 0:
                 continue
             _increment(cls.whale_driver(), pkk, dimension, metric, period, dt, n)
