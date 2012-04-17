@@ -61,7 +61,7 @@ class Period(object):
         if diff < 0:
             return False
         p = int(diff / self.interval)
-        flat = self.start() + timedelta(seconds=p * self.interval)
+        flat = (self.start() + timedelta(seconds=p * self.interval)).replace(microsecond=0)
         return flat
 
     def flatten_str(self, dtf):
@@ -108,7 +108,7 @@ class Period(object):
 
     @staticmethod
     def default_size():
-        return str(Period.all_sizes()[-4])
+        return str(Period.all_sizes()[1])
 
     def friendly_name(self):
         return self.name if self.name else '%sx%s' % (

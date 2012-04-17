@@ -49,50 +49,47 @@ P.S. don't trust the comments --
 """
 
 
-class WhaleRedisDriver(Redis):
-    def __init__(self, *args, **kwargs):
-        super(WhaleRedisDriver, self).__init__(*args, **kwargs)
-        self._added_dimensions = collections.defaultdict(list)
-        self._added_subdimensions = collections.defaultdict(list)
+_added_dimensions = collections.defaultdict(list)
+_added_subdimensions = collections.defaultdict(list)
 
-    def store(self, pk, dimension, metric, period, dt, count):
-        # Keep a list of graphs per pk
-        key = keyify(pk, dimension, str(period), metric)
-        # Store pk dimensions
-        dimension_key = keyify(pk, 'dimensions')
-        dimension_json = keyify(dimension)
-        if not dimension_json in self._added_dimensions[dimension_key]:
-            self.sadd(dimension_key, dimension_json)
-            self._added_dimensions[dimension_key].append(dimension_json)
-        # Store dimensional subdimensions
-        if dimension != '_':
-            subdimension_key = keyify(pk, 'subdimensions', parent(dimension))
-            if not dimension_json in self._added_subdimensions[subdimension_key]:
-                self.sadd(subdimension_key, dimension_json)
-                self._added_subdimensions[subdimension_key].append(dimension_json)
-        return self.hincrby(key, dt, int(count))
+def _increment(redis, pk, dimension, metric, period, dt, count):
+    # Keep a list of graphs per pk
+    key = keyify(pk, dimension, str(period), metric)
+    # Store pk dimensions
+    dimension_key = keyify(pk, 'dimensions')
+    dimension_json = keyify(dimension)
+    if not dimension_json in _added_dimensions[dimension_key]:
+        redis.sadd(dimension_key, dimension_json)
+        _added_dimensions[dimension_key].append(dimension_json)
+    # Store dimensional subdimensions
+    if dimension != '_':
+        subdimension_key = keyify(pk, 'subdimensions', parent(dimension))
+        if not dimension_json in _added_subdimensions[subdimension_key]:
+            redis.sadd(subdimension_key, dimension_json)
+            _added_subdimensions[subdimension_key].append(dimension_json)
+    return redis.hincrby(key, dt, int(count))
 
-    def retrieve(self, pk, dimensions, metrics, period=None, dt=None):
-        nested = defaultdict(dict)
-        period = str(Period.get(period))
-        for dimension in iterate_dimensions(dimensions)+['_']:
-            for metric in metrics:
-                hash_key = keyify(pk, dimension, period, metric)
-                value_dict = self.hgetall(hash_key)
-                nested[maybe_dumps(dimension)][maybe_dumps(metric)] = dict([
-                        (k, float(v)) for k, v in value_dict.items()])
-        return dict(nested)
+def _retrieve(redis, pk, dimensions, metrics, period=None, dt=None):
+    nested = defaultdict(dict)
+    period = str(Period.get(period))
+    for dimension in iterate_dimensions(dimensions)+['_']:
+        for metric in metrics:
+            hash_key = keyify(pk, dimension, period, metric)
+            value_dict = redis.hgetall(hash_key)
+            nested[maybe_dumps(dimension)][maybe_dumps(metric)] = dict([
+                    (k, float(v)) for k, v in value_dict.items()])
+    return dict(nested)
 
 
 class Whale(object):
-    whale_driver_class = WhaleRedisDriver
     whale_driver_settings = {}
 
     def curry_whale_instance_methods(self, attr='id'):
         if hasattr(self, attr) and not hasattr(self, '_hw_curried'):
             for method in ['plotpoints', 'ratio_plotpoints', 'scalar_plotpoints',
                 'totals', 'count_now', 'count_decided_now', 'decide',
-                'weighted_reasons', 'reasons_for', 'graph_tag', 'today']:
+                'weighted_reasons', 'reasons_for', 'graph_tag', 'today',
+                'count_up_to', 'total']:
                 curry_instance_attribute(attr, method, self,
                         with_class_name=True)
             # Currying for related models as 
@@ -124,13 +121,7 @@ class Whale(object):
     @classmethod
     def whale_driver(cls):
         if not hasattr(cls, '_whale_driver'):
-            cls._whale_driver = cls.whale_driver_class(**cls.whale_driver_settings)
-        elif not isinstance(cls._whale_driver, WhaleRedisDriver) and \
-                isinstance(cls._whale_driver, Redis):
-            cls._whale_driver.store = WhaleRedisDriver.store
-            cls._whale_driver.retrieve = WhaleRedisDriver.retrieve
-            cls._whale_driver._added_dimensions = collections.defaultdict(list)
-            cls._whale_driver._added_subdimensions = collections.defaultdict(list)
+            cls._whale_driver = Redis(**cls.whale_driver_settings)
         return cls._whale_driver
 
     @classmethod
@@ -230,7 +221,7 @@ class Whale(object):
         if isinstance(metrics, basestring):
             metrics = [metrics]
         period = Period.get(period)
-        sparse = cls.whale_driver().retrieve(pk, dimensions, metrics, period=period)
+        sparse = _retrieve(cls.whale_driver(), pk, dimensions, metrics, period=period)
         nonsparse = defaultdict(dict)
         if flot_time:
             points_type = list
@@ -303,8 +294,20 @@ class Whale(object):
         return cls.totals(*args, **kwargs)
 
     @classmethod
+    def total(cls, pk, metric, dimension='_', period=None, at=None, index=None):
+        if not at and not index:
+            index = -1
+        if index:
+            pps = cls.plotpoints(pk, dimension, metric, period=period, points_type=list)
+            return pps[dimension][metric][index][1]
+        else:
+            pps = cls.plotpoints(pk, dimension, metric, period=period)
+            period = Period.get(period)
+            dt = period.flatten_str(dt)
+            return pps[dimension][metric][dt]
+
     def today(cls, pk, metric, dimension='_'):
-        return cls.plotpoints(pk, dimension, metric, period='86400x%s' % (86400 * 30), points_type=list)[dimension][metric][-1][1]
+        return cls.total(pk, metric, dimension, Period.all_sizes()[1], index=-1)
 
     @classmethod
     def totals(cls, pk, dimensions=None, metrics=None, periods=None):
@@ -426,10 +429,27 @@ class Whale(object):
         # [b, y],
         # [b, y, 2]
         for pkk, dimension, (period, dt, metric, i) in itertools.product(
-            iterate_dimensions(pk),
-            iterate_dimensions(dimensions, add_root=True),
+                iterate_dimensions(pk),
+                iterate_dimensions(dimensions, add_root=True),
                         generate_increments(metrics, periods, at)):
-            cls.whale_driver().store(pkk, dimension, metric, period, dt, i)
+            _increment(cls.whale_driver(), pkk, dimension, metric, period, dt, i)
+
+    @classmethod
+    def count_up_to(cls, pk, dimensions='_', metrics=None, period=False,
+            at=False):
+        """ Immediately count a hit, as opposed to logging it into Hail"""
+        period = Period.get(period)
+        dt = period.flatten_str(at)
+
+        for pkk, dimension, (metric, i) in itertools.product(
+                iterate_dimensions(pk),
+                iterate_dimensions(dimensions, add_root=True),
+                metrics.iteritems()):
+            n = i - cls.total(pk, metric, dimension, period, at)
+            if not n > 0:
+                continue
+            _increment(cls.whale_driver(), pkk, dimension, metric, period, dt, n)
+
 
     @classmethod
     def rank_subdimensions_scalar(cls, pk, dimension='_', metric='hits',
