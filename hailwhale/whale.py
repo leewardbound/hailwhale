@@ -306,6 +306,7 @@ class Whale(object):
             dt = period.flatten_str(dt)
             return pps[dimension][metric][dt]
 
+    @classmethod
     def today(cls, pk, metric, dimension='_'):
         return cls.total(pk, metric, dimension, Period.all_sizes()[1], index=-1)
 
