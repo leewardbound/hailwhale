@@ -80,9 +80,13 @@ def _store(redis, pk, dimension, metric, period, dt, count, method='set',
     elif method == 'incr':
         new_val = redis.execute_command('HINCRBYFLOAT', key, dt, float(count))
     if rank and dimension != '_':
-        rank_key = keyify('rank', pk, parent(dimension), str(period), metric) 
+        rank_key = keyify('rank', pk, parent(dimension), str(period), dt, metric) 
         redis.zadd(rank_key, dimension_json, new_val)
     return new_val
+
+def _ranked(redis, pk, parent_dimension, metric, period, dt, start=0, size=10):
+    rank_key = keyify('rank', pk, parent_dimension, str(period), dt, metric) 
+    return redis.zrange(rank_key, start, start + size)
 
 def _retrieve(redis, pk, dimensions, metrics, period=None, dt=None):
     nested = defaultdict(dict)
@@ -464,6 +468,15 @@ class Whale(object):
                 metrics.iteritems()):
             _store(cls.whale_driver(), pkk, dimension, metric, period, dt, i,
                     rank=rank)
+
+    @classmethod
+    def zranked(cls, pk, parent_dimension='_', metric='hits', period=None,
+            at=None, start=0, size=10):
+        period = Period.get(period)
+        at = at or times.now()
+        dt = period.flatten_str(at)
+        return map(try_loads, 
+                _ranked(cls.whale_driver(), pk, parent_dimension, metric, period, dt, start, size))
 
 
     @classmethod
