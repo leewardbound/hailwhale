@@ -462,11 +462,8 @@ class Whale(object):
         period = Period.get(period)
         at = at or times.now()
         dt = period.flatten_str(at)
-        for pkk, dimension, (metric, i) in itertools.product(
-                iterate_dimensions(pk),
-                iterate_dimensions(dimensions, add_root=True),
-                metrics.iteritems()):
-            _store(cls.whale_driver(), pkk, dimension, metric, period, dt, i,
+        for (metric, i) in metrics.iteritems():
+            _store(cls.whale_driver(), pk, dimensions, metric, period, dt, i,
                     rank=rank)
 
     @classmethod
