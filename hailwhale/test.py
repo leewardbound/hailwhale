@@ -117,8 +117,8 @@ class TestHailWhale(unittest.TestCase):
         plotpoints = self.whale.plotpoints('test_depth', t, points_type=list,
                 depth=1, limit=2)
         self.assertEqual(plotpoints[maybe_dumps([t, 'b'])]['hits'][-1][1], 2)
-        self.assertNotIn(maybe_dumps([t, 'a']), plotpoints)
-        self.assertNotIn(maybe_dumps([t, 'c']), plotpoints)
+        self.assertEqual(True, maybe_dumps([t, 'a']) not in plotpoints)
+        self.assertEqual(True, maybe_dumps([t, 'c']) not in plotpoints)
 
     def testRatioPlotpoints(self):
         t = str(time.time())
@@ -167,7 +167,7 @@ class TestHailWhale(unittest.TestCase):
             t, recursive=False)
 
         all_levels = self.whale.rank_subdimensions_ratio(pk, 'value', 'visitors', t)
-        self.assertNotIn(maybe_dumps([t, 'a', 'asub1']), one_level)
+        self.assertEqual(True, maybe_dumps([t, 'a', 'asub1']) not in one_level)
         self.assertEqual(all_levels[maybe_dumps([t, 'a', 'asub1'])]['important'], False)
         self.assertEqual(all_levels[maybe_dumps([t, 'a', 'asub2'])]['important'], True)
         self.assertEqual(all_levels[maybe_dumps([t, 'b'])]['important'], True)
@@ -180,7 +180,7 @@ class TestHailWhale(unittest.TestCase):
         good, bad, test = self.whale.weighted_reasons(pk, 'random', [1,2,3])
         #_print_reasons(good, bad, test)
         any_one = self.whale.decide_from_reasons(good, bad, test)
-        self.assertIn(any_one, [1, 2, 3])
+        self.assertEqual(True, any_one in [1, 2, 3])
 
         # OK, now how about something somewhat informed?
         # This will be easy. Slogan A makes us huge profit. Products B and C suck.
@@ -194,10 +194,10 @@ class TestHailWhale(unittest.TestCase):
         good, bad, test = self.whale.weighted_reasons(pk, decision, opts, formula='dollars/visitors')
         #_print_reasons(good, bad, test)
 
-        self.assertIn('a', good.keys())
-        self.assertIn('b', bad.keys())
-        self.assertIn('c', bad.keys())
-        self.assertIn('d', test.keys())
+        self.assertEqual(True, 'a' in good.keys())
+        self.assertEqual(True, 'b' in  bad.keys())
+        self.assertEqual(True, 'c' in bad.keys())
+        self.assertEqual(True, 'd' in test.keys())
         which_one = self.whale.decide(pk, decision, opts, formula='dollars/visitors',
             bad_idea_threshold=0, test_idea_threshold=0)
         self.assertEqual(which_one, 'a')
@@ -217,19 +217,19 @@ class TestHailWhale(unittest.TestCase):
         # Here's a visitor with no info -- 'A' should win by far.
         good, bad, test = self.whale.weighted_reasons(pk, decision, opts, formula='dollars/visitors')
         #_print_reasons(good, bad, test)
-        self.assertIn('a', good.keys())
-        self.assertIn('b', bad.keys())
-        self.assertIn('c', bad.keys())
-        self.assertIn('d', test.keys())
+        self.assertEqual(True, 'a' in good.keys())
+        self.assertEqual(True, 'b' in bad.keys())
+        self.assertEqual(True, 'c' in bad.keys())
+        self.assertEqual(True, 'd' in test.keys())
 
         # How about when we know the country is "UK"?
         good, bad, test = self.whale.weighted_reasons(pk, decision, opts, formula='dollars/visitors',
             known_data={'country': 'uk'})
         #_print_reasons(good, bad, test)
-        self.assertIn('a', good.keys())
-        self.assertIn('b', good.keys())
-        self.assertIn('c', bad.keys())
-        self.assertIn('d', test.keys())
+        self.assertEqual(True, 'a' in good.keys())
+        self.assertEqual(True, 'b' in good.keys())
+        self.assertEqual(True, 'c' in bad.keys())
+        self.assertEqual(True, 'd' in test.keys())
         chosen = {'a': 0, 'b': 0}
         for k in range(100):
             choose = self.whale.decide(pk, decision, opts, formula='dollars/visitors',
@@ -275,7 +275,7 @@ class TestHailWhale(unittest.TestCase):
         count('br', 'pt', 500 * k, 50 * k)   # $10 JACKPOT
 
         self.assertEqual('en', justify('us'))
-        self.assertIn(justify('mx'), ['sp', 'en'])
+        self.assertEqual(True, justify('mx') in ['sp', 'en'])
         self.assertEqual('pt', justify('br'))
 
     def testWhaleCacheWrapper(self):

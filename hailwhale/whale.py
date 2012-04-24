@@ -52,22 +52,37 @@ P.S. don't trust the comments --
 _added_dimensions = collections.defaultdict(list)
 _added_subdimensions = collections.defaultdict(list)
 
-def _increment(redis, pk, dimension, metric, period, dt, count):
+
+def _increment(*args, **kwargs):
+    kwargs['method'] = 'incr'
+    return _store(*args, **kwargs)
+
+def _store(redis, pk, dimension, metric, period, dt, count, method='set',
+        rank=False):
     # Keep a list of graphs per pk
     key = keyify(pk, dimension, str(period), metric)
     # Store pk dimensions
-    dimension_key = keyify(pk, 'dimensions')
+    dimension_key = keyify('dimensions', pk)
     dimension_json = keyify(dimension)
     if not dimension_json in _added_dimensions[dimension_key]:
         redis.sadd(dimension_key, dimension_json)
         _added_dimensions[dimension_key].append(dimension_json)
     # Store dimensional subdimensions
     if dimension != '_':
-        subdimension_key = keyify(pk, 'subdimensions', parent(dimension))
+        subdimension_key = keyify('subdimensions', pk, parent(dimension))
         if not dimension_json in _added_subdimensions[subdimension_key]:
             redis.sadd(subdimension_key, dimension_json)
             _added_subdimensions[subdimension_key].append(dimension_json)
-    return redis.hincrby(key, dt, int(count))
+
+    if method == 'set':
+        new_val = float(count)
+        redis.hset(key, dt, new_val)
+    elif method == 'incr':
+        new_val = redis.execute_command('HINCRBYFLOAT', key, dt, float(count))
+    if rank and dimension != '_':
+        rank_key = keyify('rank', pk, parent(dimension), str(period), metric) 
+        redis.zadd(rank_key, dimension_json, new_val)
+    return new_val
 
 def _retrieve(redis, pk, dimensions, metrics, period=None, dt=None):
     nested = defaultdict(dict)
@@ -89,7 +104,7 @@ class Whale(object):
             for method in ['plotpoints', 'ratio_plotpoints', 'scalar_plotpoints',
                 'totals', 'count_now', 'count_decided_now', 'decide',
                 'weighted_reasons', 'reasons_for', 'graph_tag', 'today',
-                'count_up_to', 'total']:
+                'update_count_to', 'total']:
                 curry_instance_attribute(attr, method, self,
                         with_class_name=True)
             # Currying for related models as 
@@ -382,7 +397,7 @@ class Whale(object):
             dimension = '_'
         if dimension != '_' and not isinstance(dimension, list):
             dimension = [dimension]
-        set_members = cls.whale_driver().smembers(keyify(pk, 'subdimensions',
+        set_members = cls.whale_driver().smembers(keyify('subdimensions', pk,
                     dimension))
         subdimensions = []
         for s in set_members:
@@ -433,23 +448,22 @@ class Whale(object):
                 iterate_dimensions(pk),
                 iterate_dimensions(dimensions, add_root=True),
                         generate_increments(metrics, periods, at)):
+            if i == 0:
+                continue
             _increment(cls.whale_driver(), pkk, dimension, metric, period, dt, i)
 
     @classmethod
-    def count_up_to(cls, pk, dimensions='_', metrics=None, period=False,
-            at=False):
-        """ Immediately count a hit, as opposed to logging it into Hail"""
+    def update_count_to(cls, pk, dimensions='_', metrics=None, period=False,
+            at=False, rank=False):
         period = Period.get(period)
+        at = at or times.now()
         dt = period.flatten_str(at)
-
         for pkk, dimension, (metric, i) in itertools.product(
                 iterate_dimensions(pk),
                 iterate_dimensions(dimensions, add_root=True),
                 metrics.iteritems()):
-            n = float(i) - cls.total(pk, metric, dimension, period, at)
-            if not n > 0:
-                continue
-            _increment(cls.whale_driver(), pkk, dimension, metric, period, dt, n)
+            _store(cls.whale_driver(), pkk, dimension, metric, period, dt, i,
+                    rank=rank)
 
 
     @classmethod
