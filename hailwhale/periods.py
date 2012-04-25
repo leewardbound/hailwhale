@@ -23,6 +23,7 @@ class Period(object):
         if interval_hours == 0: interval_hours = 1
         if interval_minutes == 0: interval_minutes = 1
         return dt.replace(
+            microsecond = 0,
             second = (dt.second - dt.second%interval_seconds),
             minute = (dt.minute - dt.minute%interval_minutes),
             hour = (dt.hour - dt.hour%interval_hours),)

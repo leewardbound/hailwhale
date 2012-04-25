@@ -7,7 +7,7 @@ import urllib
 
 from redis import Redis
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from util import *
 from periods import DEFAULT_PERIODS, Period
@@ -108,7 +108,7 @@ class Whale(object):
             for method in ['plotpoints', 'ratio_plotpoints', 'scalar_plotpoints',
                 'totals', 'count_now', 'count_decided_now', 'decide',
                 'weighted_reasons', 'reasons_for', 'graph_tag', 'today',
-                'update_count_to', 'total']:
+                'yesterday', 'update_count_to', 'total']:
                 curry_instance_attribute(attr, method, self,
                         with_class_name=True)
             # Currying for related models as 
@@ -322,12 +322,18 @@ class Whale(object):
         else:
             pps = cls.plotpoints(pk, dimension, metric, period=period)
             period = Period.get(period)
-            dt = period.flatten_str(dt)
+            dt = period.flatten_str(at)
             return pps[dimension][metric][dt]
 
     @classmethod
     def today(cls, pk, metric, dimension='_'):
-        return cls.total(pk, metric, dimension, Period.all_sizes()[1], index=-1)
+        return cls.total(pk, metric, dimension, Period.all_sizes()[1],
+                at=times.now())
+
+    @classmethod
+    def yesterday(cls, pk, metric, dimension='_'):
+        return cls.total(pk, metric, dimension, Period.all_sizes()[1],
+                at=times.now()-timedelta(days=1))
 
     @classmethod
     def totals(cls, pk, dimensions=None, metrics=None, periods=None):
