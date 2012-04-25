@@ -454,13 +454,15 @@ class Whale(object):
         # [b, x, 1],
         # [b, y],
         # [b, y, 2]
+        pipe = cls.whale_driver().pipeline(transaction=False)
         for pkk, dimension, (period, dt, metric, i) in itertools.product(
                 iterate_dimensions(pk),
                 iterate_dimensions(dimensions, add_root=True),
                         generate_increments(metrics, periods, at)):
             if i == 0:
                 continue
-            _increment(cls.whale_driver(), pkk, dimension, metric, period, dt, i)
+            _increment(pipe, pkk, dimension, metric, period, dt, i)
+        pipe.execute()
 
     @classmethod
     def update_count_to(cls, pk, dimensions='_', metrics=None, period=False,
@@ -468,9 +470,11 @@ class Whale(object):
         period = Period.get(period)
         at = at or times.now()
         dt = period.flatten_str(at)
+        pipe = cls.whale_driver().pipeline(transaction=False)
         for (metric, i) in metrics.iteritems():
-            _store(cls.whale_driver(), pk, dimensions, metric, period, dt, i,
+            _store(pipe, pk, dimensions, metric, period, dt, i,
                     rank=rank)
+        pipe.execute()
 
     @classmethod
     def zranked(cls, pk, parent_dimension='_', metric='hits', period=None,
