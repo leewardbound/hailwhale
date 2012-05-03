@@ -314,7 +314,7 @@ class Whale(object):
 
     @classmethod
     def total(cls, pk, metric, dimension='_', period=None, at=None, index=None):
-        period, ats = Period.days(period, at)
+        period, ats = Period.get_days(period, at)
         if not ats and not index:
             index = -1
         if isinstance(index, int):
