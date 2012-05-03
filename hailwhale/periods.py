@@ -30,34 +30,34 @@ class Period(object):
         if period == 'ytd':
             period = 'year'
             period = cls.get(period)
-            start = datetime.now().replace(month=1, day=1,hour=0,minute=0,second=0)
+            start = times.now().replace(month=1, day=1,hour=0,minute=0,second=0)
             ats = period.datetimes_strs(start=start)
         if period == 'mtd':
             period = 'thirty'
             period = cls.get(period)
-            start = datetime.now().replace(day=1, hour=0, minute=0, second=0)
+            start = times.now().replace(day=1, hour=0, minute=0, second=0)
             ats = period.datetimes_strs(start=start)
         if period == 'wtd':
             period = 'thirty'
             period = cls.get(period)
-            day = datetime.now().day
-            start = datetime.now().replace(day=max(1, 1 + (day - (day%7))), hour=0, minute=0, second=0)
+            start = times.now().replace(hour=0, minute=0, second=0)
+            start = start - timedelta(start.weekday() + 2)
             ats = period.datetimes_strs(start=start)
         if period == 'today':
             period = 'thirty'
             period = cls.get(period)
-            start = datetime.now().replace(hour=0, minute=0, second=0)
+            start = times.now().replace(hour=0, minute=0, second=0)
             ats = period.datetimes_strs(start=start)
         if period == 'yesterday':
             period = 'thirty'
             period = cls.get(period)
-            end = datetime.now().replace(hour=0, minute=0, second=0)
+            end = times.now().replace(hour=0, minute=0, second=0)
             start = end - timedelta(1)
             ats = period.datetimes_strs(start=start, end=end)
         if period == 'seven':
             period = 'thirty'
             period = cls.get(period)
-            start = datetime.now().replace(hour=0, minute=0, second=0) - timedelta(7)
+            start = times.now().replace(hour=0, minute=0, second=0) - timedelta(7)
             ats = period.datetimes_strs(start=start)
 
         period = cls.get(period)
@@ -96,7 +96,7 @@ class Period(object):
     @staticmethod
     def parse_dt_str(t):
         try:
-            return datetime.strptime(t, '%a %b %d %H:%M:%S %Y')
+            return times.strptime(t, '%a %b %d %H:%M:%S %Y')
         except ValueError:
             return None
 
@@ -114,7 +114,7 @@ class Period(object):
 
     def flatten(self, dtf=None):
         if not dtf:
-            dtf = datetime.now()
+            dtf = times.now()
         if type(dtf) in (str, unicode):
             dtf = self.parse_dt_str(dtf)
         if not dtf:

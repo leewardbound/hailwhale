@@ -315,6 +315,7 @@ class Whale(object):
     @classmethod
     def total(cls, pk, metric, dimension='_', period=None, at=None, index=None):
         period, ats = Period.get_points(period, at)
+        print period, ats
         if not ats and not index:
             index = -1
         if isinstance(index, int):
@@ -322,6 +323,7 @@ class Whale(object):
             return pps[dimension][metric][index][1]
         else:
             pps = cls.plotpoints(pk, dimension, metric, period=period)
+            print pps[dimension][metric].keys()
             return sum([pps[dimension][metric][dt] for dt in ats])
 
     @classmethod
