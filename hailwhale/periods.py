@@ -38,13 +38,13 @@ class Period(object):
             start = datetime.now().replace(day=1, hour=0, minute=0, second=0)
             ats = period.datetimes_strs(start=start)
         if period == 'wtd':
-            period = 'seven'
+            period = 'thirty'
             period = cls.get(period)
             day = datetime.now().day
             start = datetime.now().replace(day=max(1, 1 + (day - (day%7))), hour=0, minute=0, second=0)
             ats = period.datetimes_strs(start=start)
         if period == 'today':
-            period = '24h'
+            period = 'thirty'
             period = cls.get(period)
             start = datetime.now().replace(hour=0, minute=0, second=0)
             ats = period.datetimes_strs(start=start)
