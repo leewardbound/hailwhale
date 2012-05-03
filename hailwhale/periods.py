@@ -1,11 +1,67 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import time
 import times
+PERIODS = [
+{'name': 'Last year, by 14 days', 
+    'length': 3600 * 24 * 365,
+    'interval': 3600 * 24 * 14,
+    'nickname': 'year'},
+{'name': 'Last 30 days, by day', 'length': 3600 * 24 * 30, 'interval': 3600 * 24,
+    'nickname': 'thirty'},
+{'name': 'Last week, by 6 hours', 'length': 3600 * 24 * 7, 'interval': 3600 * 6,
+    'nickname': 'seven'},
+{'name': 'Last day, by hour', 'length': 3600 * 24, 'interval': 3600,
+    'nickname': '24h'},
+{'name': 'Last 6 hours, by 15 minutes', 'length': 3600 * 6, 'interval': 60 * 15},
+{'name': 'Last hour, by 2 minutes', 'length': 3600, 'interval': 60 * 2,
+    'nickname': 'hour'},
+{'name': 'Last 5 minutes, by 10 seconds', 'length': 300, 'interval': 10,
+    'nickname': 'fivemin'},
+]
 class Period(object):
-    def __init__(self, interval, length, name=False):
+    def __init__(self, interval, length, name=False, nickname=False):
         self.interval = int(interval)
         self.length = int(length)
         self.name = name
+        self.nickname = nickname
+    @classmethod
+    def get_points(cls, period, at=None):
+        ats = False
+        if period == 'ytd':
+            period = 'year'
+            period = cls.get(period)
+            start = datetime.now().replace(month=1, day=1,hour=0,minute=0,second=0)
+            ats = period.datetimes_strs(start=start)
+        if period == 'mtd':
+            period = 'thirty'
+            period = cls.get(period)
+            start = datetime.now().replace(day=1, hour=0, minute=0, second=0)
+            ats = period.datetimes_strs(start=start)
+        if period == 'wtd':
+            period = 'seven'
+            period = cls.get(period)
+            day = datetime.now().day
+            start = datetime.now().replace(day=max(1, 1 + (day - (day%7))), hour=0, minute=0, second=0)
+            ats = period.datetimes_strs(start=start)
+        if period == 'today':
+            period = '24h'
+            period = cls.get(period)
+            start = datetime.now().replace(hour=0, minute=0, second=0)
+            ats = period.datetimes_strs(start=start)
+        if period == 'yesterday':
+            period = 'thirty'
+            period = cls.get(period)
+            end = datetime.now().replace(hour=0, minute=0, second=0)
+            start = end - timedelta(1)
+            ats = period.datetimes_strs(start=start, end=end)
+
+        period = cls.get(period)
+        if not ats and not at:
+            ats = period.datetimes_strs()
+        elif not ats:
+            ats = [period.flatten_str(at)]
+        return period, list(ats)
+
     def start(self):
         dt= (times.now() -
                 timedelta(seconds=self.length))
@@ -41,10 +97,11 @@ class Period(object):
 
     def datetimes(self, start=False, end=False):
         from util import datetimeIterator
+        in_range = lambda dt: (not start or start <= dt) and (
+            not end or end >= dt)
         return (dt for dt in datetimeIterator(
-            start or self.start(),
-            end or times.now(),
-            delta=self.delta()))
+            self.start(), times.now(),
+            delta=self.delta()) if in_range(dt))
 
     def datetimes_strs(self, start=False, end=False):
         return (Period.format_dt_str(dt) for dt in
@@ -79,19 +136,6 @@ class Period(object):
 
     @staticmethod
     def all_sizes():
-        PERIODS = [
-{'name': 'Last year, by 14 days', 'length': 3600 * 24 * 365, 'interval': 3600 * 24 * 14},
-{'name': 'Last 30 day month, by day', 'length': 3600 * 24 * 30, 'interval': 3600 * 24},
-{'name': 'Last week, by 6 hours', 'length': 3600 * 24 * 7, 'interval': 3600 * 6},
-{'name': 'Last day, by hour', 'length': 3600 * 24, 'interval': 3600},
-{'name': 'Last 6 hours, by 15 minutes', 'length': 3600 * 6, 'interval': 60 * 15},
-{'name': 'Last hour, by 2 minutes', 'length': 3600, 'interval': 60 * 2},
-{'name': 'Last 5 minutes, by 10 seconds', 'length': 300, 'interval': 10},
-]
-        PERIOD_OBJS = []
-        for p in PERIODS:
-            period = Period(p['interval'], p['length'], p['name'])
-            PERIOD_OBJS.append(period)
         return PERIOD_OBJS
 
     @staticmethod
@@ -103,6 +147,8 @@ class Period(object):
     def get(name=None):
         if isinstance(name, Period):
             return name
+        if name and name in PERIOD_NICKS:
+            return PERIOD_NICKS[str(name)]
         if not name:
             name = Period.default_size()
         return Period.all_sizes_dict()[str(name)]
@@ -115,4 +161,11 @@ class Period(object):
         return self.name if self.name else '%sx%s' % (
                 self.interval, self.length)
 
+PERIOD_OBJS = []
+PERIOD_NICKS = {} 
+for p in PERIODS:
+    period = Period(p['interval'], p['length'], p['name'], p.get('nickname', None))
+    PERIOD_OBJS.append(period)
+    if 'nickname' in p:
+        PERIOD_NICKS[p['nickname']] = period
 DEFAULT_PERIODS = Period.all_sizes()

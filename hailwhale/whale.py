@@ -314,16 +314,15 @@ class Whale(object):
 
     @classmethod
     def total(cls, pk, metric, dimension='_', period=None, at=None, index=None):
-        if not at and not index:
+        period, ats = Period.get_points(period, at)
+        if not ats and not index:
             index = -1
-        if index:
+        if isinstance(index, int):
             pps = cls.plotpoints(pk, dimension, metric, period=period, points_type=list)
             return pps[dimension][metric][index][1]
         else:
             pps = cls.plotpoints(pk, dimension, metric, period=period)
-            period = Period.get(period)
-            dt = period.flatten_str(at)
-            return pps[dimension][metric][dt]
+            return sum([pps[dimension][metric][dt] for dt in ats])
 
     @classmethod
     def today(cls, pk, metric, dimension='_'):
