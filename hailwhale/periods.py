@@ -97,7 +97,7 @@ class Period(object):
     @staticmethod
     def parse_dt_str(t):
         try:
-            return times.strptime(t, '%a %b %d %H:%M:%S %Y')
+            return datetime.strptime(t, '%a %b %d %H:%M:%S %Y')
         except ValueError:
             return None
 
