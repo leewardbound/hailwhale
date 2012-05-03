@@ -113,7 +113,7 @@ def graph():
             }
     pk = params['pk']
     dimension = params['dimension']
-    period = params['period']
+    period = Period.get(params['period'])
     debug = g('debug', False)
     parent_div = g('parent_div', 'hailwhale_graphs')
     hide_table = g('hide_table', False)
@@ -124,7 +124,6 @@ def graph():
         dimname = util.try_loads(g('dimension', 'Overall'))
         dimname = isinstance(dimname, list) and dimname[-1] or dimname
         params['title'] = '%s [%s]' % (util.maybe_dumps(pkname), util.maybe_dumps(dimname))
-    length, interval = [int(part) for part in period.split('x')]
     if isinstance(hide_table, basestring):
         hide_table = hide_table.lower() == 'true'
     hwurl = req.GET.get('hwurl', req.url.split('graph.js')[0])
