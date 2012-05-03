@@ -54,6 +54,11 @@ class Period(object):
             end = datetime.now().replace(hour=0, minute=0, second=0)
             start = end - timedelta(1)
             ats = period.datetimes_strs(start=start, end=end)
+        if period == 'seven':
+            period = 'thirty'
+            period = cls.get(period)
+            start = datetime.now().replace(hour=0, minute=0, second=0) - timedelta(7)
+            ats = period.datetimes_strs(start=start)
 
         period = cls.get(period)
         if not ats and not at:
