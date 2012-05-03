@@ -25,7 +25,7 @@ class Period(object):
         self.name = name
         self.nickname = nickname
     @classmethod
-    def get_points(cls, period, at=None):
+    def get_days(cls, period, at=None):
         ats = False
         if period == 'ytd':
             period = 'year'
@@ -43,7 +43,7 @@ class Period(object):
             start = times.now().replace(hour=0, minute=0, second=0)
             start = start - timedelta(start.weekday() + 2)
             ats = period.datetimes_strs(start=start)
-        if period == 'today':
+        if period in ['today', 'hours']:
             period = 'thirty'
             period = cls.get(period)
             start = times.now().replace(hour=0, minute=0, second=0)
@@ -59,6 +59,7 @@ class Period(object):
             period = cls.get(period)
             start = times.now().replace(hour=0, minute=0, second=0) - timedelta(7)
             ats = period.datetimes_strs(start=start)
+
 
         period = cls.get(period)
         if not ats and not at:
