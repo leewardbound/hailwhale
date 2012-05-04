@@ -91,7 +91,7 @@ def _ranked(redis, pk, parent_dimension, metric, period, ats, start=0, size=10):
             isinstance(ats, list) and ','.join(ats) or ats, metric) 
     rank_key = rank_keyify(ats)
     if len(ats) > 1:
-        redis.zunionstore(rank_key, map(rank_keyify, ats)) 
+        redis.zinterstore(rank_key, map(rank_keyify, ats)) 
     return redis.zrange(rank_key, start, start + size)
 
 def _retrieve(redis, pk, dimensions, metrics, period=None, dt=None):
