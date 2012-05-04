@@ -203,8 +203,9 @@ class whale_cache(object):
         clear_cache = kwargs.pop('unmemoize', False)
         self.get_cache()
         if 'period' in kwargs:
-            kwargs['period'] = str(kwargs['period'])
-            ttl = int(kwargs['period'].split('x')[0]) * 2
+            p = Period(kwargs['period'])
+            kwargs['period'] = str(p)
+            ttl = int(p.interval) / 5
         else:
             ttl = 60
 
