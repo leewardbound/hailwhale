@@ -331,7 +331,8 @@ class Whale(object):
             return pps[dimension][metric][index][1]
         else:
             pps = cls.plotpoints(pk, dimension, metric, period=period)
-            return sum([pps[dimension][metric][dt] for dt in ats])
+            ppsm = pps[dimension][metric]
+            return sum([ppsm[dt] for dt in ats if dt in ppsm])
 
     @classmethod
     def today(cls, pk, metric, dimension='_'):
