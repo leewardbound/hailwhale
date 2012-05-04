@@ -157,27 +157,6 @@ def curry_related_dimensions(attr, func_name, instance, with_class_name=False):
             MethodType(related_curry_func, instance, instance.__class__))
 
 
-def period_points(self, metric=False, period_str='60x86400',
-        start=False, end=False):
-    from datetime import timedelta
-    from graphs import GraphPeriod
-    interval, length = period_str.split('x')
-    period = GraphPeriod(interval, length)
-    if not start:
-        start = times.now() - (timedelta(seconds=int(interval)) * 15)
-    for dt in period.datetimes(start, end):
-        dtf = '%sx%s-%s' % (interval, length, period.flatten_str(dt))
-        v = {}
-        if dtf in self.points:
-            v = self.points[dtf].values
-        if metric:
-            if metric in v:
-                v = v[metric]
-            else:
-                v = 0
-        yield dt, v
-
-
 class whale_cache(object):
     """
     Decorator that caches a function's return value each time it is called.
@@ -198,12 +177,13 @@ class whale_cache(object):
 
     def __call__(self, *args, **kwargs):
         from whale import Whale
+        from periods import Period
         if len(args) and args[0] == Whale or issubclass(args[0], Whale):
             args = args[1:]
         clear_cache = kwargs.pop('unmemoize', False)
         self.get_cache()
         if 'period' in kwargs:
-            p = Period(kwargs['period'])
+            p = Period.get(kwargs['period'])
             kwargs['period'] = str(p)
             ttl = int(p.interval) / 5
         else:
