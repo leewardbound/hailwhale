@@ -86,10 +86,8 @@ def _store(redis, pk, dimension, metric, period, dt, count, method='set',
 
 def _ranked(redis, pk, parent_dimension, metric, period, ats, start=0, size=10,
         sort_dir=None):
-    if not isinstance(ats, list):
-        ats = [ats]
     rank_keyify = lambda ats: keyify('rank', pk, parent_dimension, str(period),
-            isinstance(ats, list) and ','.join(ats) or ats, metric) 
+            ats, metric) 
     rank_key = rank_keyify(ats)
     if len(ats) > 1:
         redis.zunionstore(rank_key, map(rank_keyify, ats)) 
