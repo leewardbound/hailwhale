@@ -478,9 +478,8 @@ class Whale(object):
     @classmethod
     def zranked(cls, pk, parent_dimension='_', metric='hits', period=None,
             at=None, start=0, size=10):
-        period = Period.get(period)
-        at = at or times.now()
-        dt = period.flatten_str(at)
+        period, ats = Period.get_days(period, at)
+        dt = ats and ats[0] or times.now()
         return map(try_loads, 
                 _ranked(cls.whale_driver(), pk, parent_dimension, metric, period, dt, start, size))
 
