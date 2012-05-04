@@ -90,6 +90,7 @@ def _ranked(redis, pk, parent_dimension, metric, period, ats, start=0, size=10,
             ats, metric) 
     rank_key = rank_keyify(ats)
     if len(ats) > 1:
+        map(lambda at: redis.zremrangebyscore(rank_keyify(at), 0, 0), ats)
         redis.zunionstore(rank_key, map(rank_keyify, ats)) 
     if not sort_dir or sort_dir.upper() in ['-', 'DESC', 'HIGH']:
         return redis.zrevrange(rank_key, start, start + size)
