@@ -84,7 +84,8 @@ def _store(redis, pk, dimension, metric, period, dt, count, method='set',
         redis.zadd(rank_key, dimension_json, new_val)
     return new_val
 
-def _ranked(redis, pk, parent_dimension, metric, period, ats, start=0, size=10):
+def _ranked(redis, pk, parent_dimension, metric, period, ats, start=0, size=10,
+        sort_dir=None):
     if not isinstance(ats, list):
         ats = [ats]
     rank_keyify = lambda ats: keyify('rank', pk, parent_dimension, str(period),
@@ -92,7 +93,10 @@ def _ranked(redis, pk, parent_dimension, metric, period, ats, start=0, size=10):
     rank_key = rank_keyify(ats)
     if len(ats) > 1:
         redis.zinterstore(rank_key, map(rank_keyify, ats)) 
-    return redis.zrange(rank_key, start, start + size)
+    if not sort_dir or sort_dir.upper() in ['-', 'DESC', 'HIGH']:
+        return redis.zrevrange(rank_key, start, start + size)
+    else:
+        return redis.zrange(rank_key, start, start + size)
 
 def _retrieve(redis, pk, dimensions, metrics, period=None, dt=None):
     nested = defaultdict(dict)
@@ -483,11 +487,12 @@ class Whale(object):
 
     @classmethod
     def zranked(cls, pk, parent_dimension='_', metric='hits', period=None,
-            at=None, start=0, size=10):
+            at=None, start=0, size=10, sort_dir=None):
         period, ats = Period.get_days(period, at)
         dt = ats or [times.now()]
         return map(try_loads, 
-                _ranked(cls.whale_driver(), pk, parent_dimension, metric, period, dt, start, size))
+                _ranked(cls.whale_driver(), pk, parent_dimension, metric,
+                    period, dt, start, size, sort_dir=None))
 
 
     @classmethod
