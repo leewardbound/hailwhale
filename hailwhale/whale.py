@@ -322,8 +322,10 @@ class Whale(object):
         return cls.totals(*args, **kwargs)
 
     @classmethod
-    def total(cls, pk, metric, dimension='_', period=None, at=None, index=None):
-        period, ats = Period.get_days(period, at)
+    def total(cls, pk, metric, dimension='_', period=None, at=None, index=None,
+            tzoffset=None):
+        period, ats, tzoffset = Period.get_days(period, at, tzoffset=None)
+        print period, ats, tzoffset
         if not ats and not index:
             index = -1
         if isinstance(index, int):
@@ -487,9 +489,9 @@ class Whale(object):
 
     @classmethod
     def zranked(cls, pk, parent_dimension='_', metric='hits', period=None,
-            at=None, start=0, size=10, sort_dir=None):
-        period, ats = Period.get_days(period, at)
-        dt = ats or [times.now()]
+            at=None, start=0, size=10, sort_dir=None, tzoffset=None):
+        period, ats, tzoffset = Period.get_days(period, at)
+        dt = ats or [Period.convert(times.now(), tzoffset)]
         return map(try_loads, 
                 _ranked(cls.whale_driver(), pk, parent_dimension, metric,
                     period, dt, start, size, sort_dir=None))

@@ -25,48 +25,57 @@ class Period(object):
         self.name = name
         self.nickname = nickname
     @classmethod
-    def get_days(cls, period, at=None):
+    def get_days(cls, period, at=None, tzoffset=None):
         ats = False
+        if '|' in period:
+            period, tzoffset = period.split('|')
         if period == 'ytd':
             period = 'year'
             period = cls.get(period)
-            start = times.now().replace(month=1, day=1,hour=0,minute=0,second=0)
+            start = convert(times.now(), tzoffset).replace(month=1,
+                    day=1,hour=0,minute=0,second=0, microsecond=0)
             ats = period.datetimes_strs(start=start)
         if period == 'mtd':
             period = 'thirty'
             period = cls.get(period)
-            start = times.now().replace(day=1, hour=0, minute=0, second=0)
+            start = convert(times.now(), tzoffset).replace(day=1, hour=0,
+                    minute=0, second=0, microsecond=0)
             ats = period.datetimes_strs(start=start)
         if period == 'wtd':
             period = 'thirty'
             period = cls.get(period)
-            start = times.now().replace(hour=0, minute=0, second=0)
+            start = convert(times.now(), tzoffset).replace(hour=0, minute=0,
+                    second=0, microsecond=0)
             start = start - timedelta(start.weekday() + 2)
             ats = period.datetimes_strs(start=start)
         if period in ['today', 'hours']:
             period = 'thirty'
             period = cls.get(period)
-            start = times.now().replace(hour=0, minute=0, second=0)
+            start = convert(times.now(), tzoffset).replace(hour=0, minute=0,
+                    second=0, microsecond=0)
             ats = period.datetimes_strs(start=start)
         if period == 'yesterday':
             period = 'thirty'
             period = cls.get(period)
-            end = times.now().replace(hour=0, minute=0, second=0)
+            end = convert(times.now(), tzoffset).replace(hour=0, minute=0,
+                    second=0, microsecond=0)
             start = end - timedelta(1)
-            ats = period.datetimes_strs(start=start, end=end)
+            end = end - timedelta(seconds=1)
+            ats = period.datetimes_strs(start=start, end=end, tzoffset=tzoffset)
         if period == 'seven':
             period = 'thirty'
             period = cls.get(period)
-            start = times.now().replace(hour=0, minute=0, second=0) - timedelta(7)
+            start = convert(times.now(), tzoffset).replace(hour=0, minute=0,
+                    second=0, microsecond=0) - timedelta(7)
             ats = period.datetimes_strs(start=start)
 
 
         period = cls.get(period)
         if not ats and not at:
-            ats = period.datetimes_strs()
+            ats = period.datetimes_strs(tzoffset=tzoffset)
         elif not ats:
-            ats = [period.flatten_str(at)]
-        return period, list(ats)
+            ats = [period.flatten_str(convert(at, tzoffset))]
+        return period, list(ats), tzoffset
 
     def start(self):
         dt= (times.now() -
@@ -101,17 +110,16 @@ class Period(object):
         except ValueError:
             return None
 
-    def datetimes(self, start=False, end=False):
+    def datetimes(self, start=False, end=False, tzoffset=None):
         from util import datetimeIterator
         in_range = lambda dt: (not start or start <= dt) and (
             not end or end >= dt)
         return (dt for dt in datetimeIterator(
-            self.start(), times.now(),
-            delta=self.delta()) if in_range(dt))
+            start or self.start(), end or times.now(), delta=self.delta()) if in_range(dt))
 
-    def datetimes_strs(self, start=False, end=False):
+    def datetimes_strs(self, start=False, end=False, tzoffset=None):
         return (Period.format_dt_str(dt) for dt in
-                self.datetimes(start=start, end=end))
+                self.datetimes(start=start, end=end, tzoffset=tzoffset))
 
     def flatten(self, dtf=None):
         if not dtf:
@@ -162,6 +170,9 @@ class Period(object):
     @staticmethod
     def default_size():
         return str(Period.all_sizes()[1])
+    @staticmethod
+    def convert(tz, tzo):
+        return convert(tz, tzo)
 
     def friendly_name(self):
         return self.name if self.name else '%sx%s' % (
@@ -175,3 +186,16 @@ for p in PERIODS:
     if 'nickname' in p:
         PERIOD_NICKS[p['nickname']] = period
 DEFAULT_PERIODS = Period.all_sizes()
+def convert(tzs, tzoffset=None):
+    if tzoffset == 'system':
+        tzoffset = (time.timezone / -(60*60) * 100)
+    if not tzoffset:
+        return tzs
+    elif isinstance(tzs, datetime):
+        return tzs + timedelta(hours=float(tzoffset)/100)
+    elif isinstance(tzs, basestring):
+        return times.format(tzs, int(tzoffset))
+    elif isinstance(tzs, int):
+        return tzs + int(3600*float(tzoffset)/100)
+    elif isinstance(tzs, list):
+        return map(lambda tz: convert(tz, float(tzoffset)), tzs)
