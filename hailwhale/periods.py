@@ -34,26 +34,26 @@ class Period(object):
             period = cls.get(period)
             start = convert(times.now(), tzoffset).replace(month=1,
                     day=1,hour=0,minute=0,second=0, microsecond=0)
-            ats = period.datetimes_strs(start=start)
+            ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
         if period == 'mtd':
             period = 'thirty'
             period = cls.get(period)
             start = convert(times.now(), tzoffset).replace(day=1, hour=0,
                     minute=0, second=0, microsecond=0)
-            ats = period.datetimes_strs(start=start)
+            ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
         if period == 'wtd':
             period = 'thirty'
             period = cls.get(period)
             start = convert(times.now(), tzoffset).replace(hour=0, minute=0,
                     second=0, microsecond=0)
             start = start - timedelta(start.weekday() + 2)
-            ats = period.datetimes_strs(start=start)
+            ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
         if period in ['today', 'hours']:
             period = 'thirty'
             period = cls.get(period)
             start = convert(times.now(), tzoffset).replace(hour=0, minute=0,
                     second=0, microsecond=0)
-            ats = period.datetimes_strs(start=start)
+            ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
         if period == 'yesterday':
             period = 'thirty'
             period = cls.get(period)
@@ -67,7 +67,7 @@ class Period(object):
             period = cls.get(period)
             start = convert(times.now(), tzoffset).replace(hour=0, minute=0,
                     second=0, microsecond=0) - timedelta(7)
-            ats = period.datetimes_strs(start=start)
+            ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
 
 
         period = cls.get(period)
@@ -115,7 +115,7 @@ class Period(object):
         in_range = lambda dt: (not start or start <= dt) and (
             not end or end >= dt)
         return (dt for dt in datetimeIterator(
-            start or self.start(), end or times.now(), delta=self.delta()) if in_range(dt))
+            start or self.start(), end or convert(times.now(), tzoffset), delta=self.delta()) if in_range(dt))
 
     def datetimes_strs(self, start=False, end=False, tzoffset=None):
         return (Period.format_dt_str(dt) for dt in
