@@ -68,6 +68,14 @@ class Period(object):
             start = convert(times.now(), tzoffset).replace(hour=0, minute=0,
                     second=0, microsecond=0) - timedelta(7)
             ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
+        if '-' in str(period):
+            start_s, end_s = period.split('-')
+            period = 'thirty'
+            period = cls.get(period)
+            end = datetime.strptime(end_s, '%m/%d/%Y').replace(hour=0, minute=0,
+                    second=0, microsecond=0)+timedelta(1)-timedelta(seconds=1)
+            start = datetime.strptime(start_s, '%m/%d/%Y').replace(hour=0, minute=0, second=0, microsecond=0)
+            ats = period.datetimes_strs(start=start, end=end, tzoffset=tzoffset)
 
 
         period = cls.get(period)
