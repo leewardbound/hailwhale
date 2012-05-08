@@ -103,7 +103,7 @@ def _ranked(redis, pk, parent_dimension, metric, period, ats, start=0, size=10,
         for key_i, key_n in ipairs(redis.call("zrange", KEYS[2], 0, -1)) do
             local top_s = tonumber(redis.call("zscore", KEYS[1], key_n))
             local bot_s = tonumber(redis.call("zscore", KEYS[2], key_n))
-            if bot_s and bot_s > 0 then 
+            if top_s and bot_s and bot_s > 0 then 
                 redis.call("zadd", KEYS[3], top_s/bot_s, key_n)
             end
         end
