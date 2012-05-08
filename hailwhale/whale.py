@@ -86,16 +86,32 @@ def _store(redis, pk, dimension, metric, period, dt, count, method='set',
 
 def _ranked(redis, pk, parent_dimension, metric, period, ats, start=0, size=10,
         sort_dir=None):
-    rank_keyify = lambda ats: keyify('rank', pk, parent_dimension, str(period),
-            ats, metric) 
-    rank_key = rank_keyify(ats)
-    if len(ats) > 1:
-        map(lambda at: redis.zremrangebyscore(rank_keyify(at), 0, 0), ats)
-        redis.zunionstore(rank_key, map(rank_keyify, ats)) 
-    if not sort_dir or sort_dir.upper() in ['-', 'DESC', 'HIGH']:
-        return redis.zrevrange(rank_key, start, start + size)
-    else:
-        return redis.zrange(rank_key, start, start + size)
+    top, bot = parse_formula(metric)
+    rank_keyify = lambda ats, met: keyify('rank', pk, parent_dimension, str(period),
+            ats, met) 
+    top_rank_key = lambda ats: rank_keyify(ats, top)
+    bot_rank_key = lambda ats: rank_keyify(ats, bot)
+    final_rank_key = rank_keyify(ats, metric)
+    def squash_ats(met):
+        if len(ats) > 1:
+            map(lambda at: redis.zremrangebyscore(rank_keyify(at, met), 0, 0), ats)
+            redis.zunionstore(rank_keyify(ats, met),
+                    map(lambda at: rank_keyify(at, met), ats)) 
+    squash_ats(top)
+    if bot:
+        squash_ats(bot)
+        top_key, bot_key = rank_keyify(ats, top), rank_keyify(ats, bot)
+        top_count, bot_count = redis.zcard(top_key), redis.zcard(bot_key)
+        top_all, bot_all = redis.zrange(top_key, 0, top_count, False, True), redis.zrange(
+                bot_key, 0, bot_count, False, True)
+        top_dict = dict(top_all)
+        for k, v in bot_all:
+            if k not in top_dict or not v or not top_dict[k]:
+                continue
+            redis.zadd(final_rank_key, k, top_dict[k]/v)
+        redis.zremrangebyscore(final_rank_key, 0, 0)
+    return redis.zrange(final_rank_key, start, start + size, 
+                desc=not sort_dir or sort_dir.upper() in ['-', 'DESC', 'HIGH'])
 
 def _retrieve(redis, pk, dimensions, metrics, period=None, dt=None):
     nested = defaultdict(dict)
@@ -325,16 +341,25 @@ class Whale(object):
     def total(cls, pk, metric, dimension='_', period=None, at=None, index=None,
             tzoffset=None):
         period, ats, tzoffset = Period.get_days(period, at, tzoffset=None)
-        print period, ats, tzoffset
+        top, bot = parse_formula(metric)
         if not ats and not index:
             index = -1
         if isinstance(index, int):
             pps = cls.plotpoints(pk, dimension, metric, period=period, points_type=list)
             return pps[dimension][metric][index][1]
         else:
-            pps = cls.plotpoints(pk, dimension, metric, period=period)
-            ppsm = pps[dimension][metric]
-            return sum([ppsm[dt] for dt in ats if dt in ppsm])
+            if not bot:
+                pps = cls.plotpoints(pk, dimension, metric, period=period)
+                ppsm = pps[dimension][metric]
+                return sum([ppsm[dt] for dt in ats if dt in ppsm])
+            else:
+                top_pps = cls.plotpoints(pk, dimension, top, period=period)
+                bot_pps = cls.plotpoints(pk, dimension, bot, period=period)
+                top_ppsm = top_pps[dimension][top]
+                bot_ppsm = bot_pps[dimension][bot]
+                top_tot = sum([top_ppsm[dt] for dt in ats if dt in top_ppsm])
+                bot_tot = sum([bot_ppsm[dt] for dt in ats if dt in bot_ppsm])
+                return bot_tot and top_tot/bot_tot or 0
 
     @classmethod
     def today(cls, pk, metric, dimension='_'):
@@ -494,7 +519,7 @@ class Whale(object):
         dt = ats or [Period.convert(times.now(), tzoffset)]
         return map(try_loads, 
                 _ranked(cls.whale_driver(), pk, parent_dimension, metric,
-                    period, dt, start, size, sort_dir=None))
+                    period, dt, start, size, sort_dir=sort_dir))
 
 
     @classmethod
