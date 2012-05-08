@@ -89,8 +89,6 @@ def _ranked(redis, pk, parent_dimension, metric, period, ats, start=0, size=10,
     top, bot = parse_formula(metric)
     rank_keyify = lambda ats, met: keyify('rank', pk, parent_dimension, str(period),
             ats, met) 
-    top_rank_key = lambda ats: rank_keyify(ats, top)
-    bot_rank_key = lambda ats: rank_keyify(ats, bot)
     final_rank_key = rank_keyify(ats, metric)
     def squash_ats(met):
         if len(ats) > 1:
@@ -101,14 +99,15 @@ def _ranked(redis, pk, parent_dimension, metric, period, ats, start=0, size=10,
     if bot:
         squash_ats(bot)
         top_key, bot_key = rank_keyify(ats, top), rank_keyify(ats, bot)
-        top_count, bot_count = redis.zcard(top_key), redis.zcard(bot_key)
-        top_all, bot_all = redis.zrange(top_key, 0, top_count, False, True), redis.zrange(
-                bot_key, 0, bot_count, False, True)
-        top_dict = dict(top_all)
-        for k, v in bot_all:
-            if k not in top_dict or not v or not top_dict[k]:
-                continue
-            redis.zadd(final_rank_key, k, top_dict[k]/v)
+        redis.execute_command("eval", """
+        for key_i, key_n in ipairs(redis.call("zrange", KEYS[2], 0, -1)) do
+            local top_s = tonumber(redis.call("zscore", KEYS[1], key_n))
+            local bot_s = tonumber(redis.call("zscore", KEYS[2], key_n))
+            if bot_s and bot_s > 0 then 
+                redis.call("zadd", KEYS[3], top_s/bot_s, key_n)
+            end
+        end
+        """, 3, top_key, bot_key, final_rank_key)
         redis.zremrangebyscore(final_rank_key, 0, 0)
     return redis.zrange(final_rank_key, start, start + size, 
                 desc=not sort_dir or sort_dir.upper() in ['-', 'DESC', 'HIGH'])
