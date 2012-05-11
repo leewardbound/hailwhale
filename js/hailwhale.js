@@ -330,7 +330,7 @@
       };
       poller();
       if (extra.autoupdate) {
-        return poller_handle = setInterval(poller, extra.interval || 2500);
+        return poller_handle = setInterval(poller, extra.interval || 7500);
       }
     };
     return this;

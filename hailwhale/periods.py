@@ -27,6 +27,7 @@ class Period(object):
     @classmethod
     def get_days(cls, period, at=None, tzoffset=None):
         ats = False
+        period = str(period)
         if '|' in period:
             period, tzoffset = period.split('|')
         if period == 'ytd':
