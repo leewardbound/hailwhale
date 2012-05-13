@@ -128,7 +128,7 @@ def graph():
         hide_table = hide_table.lower() == 'true'
     hwurl = req.GET.get('hwurl', req.url.split('graph.js')[0])
     params['autoupdate'] = g('live', True)
-    params['interval'] = g('interval', 15000)
+    params['interval'] = g('interval', 6000)
     include_string = \
 "document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/jquery.min.js'></script>\");"%hwurl
     if hide_table: 
