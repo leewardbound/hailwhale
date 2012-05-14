@@ -28,6 +28,6 @@ setup(name='hailwhale',
       long_description=LONG_DESCRIPTION,
       platforms=['any'],
       classifiers=CLASSIFIERS,
-      install_requires = ['bottle', 'redis', 'times'],
+      install_requires = ['bottle', 'redis', 'times', 'pycrypto'],
       version='1.3.3',
 )

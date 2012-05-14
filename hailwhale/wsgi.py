@@ -100,6 +100,33 @@ def plotpoints():
     return whale.plotpoints(**params)
 
 
+@route('/tracker')
+def tracker():
+    from periods import Period
+    import random
+    params = default_params()
+    # LOLOL THIS SHOULD REALLY CHANGE
+    key = 'hailwhale_weak_aes_key_pixel'
+    if not 'pk' in params and 'pixel' in params:
+        from Crypto.Cipher import AES
+        mode = AES.MODE_CBC
+        encryptor = AES.new(key, mode)
+        text = g('pixel')
+        params['pk'] = encryptor.decrypt(text)
+    pk = params['pk']
+    whale = Whale()
+    hail = Hail()
+    val = whale.count_now(at=times.now(), **params)
+    uid = g('uid')
+    if not uid or uid == '_new':
+        default = random.randrange(10**6,10**9)
+        uid = str(req.get_cookie('uid', str(default), key))
+    hail.spy_log(uid, params)
+    response.set_cookie('uid', uid, key)
+    return str(uid)
+
+
+
 @route('/graph.js')
 def graph():
     from periods import Period

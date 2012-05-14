@@ -172,7 +172,7 @@ class Period(object):
             return name
         if name and name in PERIOD_NICKS:
             return PERIOD_NICKS[str(name)]
-        if not name:
+        if not name or name == 'None':
             name = Period.default_size()
         return Period.all_sizes_dict()[str(name)]
 
