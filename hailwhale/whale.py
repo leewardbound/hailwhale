@@ -414,12 +414,15 @@ class Whale(object):
         r = cls.whale_driver()
         keys = r.keys('*||*||*||*')
         for k in keys:
+            parts = k.split('||')
+            if parts == 'rank':
+                continue
             try:
                 val = r.hgetall(k)
             except:
                 r.delete(k)
                 continue
-            this_p = k.split('||')[2]
+            this_p = parts[2]
             if not this_p in ps:
                 r.delete(k)
                 continue
