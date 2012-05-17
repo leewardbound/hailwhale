@@ -79,8 +79,14 @@ def _store(redis, pk, dimension, metric, period, dt, count, method='set',
         redis.hset(key, dt, new_val)
     elif method == 'incr':
         new_val = redis.execute_command('HINCRBYFLOAT', key, dt, float(count))
-    if rank and dimension != '_':
-        rank_key = keyify('rank', pk, parent(dimension), str(period), dt, metric) 
+    if rank and (isinstance(try_loads(pk), list) or dimension != '_'):
+        if isinstance(pk, list) and dimension == '_':
+            tgt_pk = parent(pk)
+            tgt_dimension = dimension
+        else:
+            tgt_pk = pk
+            tgt_dimension = parent(dimension)
+        rank_key = keyify('rank', tgt_pk, tgt_dimension, str(period), dt, metric) 
         redis.zadd(rank_key, dimension_json, new_val)
     return new_val
 
