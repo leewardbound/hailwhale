@@ -133,9 +133,8 @@ def tracker():
         def hw_encoded(t):
             return quote_plus(b64encode(encryptor.encrypt(AddPadding(t, INTERRUPT, PAD, 32))))
         def hw_decoded(t):
-            return encryptor.decrypt(b64decode(StripPadding(t, INTERRUPT, PAD)))
+            return StripPadding(encryptor.decrypt(b64decode(t)), INTERRUPT, PAD)
         params['pk'] = hw_decoded(text)
-        print params['pk']
     pk = params['pk']
     whale = Whale()
     hail = Hail()
