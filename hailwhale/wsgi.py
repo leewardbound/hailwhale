@@ -106,13 +106,36 @@ def tracker():
     import random
     params = default_params()
     # LOLOL THIS SHOULD REALLY CHANGE
-    key = 'hailwhale_weak_aes_key_pixel'
-    if not 'pk' in params and 'pixel' in params:
+    if 'pk' not in req.GET and 'pixel' in req.GET:
         from Crypto.Cipher import AES
+        from base64 import b64encode, b64decode
+        from urllib import quote_plus
+
+        key = hashlib.sha256('hailwhale_weak_key').digest()
         mode = AES.MODE_CBC
         encryptor = AES.new(key, mode)
         text = g('pixel')
-        params['pk'] = encryptor.decrypt(text)
+        INTERRUPT = u'\u0001'
+        PAD = u'\u0000'
+
+        # Since you need to pad your data before encryption, 
+        # create a padding function as well
+        # Similarly, create a function to strip off the padding after decryption
+        def AddPadding(data, interrupt, pad, block_size):
+            new_data = ''.join([data, interrupt])
+            new_data_len = len(new_data)
+            remaining_len = block_size - new_data_len
+            to_pad_len = remaining_len % block_size
+            pad_string = pad * to_pad_len
+            return ''.join([new_data, pad_string])
+        def StripPadding(data, interrupt, pad):
+            return data.rstrip(pad).rstrip(interrupt)
+        def hw_encoded(t):
+            return quote_plus(b64encode(encryptor.encrypt(AddPadding(t, INTERRUPT, PAD, 32))))
+        def hw_decoded(t):
+            return encryptor.decrypt(b64decode(StripPadding(t, INTERRUPT, PAD)))
+        params['pk'] = hw_decoded(text)
+        print params['pk']
     pk = params['pk']
     whale = Whale()
     hail = Hail()
