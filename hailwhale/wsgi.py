@@ -106,12 +106,12 @@ def tracker():
     import random
     params = default_params()
     # LOLOL THIS SHOULD REALLY CHANGE
+    key = hashlib.sha256('hailwhale_weak_key').digest()
     if 'pk' not in req.GET and 'pixel' in req.GET:
         from Crypto.Cipher import AES
         from base64 import b64encode, b64decode
         from urllib import quote_plus
 
-        key = hashlib.sha256('hailwhale_weak_key').digest()
         mode = AES.MODE_CBC
         encryptor = AES.new(key, mode)
         text = g('pixel')
