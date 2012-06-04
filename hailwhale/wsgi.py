@@ -284,3 +284,4 @@ def send_static_js(filename):
 
 if __name__ == '__main__':
     run(host='0.0.0.0', port=PORT)
+application = bottle.default_app()
