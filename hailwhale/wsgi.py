@@ -7,16 +7,17 @@ import times
 from datetime import datetime
 from bottle import hook, response, run, route, request as req, static_file
 
-import util
-
-from hail import Hail
-from whale import Whale
-
 PORT=8085
 project_dir = os.path.dirname(os.path.abspath(__file__))
 here = lambda * x: os.path.join(os.path.abspath(os.path.dirname(__file__)), *x)
 import sys
 sys.path.insert(0, project_dir)
+
+import util
+
+from hail import Hail
+from whale import Whale
+
 
 bottle.debug(True)
 @hook('after_request')
