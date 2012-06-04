@@ -15,6 +15,8 @@ from whale import Whale
 PORT=8085
 project_dir = os.path.dirname(os.path.abspath(__file__))
 here = lambda * x: os.path.join(os.path.abspath(os.path.dirname(__file__)), *x)
+import sys
+sys.path.insert(0, project_dir)
 
 bottle.debug(True)
 @hook('after_request')
