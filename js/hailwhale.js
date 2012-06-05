@@ -8,13 +8,19 @@
     this.host = host;
     this.opts = opts;
     this.charts = [];
+    var JSONify = function(str_or_obj) {
+        if(typeof(str_or_obj) == "string")
+            return str_or_obj;
+        else
+            return JSON.stringify(str_or_obj);
+    }
     this.make_params = function(extra) {
       var params;
       d = new Date();
       return params = {
-        pk: JSON.stringify(extra.pk || extra.category || ''),
-        dimensions: JSON.stringify(extra.dimensions || extra.dimension || ''),
-        metrics: JSON.stringify(extra.metrics || extra.metric || ''),
+        pk: JSONify(extra.pk || extra.category || ''),
+        dimensions: JSONify(extra.dimensions || extra.dimension || ''),
+        metrics: JSONify(extra.metrics || extra.metric || ''),
         period: extra.period || '',
         tzoffset: extra.tzoffset || d.getTimezoneOffset()/60
       };
@@ -64,6 +70,7 @@
         d3: extra.d3 || false
       });
       params = this.make_params(extra);
+      console.log(params);
       params['depth'] = (extra.depth || 0);
       if(extra.area) {
         params['depth'] = 1;

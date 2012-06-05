@@ -7,7 +7,7 @@ import times
 from datetime import datetime
 from bottle import hook, response, run, route, request as req, static_file
 
-PORT=8085
+PORT=80
 project_dir = os.path.dirname(os.path.abspath(__file__))
 here = lambda * x: os.path.join(os.path.abspath(os.path.dirname(__file__)), *x)
 import sys
@@ -70,7 +70,29 @@ def reset():
 @route('/count_now')
 def count_now():
     whale = Whale()
-    val = whale.count_now(at=times.now(), **default_params())
+    at = g('at', False)
+    tzoffset = None
+    if not at:
+        at = times.now()
+    else:
+        from dateutil.parser import parse
+        at = parse(g('at'))
+        at = at.replace(tzinfo=None)
+    val = whale.count_now(at=at, **default_params())
+    return 'OK'
+
+@route('/update_count_to')
+def update_count_to():
+    whale = Whale()
+    at = g('at', False)
+    tzoffset = None
+    if not at:
+        at = times.now()
+    else:
+        from dateutil.parser import parse
+        at = parse(g('at'))
+        at = at.replace(tzinfo=None)
+    val = whale.update_count_to(at=at, **default_params())
     return 'OK'
 
 @route('/flush_hail')

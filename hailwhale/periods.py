@@ -1,29 +1,79 @@
 from datetime import datetime, timedelta, date
 import time
 import times
+import re
 PERIODS = [
-{'name': 'Last year, by 14 days', 
-    'length': 3600 * 24 * 365,
-    'interval': 3600 * 24 * 14,
+{'name': 'Last 3 years, by month', 
+    'length': '3y',
+    'interval': '1mo',
+    'nickname': 'monthly'},
+{'name': 'Last year, by week', 
+    'length': '1y',
+    'interval': '1w',
     'nickname': 'year'},
-{'name': 'Last 30 days, by day', 'length': 3600 * 24 * 30, 'interval': 3600 * 24,
+{'name': 'Last 30 days, by day', 'length': '1mo', 'interval': '1d',
     'nickname': 'thirty'},
-{'name': 'Last week, by 6 hours', 'length': 3600 * 24 * 7, 'interval': 3600 * 6,
+{'name': 'Last week, by 6 hours', 'length': '1w', 'interval': '6h',
     'nickname': 'seven'},
-{'name': 'Last day, by hour', 'length': 3600 * 24, 'interval': 3600,
+{'name': 'Last day, by hour', 'length': '1d', 'interval': '1h',
     'nickname': '24h'},
-{'name': 'Last 6 hours, by 15 minutes', 'length': 3600 * 6, 'interval': 60 * 15},
-{'name': 'Last hour, by 2 minutes', 'length': 3600, 'interval': 60 * 2,
+{'name': 'Last hour, by 1 minutes', 'length': '1h', 'interval': '1m',
     'nickname': 'hour'},
-{'name': 'Last 5 minutes, by 10 seconds', 'length': 300, 'interval': 10,
-    'nickname': 'fivemin'},
+{'name': 'Last 5 minutes, by 10 seconds', 'length': '5m', 'interval': '10s',
+        'nickname': 'fivemin'}
 ]
+
+UnitMultipliers = {
+  'seconds' : 1,
+  'minutes' : 60,
+  'hours' : 3600,
+  'days' : 86400,
+  'weeks' : 86400 * 7,
+  'months' : 86400 * 31,
+  'years' : 86400 * 365
+}
+
+
+def getUnitString(s):
+  if 'seconds'.startswith(s): return 'seconds'
+  if 'minutes'.startswith(s): return 'minutes'
+  if 'hours'.startswith(s): return 'hours'
+  if 'days'.startswith(s): return 'days'
+  if 'weeks'.startswith(s): return 'weeks'
+  if 'months'.startswith(s): return 'months'
+  if 'years'.startswith(s): return 'years'
+  raise ValueError("Invalid unit '%s'" % s)
+
+def parseUnit(unit):
+    if str(unit).isdigit():
+        return int(unit) * UnitMultipliers[getUnitString('s')]
+    unit_re = re.compile(r'^(\d+)([a-z]+)$')
+    match = unit_re.match(str(unit))
+    if match:
+      unit = int(match.group(1)) * UnitMultipliers[getUnitString(match.group(2))]
+    else:
+      raise ValueError("Invalid unit specification '%s'" % unit)
+    return unit
+
+def parseRetentionDef(retentionDef):
+  (precision, points) = retentionDef.strip().split(':')
+  precision = parseUnit(precision)
+
+  if points.isdigit():
+    points = int(points)
+  else:
+    points = parseUnit(points) / precision
+
+  return (precision, points)
+
 class Period(object):
     def __init__(self, interval, length, name=False, nickname=False):
-        self.interval = int(interval)
-        self.length = int(length)
+        self.interval = str(interval)
+        self.length = str(length)
         self.name = name
         self.nickname = nickname
+    def getUnits(self):
+        return parseUnit(self.interval), parseUnit(self.length)
     @classmethod
     def get_days(cls, period, at=None, tzoffset=None):
         ats = False
@@ -87,28 +137,30 @@ class Period(object):
         return period, list(ats), tzoffset
 
     def start(self):
+        interval, length = self.getUnits()
         dt= (times.now() -
-                timedelta(seconds=self.length))
-        if self.interval < 60:
-            interval_seconds = self.interval
+                timedelta(seconds=length))
+        if interval < 60:
+            interval_seconds = interval
         else: interval_seconds = 60
-        if self.interval < 3600:
-            interval_minutes = (self.interval - interval_seconds)/60
+        if interval < 3600:
+            interval_minutes = (interval - interval_seconds)/60
         else: interval_minutes = 60
-        if self.interval < 3600*24:
-            interval_hours = (self.interval - interval_seconds -
+        if interval < 3600*24:
+            interval_hours = (interval - interval_seconds -
                     (60*interval_minutes))/3600
         else:
             interval_hours = 24
         if interval_hours == 0: interval_hours = 1
         if interval_minutes == 0: interval_minutes = 1
-        return dt.replace(
+        new_start = dt.replace(
             microsecond = 0,
             second = (dt.second - dt.second%interval_seconds),
             minute = (dt.minute - dt.minute%interval_minutes),
             hour = (dt.hour - dt.hour%interval_hours),)
-    def delta(self):
-        return timedelta(seconds=self.interval)
+        if interval >= (3600*24*30):
+            new_start = new_start.replace(day=1)
+        return new_start
     @staticmethod
     def format_dt_str(t):
         return t.strftime('%a %b %d %H:%M:%S %Y')
@@ -120,11 +172,33 @@ class Period(object):
             return None
 
     def datetimes(self, start=False, end=False, tzoffset=None):
+        from dateutil import rrule
         from util import datetimeIterator
         in_range = lambda dt: (not start or start <= dt) and (
             not end or end >= dt)
-        return (dt for dt in datetimeIterator(
-            start or self.start(), end or convert(times.now(), tzoffset), delta=self.delta()) if in_range(dt))
+        use_start = start or self.start()
+        use_end = end or convert(times.now(), tzoffset)
+        interval, length = self.getUnits()
+        if interval >= 3600*24*30:
+            rule = rrule.MONTHLY
+            step = interval / (3600*24*30)
+        elif interval >= 3600*24*7:
+            rule = rrule.WEEKLY
+            step = interval / (3600*24*7)
+        elif interval >= 3600*24:
+            rule = rrule.DAILY
+            step = interval / (3600*24)
+        elif interval >= 3600:
+            rule = rrule.HOURLY
+            step = interval / 3600
+        elif interval >= 60:
+            rule = rrule.MINUTELY
+            step = interval / 60
+        else:
+            rule = rrule.SECONDLY
+            step = interval
+        dts = rrule.rrule(rule, dtstart=use_start, until=use_end, interval=step)
+        return dts
 
     def datetimes_strs(self, start=False, end=False, tzoffset=None):
         return (Period.format_dt_str(dt) for dt in
@@ -135,14 +209,8 @@ class Period(object):
             dtf = times.now()
         if type(dtf) in (str, unicode):
             dtf = self.parse_dt_str(dtf)
-        if not dtf:
-            return False
-        diff_delta = dtf - self.start()
-        diff = diff_delta.seconds + (diff_delta.days * 86400)
-        if diff < 0:
-            return False
-        p = int(diff / self.interval)
-        flat = (self.start() + timedelta(seconds=p * self.interval)).replace(microsecond=0)
+        dts = list(self.datetimes(end=dtf))
+        flat = len(dts) and dts[-1] or False
         return flat
 
     def flatten_str(self, dtf):
@@ -152,10 +220,10 @@ class Period(object):
         return self.format_dt_str(f)
 
     def __unicode__(self):
-        return '%dx%d' % (self.interval, self.length)
+        return '%s:%s' % (self.interval, self.length)
 
     def __str__(self):
-        return '%dx%d' % (self.interval, self.length)
+        return '%s:%s' % (self.interval, self.length)
 
     @staticmethod
     def all_sizes():
@@ -163,7 +231,7 @@ class Period(object):
 
     @staticmethod
     def all_sizes_dict():
-        return dict(map(lambda p: ('%sx%s' % (p.interval, p.length), p),
+        return dict(map(lambda p: ('%s:%s' % (p.interval, p.length), p),
             Period.all_sizes()))
 
     @staticmethod
@@ -174,7 +242,12 @@ class Period(object):
             return PERIOD_NICKS[str(name)]
         if not name or name == 'None':
             name = Period.default_size()
-        return Period.all_sizes_dict()[str(name)]
+        if str(name) in Period.all_sizes_dict():
+            return Period.all_sizes_dict()[str(name)]
+        try:
+            return PERIOD_INTERVALS[parseUnit(name)]
+        except:
+            raise KeyError(name)
 
     @staticmethod
     def default_size():
@@ -184,16 +257,19 @@ class Period(object):
         return convert(tz, tzo)
 
     def friendly_name(self):
-        return self.name if self.name else '%sx%s' % (
+        return self.name if self.name else '%s:%s' % (
                 self.interval, self.length)
 
 PERIOD_OBJS = []
 PERIOD_NICKS = {} 
+PERIOD_INTERVALS = {} 
 for p in PERIODS:
     period = Period(p['interval'], p['length'], p['name'], p.get('nickname', None))
     PERIOD_OBJS.append(period)
+    PERIOD_INTERVALS[parseUnit(p['interval'])] = period
     if 'nickname' in p:
         PERIOD_NICKS[p['nickname']] = period
+        PERIOD_NICKS[p['interval']] = period
 DEFAULT_PERIODS = Period.all_sizes()
 def convert(tzs, tzoffset=None):
     if tzoffset == 'system':

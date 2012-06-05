@@ -27,16 +27,16 @@ $(function() {
   $(function() {
       debug = true;
     hw.add_graph($('#countOne .plot'), {pk: 'countOne', autoupdate: debug,
-        period:'10x300'});
+        period:'monthly'});
     hw.add_graph($('#countManyNums .plot'), {pk: 'countManyNums', depth: 1,
-        autoupdate: debug, period: '10x300'});
+        autoupdate: debug, period: 'monthly'});
     hw.add_graph($('#countManyNums .areaplot'), {pk: 'countManyNums', depth: 1,
-        autoupdate: debug, period: '10x300', area: true});
+        autoupdate: debug, period: 'monthly', area: true});
     hw.add_graph($('#countManyNums .wiggleplot'), {pk: 'countManyNums', depth: 1,
-        autoupdate: debug, period: '10x300', area: 'silhouette'});
+        autoupdate: debug, period: 'monthly', area: 'silhouette'});
     hw.add_graph($('#manyMetrics .plot'), {pk: 'system_status', 
         metrics: { 'CPU percent':'hits', 'RAM (GB)':'hits' },
-        period: '10x300',
+        period: 'monthly',
         interval: 10000,
         autoupdate: debug});
   });

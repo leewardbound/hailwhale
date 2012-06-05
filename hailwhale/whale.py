@@ -60,7 +60,7 @@ def _increment(*args, **kwargs):
 def _store(redis, pk, dimension, metric, period, dt, count, method='set',
         rank=False):
     # Keep a list of graphs per pk
-    key = keyify(pk, dimension, str(period), metric)
+    key = keyify(pk, dimension, Period.get(period).interval, metric)
     # Store pk dimensions
     dimension_key = keyify('dimensions', pk)
     dimension_json = keyify(dimension)
@@ -86,15 +86,16 @@ def _store(redis, pk, dimension, metric, period, dt, count, method='set',
         else:
             tgt_pk = pk
             tgt_dimension = parent(dimension)
-        rank_key = keyify('rank', tgt_pk, tgt_dimension, str(period), dt, metric) 
+        rank_key = keyify('rank', tgt_pk, tgt_dimension,
+                Period.get(period).interval, dt, metric) 
         redis.zadd(rank_key, dimension_json, new_val)
     return new_val
 
 def _ranked(redis, pk, parent_dimension, metric, period, ats, start=0, size=10,
         sort_dir=None):
     top, bot = parse_formula(metric)
-    rank_keyify = lambda ats, met: keyify('rank', pk, parent_dimension, str(period),
-            ats, met) 
+    rank_keyify = lambda ats, met: keyify('rank', pk, parent_dimension,
+            Period.get(period).interval, ats, met) 
     final_rank_key = rank_keyify(ats, metric)
     def squash_ats(met):
         if len(ats) > 1:
@@ -120,10 +121,10 @@ def _ranked(redis, pk, parent_dimension, metric, period, ats, start=0, size=10,
 
 def _retrieve(redis, pk, dimensions, metrics, period=None, dt=None):
     nested = defaultdict(dict)
-    period = str(Period.get(period))
+    interval = Period.get(period).interval
     for dimension in iterate_dimensions(dimensions)+['_']:
         for metric in metrics:
-            hash_key = keyify(pk, dimension, period, metric)
+            hash_key = keyify(pk, dimension, interval, metric)
             value_dict = redis.hgetall(hash_key)
             nested[maybe_dumps(dimension)][maybe_dumps(metric)] = dict([
                     (k, float(v)) for k, v in value_dict.items()])
@@ -393,7 +394,7 @@ class Whale(object):
                 metrics += metric.split('/')
         d = {}
         for p in periods:
-            p_data = cls.plotpoints(pk, dimensions, metrics, period=str(p))
+            p_data = cls.plotpoints(pk, dimensions, metrics, period=p)
             p_totals = dict()
             for dim in p_data.keys():
                 p_totals[dim] = dict()
@@ -533,9 +534,9 @@ class Whale(object):
     @classmethod
     def rank_subdimensions_scalar(cls, pk, dimension='_', metric='hits',
             period=None, recursive=True, prune_parents=True, points=False):
-        period = period or Period.default_size()
+        period = Period.get(period) or Period.default_size()
         d_k = keyify(dimension)
-        total = cls.cached_totals(pk, dimension, metric, periods=[period])[period][d_k][metric]
+        total = cls.cached_totals(pk, dimension, metric, periods=[period])[period.interval][d_k][metric]
         ranked = dict()
 
         def info(sub):
@@ -571,10 +572,12 @@ class Whale(object):
     def rank_subdimensions_ratio(cls, pk, numerator, denominator='hits',
             dimension='_', period=None, recursive=True, points=False):
         top, bottom = numerator, denominator
-        period = period or Period.default_size()
+        period = Period.get(period) or Period.default_size()
         d_k = keyify(dimension)
-        top_total = cls.cached_totals(pk, dimension, top, periods=[period])[str(period)][d_k][top]
-        bottom_total = cls.cached_totals(pk, dimension, bottom, periods=[period])[str(period)][d_k][bottom]
+        top_total = cls.cached_totals(pk, dimension, top,
+                periods=[period])[period.interval][d_k][top]
+        bottom_total = cls.cached_totals(pk, dimension, bottom,
+                periods=[period])[period.interval][d_k][bottom]
         ratio_total = bottom_total and float(top_total / bottom_total) or 0
         ranked = dict()
 
@@ -761,7 +764,7 @@ def generate_increments(metrics, periods=False, at=False):
         if not dt:
             continue
         observations.add((period, dt))
-    rr = [(str(period), dt, metric, incr_by)
+    rr = [(period, dt, metric, incr_by)
             for (period, dt) in observations
             for metric, incr_by in metrics.items()]
     return rr
