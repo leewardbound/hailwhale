@@ -92,7 +92,11 @@ def update_count_to():
         from dateutil.parser import parse
         at = parse(g('at'))
         at = at.replace(tzinfo=None)
-    val = whale.update_count_to(at=at, **default_params())
+    params = dict(at=at, 
+            period=g('period', None),
+            **default_params())
+
+    val = whale.update_count_to(**params)
     return 'OK'
 
 @route('/flush_hail')
