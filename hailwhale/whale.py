@@ -271,25 +271,31 @@ class Whale(object):
         if isinstance(metrics, basestring):
             metrics = [metrics]
         period = Period.get(period)
+        dts = list(period.datetimes_strs())
         sparse = _retrieve(cls.whale_driver(), pk, dimensions, metrics, period=period)
         nonsparse = defaultdict(dict)
         if flot_time:
             points_type = list
         for dim, mets in sparse.items():
             for met, points in mets.items():
-                dts = period.datetimes_strs()
                 nonsparse[dim][met] = []
                 const_value = False
                 if met in TIME_MATRIX:
-                    const_value = float(period.interval / TIME_MATRIX[met])
+                    const_value = float(getUnits(period.interval) / TIME_MATRIX[met])
                 # Try to parse static metrics too
+                elif met == '_count':
+                    const_value = len(dts)
                 try:
                     const_value = float(met)
                 except:
                     pass
                 for dt in dts:
+                    dt_obj = Period.parse_dt_str(dt)
+                    if met == '_days_in_month':
+                        from calendar import monthrange
+                        const_value = monthrange(dt_obj.year, dt_obj.month)[1]
                     if flot_time:
-                        dt_t = to_flot_time(Period.parse_dt_str(dt))
+                        dt_t = to_flot_time(dt_obj)
                     else:
                         dt_t = dt
                     if const_value:
