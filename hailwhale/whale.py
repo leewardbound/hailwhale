@@ -536,7 +536,7 @@ class Whale(object):
             period=None, recursive=True, prune_parents=True, points=False):
         period = Period.get(period) or Period.default_size()
         d_k = keyify(dimension)
-        total = cls.cached_totals(pk, dimension, metric, periods=[period])[period.interval][d_k][metric]
+        total = cls.cached_totals(pk, dimension, metric, periods=[period.interval])[period.interval][d_k][metric]
         ranked = dict()
 
         def info(sub):

@@ -3,11 +3,11 @@
     __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   $ = jQuery;
+  $.charts = $.charts || [];
 
   $.hailwhale = function(host, opts) {
     this.host = host;
     this.opts = opts;
-    this.charts = [];
     var JSONify = function(str_or_obj) {
         if(typeof(str_or_obj) == "string")
             return str_or_obj;
@@ -52,13 +52,12 @@
       target = $(target)[0];
       
       url = this.host + 'plotpoints';
-      var charts = this.charts || [];
-      var charts_on_page = charts.length || 0;
+      var charts_on_page = $.charts.length || 0;
       var our_chart_id = charts_on_page+1;
-      var our_chart = charts[our_chart_id];
+      var our_chart = $.charts[our_chart_id];
       var w = $(target).width(),
           h = $(target).height();
-      this.charts.push(our_chart);
+      $.charts.push(our_chart);
       extra = $.extend(extra, {
         pk: extra.pk || extra.category || false,
         dimensions: extra.dimensions || extra.dimension || false,
@@ -79,7 +78,7 @@
           extra.d3 = extra.area;
           var stack_func = d3.layout.stack().offset(extra.d3);
           var area = d3.svg.area();
-          our_chart = charts[our_chart_id] = d3.select(target).append("svg");
+          our_chart = $.charts[our_chart_id] = d3.select(target).append("svg");
         }
       }
       poller = function() {
@@ -94,7 +93,7 @@
           root_dimension = '_';
           dimension_data = {};
           ordered_dimensions = [];
-          our_chart = charts[our_chart_id];
+          our_chart = $.charts[our_chart_id];
           // Data comes back as JSON in the following format:
           // { 'dimension_str_or_list': {'metric': [[x, y], ... ] , 'metric2': ...} }
           // First, let's look at the dimensions and gather some info
@@ -131,7 +130,7 @@
 
           // OK, now if any of the dimensions changed, we have to re-render the graph
           // Also, always re-render d3
-          var re_render = false;
+          var re_render = $(target).attr('data-redraw') == 'true';
           if(extra.d3)
           {
             re_render = true;
@@ -281,10 +280,9 @@
               if (extra.metric_two) yaxis = [yaxis, yaxis_two];
               our_chart = new Highcharts.Chart(render_options);
               our_chart_id = our_chart.container.id;
-              charts[our_chart_id] = our_chart;
+              $.charts[our_chart_id] = our_chart;
           };
           if (extra.d3) {
-            console.log('drawing d3', target, extra.d3);
             extra.metric = extra.metric || 'hits';
             var lines = our_chart.selectAll("path");
             var datapoints = d3.range(ordered_dimensions.length).map(function(d, n) {
@@ -337,7 +335,7 @@
       };
       poller();
       if (extra.autoupdate) {
-        return poller_handle = setInterval(poller, extra.interval || 7500);
+        return poller_handle = setInterval(poller, extra.interval || 3500);
       }
     };
     return this;

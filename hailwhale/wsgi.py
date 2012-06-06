@@ -187,86 +187,71 @@ def graph():
             }
     pk = params['pk']
     dimension = params['dimension']
+    metric = params['metric']
     period = Period.get(params['period'])
     debug = g('debug', False)
     parent_div = g('parent_div', 'hailwhale_graphs')
-    hide_table = g('hide_table', False)
-    height = g('height', '400px')
+    table = g('table', False)
+    height = g('height', '300px')
     params['title'] = g('title', '')
     if not params['title']:
         pkname = g('pk', '')
         dimname = util.try_loads(g('dimension', 'Overall'))
         dimname = isinstance(dimname, list) and dimname[-1] or dimname
         params['title'] = '%s [%s]' % (util.maybe_dumps(pkname), util.maybe_dumps(dimname))
-    if isinstance(hide_table, basestring):
-        hide_table = hide_table.lower() == 'true'
+    if isinstance(table, basestring):
+        table = table.lower() == 'true'
     hwurl = req.GET.get('hwurl', req.url.split('graph.js')[0])
     params['autoupdate'] = g('live', True)
     params['interval'] = g('interval', 6000)
+    graph_id = hashlib.md5(str(params)).hexdigest()
     include_string = \
 "document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/jquery.min.js'></script>\");"%hwurl
-    if hide_table: 
-        table_str = '''
-            $('#{parent_div}').append('<table>
-                <tr>
-                    <th></th>
-                    <th>Dimension Name</th>
-                </tr>
-        '''.strip()
+    if table: 
+        try:
+            columns = int(g('table', 6, int))
+        except:
+            columns = 6
+        pps = Whale.plotpoints(pk, dimension, metric, period=period,
+                depth=params['depth'])
+        dates = [p for p in
+                Period.get(period).datetimes_strs()][(-1*columns - 1):]
 
-        dimensions = [item['dimension'] for item in Whale().rank(pk, formula).values()]
+        table_str = '''
+            $('#{id} .table').html('<table style="width: 100%"> <tr> <th></th> <th></th> {columns} </tr>
+        '''.strip().format(id=graph_id,columns=' '.join([
+            '<th>%s</th>'%date.replace('00:00:00 ', '') for date in dates])) 
+
+        dimensions = pps.keys()
+        if '_' in dimensions:
+            dimensions.remove('_')
+            dimensions = ['_'] + dimensions
         for dimension_counter, dimension in enumerate(dimensions):
             checked = 'off'
             if dimension_counter < 10:
                 checked = 'on'
+            if dimension == '_':
+                if params['depth']:
+                    continue
+                dimension_name = '<b>Overall</b>'
+            else:
+                dimension_name = dimension.capitalize()
             table_str += '''
-                <tr>
-                    <td><input id="" type="checkbox" value="{checked}" name="checkbox-{pk}-{dimension}"></td>
-                    <td>{dimension}</td>
-                </tr>
-                '''.format(pk=pk, dimension=dimension, checked=checked)
+                <tr> <td><input id="" style="display: none" type="checkbox" value="{checked}" name="checkbox-{pk}-{dimension}"></td> <td>{dimension_name}</td> {columns} </tr>
+                '''.format(pk=pk, dimension=dimension, checked=checked,
+                        dimension_name=dimension_name,
+                        columns=' '.join([
+                "<td>%s</td>"%int(pps[dimension][metric][date]) for date in dates])).strip()
 
         table_str += '''</table>');'''
     else:
         table_str = ''
-
-    debug_return_string = '''
-appended=false;\n
-document.write('<div id="{id}" style="height: {height}"></div>');\n
-function jqinit() {{\n
-    if(typeof(jQuery) == 'undefined') {{\n
-        if(!appended) {{\n
-            appended = true;\n
-            {include_string}\n
-        }}\n
-        setTimeout(jqinit, 250);\n
-    }} else {{\n
-        $(function() {{\n
-            // Nest a few of these, very poor form \n
-            $.getScript('{hwurl}js/highcharts.src.js', function() {{\n
-            $.getScript('{hwurl}js/d3.js', function() {{\n
-            $.getScript('{hwurl}js/hailwhale.js', function() {{\n
-                $.hailwhale('{hwurl}').add_graph('{id}', {options});\n
-                {table_str}
-            }});\n
-            }});\n
-            }});\n
-        }});\n
-    }}
-}}
-jqinit();\n
-    
-    
-    '''.format(parent_div=parent_div, include_string=include_string,
-            hwurl=hwurl, table_str=table_str, height=height,
-            id=hashlib.md5(str(params)).hexdigest(),
-            options=util.maybe_dumps(params))
     include_string = \
 "document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/hailwhale.min.js'></script>\");"%hwurl
 
     return_string = '''
 appended=false;\n
-document.write('<div id="{id}" style="height: {height}"></div>');\n
+document.write('<div id="{id}"><div class="graph" style="height: {height}"></div><div class="table"></div></div>');\n
 function jqinit() {{\n
     if(typeof(jQuery) == 'undefined' || typeof(jQuery.hailwhale) == 'undefined') {{\n
         if(!appended) {{\n
@@ -276,7 +261,7 @@ function jqinit() {{\n
         setTimeout(jqinit, 250);\n
     }} else {{\n
         $(function() {{\n
-                $.hailwhale('{hwurl}').add_graph('{id}', {options});\n
+                $.hailwhale('{hwurl}').add_graph('{id} .graph', {options});\n
                 {table_str}
         }});\n
     }}
@@ -286,9 +271,9 @@ jqinit();\n
     
     '''.format(parent_div=parent_div, include_string=include_string,
             hwurl=hwurl, table_str=table_str, height=height,
-            id=hashlib.md5(str(params)).hexdigest(),
+            id=graph_id,
             options=util.maybe_dumps(params))
-    return debug and debug_return_string or return_string
+    return return_string
 
 
 @route('/demo/:filename#.*#')
