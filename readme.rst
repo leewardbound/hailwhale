@@ -1,5 +1,20 @@
 HailWhale
 =========
+**STATUS UPDATE**
+HailWhale is still in VERY active development. I make improvements almost every
+single day. But for the most part, the readme and the core docs are TERRIBLY out
+of date.
+
+This project is getting exponentially more powerful by the minute. We already
+support shit this readme never even dreamed of -- auto optimizing, pixel
+encryption, fuzzy decision making and tons more.
+
+If you need hand holding, get out and go home. This project isn't for you yet.
+
+If you like hacking, testing and reading source code, start with tests.py and
+then catch up on the last few weeks of commit logs. You'll be smoking the good
+stuff in no time.
+
 **What Is It?**
 Real-time counting of rolled-up multi-dimensional metric data via HTTP service.
 
@@ -131,3 +146,12 @@ I'm using this in production at http://series.oftubes.com which is still
 pre-beta. In addition to benchmarks, I'm trusting it to count my own live 
 data for a (unrelated) marketing campaign, and it's good enough for me.
 Use at your own risk.
+
+Credits
+=======
+HailWhale was almost entirely coded by yours truly, Leeward Bound, with very
+little outside assistance. But some names need mentioning and thanks need giving
+
+  + Mike and WhatRunsWhere.com, for paying me cash for some custom mods
+  + Mattseh, for assisting in some of the early WSGI code
+  + Every deadbeat client that still owes me money, shit's fuel for my fire.
