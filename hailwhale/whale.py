@@ -133,6 +133,7 @@ def _retrieve(redis, pk, dimensions, metrics, period=None, dt=None):
 
 class Whale(object):
     whale_driver_settings = {}
+    _local = None
 
     def curry_whale_instance_methods(self, attr='id'):
         if hasattr(self, attr) and not hasattr(self, '_hw_curried'):
@@ -376,12 +377,18 @@ class Whale(object):
     @classmethod
     def today(cls, pk, metric, dimension='_'):
         return cls.total(pk, metric, dimension, Period.all_sizes()[1],
-                at=times.now())
+                at=cls.now())
 
     @classmethod
     def yesterday(cls, pk, metric, dimension='_'):
         return cls.total(pk, metric, dimension, Period.all_sizes()[1],
-                at=times.now()-timedelta(days=1))
+                at=cls.now()-timedelta(days=1))
+    @classmethod
+    def now(cls):
+        if cls._local:
+            return datetime.now()
+        else:
+            return times.now()
 
     @classmethod
     def totals(cls, pk, dimensions=None, metrics=None, periods=None):
@@ -492,6 +499,7 @@ class Whale(object):
                     at = float(at)
             except Exception, e:
                 print e
+        at = at or cls.now()
         if not metrics:
             metrics = ['hits']
         if type(metrics) == list:
@@ -519,7 +527,7 @@ class Whale(object):
     def update_count_to(cls, pk, dimensions='_', metrics=None, period=False,
             at=False, rank=False):
         period = Period.get(period)
-        at = at or times.now()
+        at = at or cls.now()
         dt = period.flatten_str(at)
         pipe = cls.whale_driver().pipeline(transaction=False)
         for (metric, i) in metrics.iteritems():
@@ -531,7 +539,7 @@ class Whale(object):
     def zranked(cls, pk, parent_dimension='_', metric='hits', period=None,
             at=None, start=0, size=10, sort_dir=None, tzoffset=None):
         period, ats, tzoffset = Period.get_days(period, at)
-        dt = ats or [Period.convert(times.now(), tzoffset)]
+        dt = ats or [Period.convert(cls.now(), tzoffset)]
         return map(try_loads, 
                 _ranked(cls.whale_driver(), pk, parent_dimension, metric,
                     period, dt, start, size, sort_dir=sort_dir))
@@ -764,7 +772,7 @@ def iterate_dimensions(dimensions, add_root=False):
 def generate_increments(metrics, periods=False, at=False):
     periods = periods or DEFAULT_PERIODS
     observations = set()
-    at = at or times.now()
+    at = at or cls.now()
     for period in periods:
         dt = period.flatten_str(at)
         if not dt:
