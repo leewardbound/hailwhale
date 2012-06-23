@@ -443,9 +443,6 @@ class Whale(object):
                 r.delete(k)
                 continue
             this_p = parts[2]
-            if not this_p in ps:
-                r.delete(k)
-                continue
             deleted = 0
             for dt, num in val.items():
                 if not ps[this_p].flatten(dt):
