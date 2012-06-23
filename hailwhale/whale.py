@@ -437,11 +437,11 @@ class Whale(object):
             parts = k.split('||')
             if parts == 'rank':
                 continue
-            try:
-                val = r.hgetall(k)
-            except:
-                r.delete(k)
-                continue
+            #try:
+                #val = r.hgetall(k)
+            #except:
+                #r.delete(k)
+                #continue
             this_p = parts[2]
             deleted = 0
             for dt, num in val.items():
