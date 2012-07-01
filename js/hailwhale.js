@@ -8,6 +8,15 @@
         $(target).attr('data-redraw', function() {
             selectors = $(target).attr('data-selector').split(',');
             metric = $(target).attr('data-metric');
+            source_table = $(target).attr('data-source-table');
+            if(source_table)
+            {
+                this_head = $('th[data-extra=graphable][data-name="'+metric+'"]', source_table)
+                $('[data-extra=graph-icon]').remove();
+                $(this_head).append($('<i>').attr('data-extra', 'graph-icon')
+                    .addClass('icon').addClass('icon-signal').addClass('icon-white')
+                    );
+            }
             tables = $.map(selectors, function(s) { 
                 return $(s+ ' table[data-metric="'+metric+'"]')});
             datum = d3.range(tables.length).map(function(i) {
@@ -19,13 +28,11 @@
                         cells = $('td', data_row);
                         if(cells.length != 2)
                             return;
-                        if(cells[1].innerText != '0')
-                            console.log(cells);
                         return {x: new Date(cells[0].innerText), y: parseFloat(cells[1].innerText)};})
                 };
             }, tables);
             var chart = nv.models.lineChart()
-                //.color(d3.scale.category10().range());
+                .color(d3.scale.category10().range());
             chart.xAxis
                 .tickFormat(function(d) {
                   return d3.time.format('%x')(new Date(d))
@@ -90,13 +97,15 @@
             rows =  $(source_table).children('tbody').first().children('tr')
             graph_selector = $(source_table).attr('data-hw-target');
             graph = $(graph_selector)
-            console.log(rows);
             row_ids = $.map(rows, function(r) {
                 $(r).attr('data-id', $(r).attr('id'));
                 return '[data-id="' + $(r).attr('id')+'"]'});
-            console.log(row_ids)
             $(graph_selector).attr('data-selector', row_ids.join(','));
-            $(graph_selector).attr('data-metric', $(columns[0]).attr('data-name'));
+            $(graph_selector).attr('data-source-table', '#'+$(source_table).attr('id'));
+            if(!$(source_table).attr('data-metric'))
+                $(graph_selector).attr('data-metric', $(columns[0]).attr('data-name'));
+            else
+                $(graph_selector).attr('data-metric', $(source_table).attr('data-metric'));
             graph_obj = render_graph(graph_selector);
         });
     }
