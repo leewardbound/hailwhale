@@ -6,7 +6,7 @@ import times
 import urllib
 
 from redis import Redis
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from datetime import datetime, timedelta
 
 from util import *
@@ -140,7 +140,7 @@ class Whale(object):
             for method in ['plotpoints', 'ratio_plotpoints', 'scalar_plotpoints',
                 'totals', 'count_now', 'count_decided_now', 'decide',
                 'weighted_reasons', 'reasons_for', 'graph_tag', 'today',
-                'yesterday', 'update_count_to', 'total']:
+                'yesterday', 'update_count_to', 'total', 'render_divs']:
                 curry_instance_attribute(attr, method, self,
                         with_class_name=True)
             # Currying for related models as 
@@ -267,7 +267,7 @@ class Whale(object):
 
     @classmethod
     def scalar_plotpoints(cls, pk, dimensions=None, metrics=None,
-            depth=0, period=None, flot_time=False, points_type=dict):
+            depth=0, period=None, flot_time=False, points_type=OrderedDict):
         metrics = metrics or ['hits']
         if isinstance(metrics, basestring):
             metrics = [metrics]
@@ -314,7 +314,8 @@ class Whale(object):
 
     @classmethod
     def ratio_plotpoints(cls, pk, numerator_metric, denomenator_metric='hits',
-            dimensions=None, depth=0, period=None, flot_time=False, points_type=dict):
+            dimensions=None, depth=0, period=None, flot_time=False,
+            points_type=OrderedDict):
         if flot_time:
             points_type = list
         top, bot = numerator_metric, denomenator_metric
@@ -325,12 +326,12 @@ class Whale(object):
         # The function that makes the ratios
         def ratio_func(tup):
             dim, mets = tup
-            tgt_iter = points_type is dict and mets[bot].items() or mets[bot]
+            tgt_iter = issubclass(points_type, dict) and mets[bot].items() or mets[bot]
 
             # A function to get the numerator from either points_type=dict or points_type=list
             def get_top(dt):
                 # Easy, just use the dict index
-                if points_type is dict:
+                if issubclass(points_type, dict):
                     return mets[top][dt]
                 # Complicated, use i-based index
                 else:
@@ -373,6 +374,50 @@ class Whale(object):
                 top_tot = sum([top_ppsm[dt] for dt in ats if dt in top_ppsm])
                 bot_tot = sum([bot_ppsm[dt] for dt in ats if dt in bot_ppsm])
                 return bot_tot and top_tot/bot_tot or 0
+
+    @classmethod
+    def render_divs(cls, pk, metric, dimension='_', period=None, at=None,
+            tzoffset=None, format=None, hidden=False):
+        period, ats, tzoffset = Period.get_days(period, at, tzoffset=tzoffset)
+        top, bot = parse_formula(metric)
+        pps = cls.plotpoints(pk, dimension, metric, period=period)
+        ppsm = pps[dimension][metric]
+        if not format:
+            if bot:
+                format = 'pct'
+            else:
+                format = 'grouped'
+        def fmt(v):
+            import locale
+            if v == 'None':
+                v = None
+            f = format
+            if f == 'int':
+                f = lambda s: int(float(s or 0))
+            elif f == 'float':
+                v = v or 0.0
+                f = float
+            elif f == 'grouped':
+                v = v or 0
+                f = lambda s: locale.format('%d', int(float(s)), True)
+            elif f in ['pct', 'percent', '%', 'ratio']:
+                v = v and float(v)*100 or 0
+                f = lambda s: '%.2f%%'%s
+            elif f in ['cash', 'money', 'usd', '$', 'dollars', 'cents']:
+                v = v and float(v) or 0.0
+                if f == 'cents':
+                    v = v/100.0
+                f = locale.currency
+            if not f:
+                return v
+            return callable(f) and f(v) or v
+        hidden = hidden and 'style="display: none"' or ''
+        rep = lambda s: s.format(pk=pk, metric=metric, dimension=dimension, hidden=hidden)
+        table = rep('<table {hidden} data-hw-pk="{pk}" data-hw-name="{{name}}" \
+                data-hw-dimension="{dimension}" data-metric="{metric}">')+'\n'.join([
+            '<tr><td>%s</td><td>%s</td></tr>'%(at.replace(' 00:00:00', ''), fmt(count) )
+            for at, count in ppsm.items()])+'</table>'
+        return table
 
     @classmethod
     def today(cls, pk, metric, dimension='_'):

@@ -177,6 +177,54 @@ def tracker():
     return str(uid)
 
 
+@route('/table_graph.js')
+def table_graph():
+    from periods import Period
+    params = {
+            'tzoffset': g('tzoffset', 0.0),
+            'period': g('period', str(Period.get(None))),
+            }
+    debug = g('debug', False)
+    table = g('table', '')
+    height = g('height', '300px')
+    delay = g('delay', 0)
+    hwurl = req.GET.get('hwurl', req.url.split('table_graph.js')[0])
+    include_string = \
+"document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/jquery.min.js'></script>\");"%hwurl
+    include_string += \
+"document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/hailwhale.js'></script>\");"%hwurl
+    include_string += \
+"document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/d3.js'></script>\");"%hwurl
+    include_string += \
+"document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/nvd3.js'></script>\");"%hwurl
+
+    return_string = '''
+appended=false;\n
+function jqinit() {{\n
+    if(typeof(jQuery) == 'undefined' || typeof(jQuery.hailwhale) == 'undefined') {{\n
+        if(!appended) {{\n
+            appended = true;\n
+            {include_string}\n
+        }}\n
+        setTimeout(jqinit, 250);\n
+    }} else {{\n
+        $(function() {{\n
+        init_graphs =function() {{
+                $.hailwhale('{hwurl}').graph_tables('{table}', {options});\n
+                }}
+        setTimeout(init_graphs, {delay});
+        if(ui_loaded_funcs)
+            ui_loaded_funcs.init_graphs = init_graphs;
+        }});\n
+    }}
+}}
+jqinit();\n
+    
+    
+    '''.format( include_string=include_string, table=table, delay=delay,
+            hwurl=hwurl, options=util.maybe_dumps(params))
+    return return_string
+
 
 @route('/graph.js')
 def graph():

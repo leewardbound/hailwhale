@@ -1,12 +1,1112 @@
 <html>
 	<head>
-		<title>AutoGraphs Demo</title>
-		<script type="text/javascript" src="/graph.js?debug=true&area=zero&pk=countMany"></script>
+		<title>Test Playground</title>
+    <link rel=stylesheet href="/js/style.css">
+<script src='/js/jquery.min.js'></script>
+<script src='/js/d3.js'></script>
+<script src='/js/nvd3.js'></script>
+<script src='/js/hailwhale.js'></script>
 	</head>
 
 	<body>
-		<h1>Graphs with only script tags!</h1>
 
-		<div id="hailwhale_graphs"></div>
+      <div class="chart" id="main-chart"><svg style='height:500px' /></div>
+    <script>
+
+nv.addGraph(function() {  
+  var chart = nv.models.lineChart();
+
+  chart.xAxis
+      .axisLabel('Time (ms)')
+      .tickFormat(d3.format(',r'));
+
+  chart.yAxis
+      .axisLabel('Voltage (v)')
+      .tickFormat(d3.format('.02f'));
+
+  d3.select('#chart svg')
+      .datum(sinAndCos())
+    .transition().duration(500)
+      .call(chart);
+
+  nv.utils.windowResize(function() { d3.select('#chart svg').call(chart) });
+
+  return chart;
+});
+
+
+
+
+/**************************************
+ * Simple test data generator
+ */
+
+
+function sinAndCos() {
+  var sin = [],
+      cos = [];
+
+  for (var i = 0; i < 100; i++) {
+    sin.push({x: i, y: Math.sin(i/10)});
+    cos.push({x: i, y: .5 * Math.cos(i/10)});
+  }
+
+  return [
+    {
+      values: sin,
+      key: 'Sine Wave',
+      color: '#ff7f0e'
+    },
+    {
+      values: cos,
+      key: 'Cosine Wave',
+      color: '#2ca02c'
+    }
+  ];
+}
+
+    </script>
+<table width="100%" class="table table-striped datatables"
+            data-sort=""
+            data-len=5 data-uri="/apps/?&json=true"
+            data-daterange=today
+            data-hw-target="#main-chart"
+            >
+          <thead>
+            <tr>
+              
+                <th data-name="id" rel="tooltip" title="">
+                  Id 
+                </th>
+              
+                <th data-name="name" rel="tooltip" title="">
+                  Name 
+                </th>
+              
+                <th data-name="all_time_installs" rel="tooltip" title="">
+                  All_time_installs 
+                </th>
+              
+                <th data-name="currently_active_installs" rel="tooltip" title="">
+                  Currently_active_installs 
+                </th>
+              
+                <th data-name="download_impressions" rel="tooltip" title="">
+                  Download Button Impressions 
+                </th>
+              
+                <th data-name="download_impressions/market_clicks" rel="tooltip" title="">
+                  Download Button CTR 
+                </th>
+              
+                <th data-name="market_clicks" rel="tooltip" title="">
+                  Clicks to Market 
+                </th>
+              
+                <th data-name="tracked_installs/clicks" rel="tooltip" title="">
+                  Tracked Install Rate 
+                </th>
+              
+                <th data-name="tracked_installs" rel="tooltip" title="">
+                  Tracked Installs 
+                </th>
+              
+                <th data-name="organic_installs" rel="tooltip" title="">
+                  Organic Installs 
+                </th>
+              
+            </tr>
+          </thead>
+          <tbody>
+          
+            
+              <tr><td>a8223b38b6ce75bed1e5b5f042dae802759e6201</td>
+  <td><a href="/apps/a8223b38b6ce75bed1e5b5f042dae802759e6201?">Leadshare Twilight</a></td>
+  <td>0</td>
+  <td>0</td>
+  <td><table data-hw-pk="['CricketApp', u'a8223b38b6ce75bed1e5b5f042dae802759e6201']" data-hw-name="Leadshare Twilight"                 data-hw-dimension="_" data-metric="download_impressions"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'a8223b38b6ce75bed1e5b5f042dae802759e6201']" data-hw-name="Leadshare Twilight"                 data-hw-dimension="_" data-metric="download_impressions/market_clicks"><tr><td>Mon May 28 2012</td><td>0.00%</td></tr>
+<tr><td>Tue May 29 2012</td><td>0.00%</td></tr>
+<tr><td>Wed May 30 2012</td><td>0.00%</td></tr>
+<tr><td>Thu May 31 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0.00%</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'a8223b38b6ce75bed1e5b5f042dae802759e6201']" data-hw-name="Leadshare Twilight"                 data-hw-dimension="_" data-metric="market_clicks"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'a8223b38b6ce75bed1e5b5f042dae802759e6201']" data-hw-name="Leadshare Twilight"                 data-hw-dimension="_" data-metric="tracked_installs/clicks"><tr><td>Mon May 28 2012</td><td>0.00%</td></tr>
+<tr><td>Tue May 29 2012</td><td>0.00%</td></tr>
+<tr><td>Wed May 30 2012</td><td>0.00%</td></tr>
+<tr><td>Thu May 31 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0.00%</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'a8223b38b6ce75bed1e5b5f042dae802759e6201']" data-hw-name="Leadshare Twilight"                 data-hw-dimension="_" data-metric="tracked_installs"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'a8223b38b6ce75bed1e5b5f042dae802759e6201']" data-hw-name="Leadshare Twilight"                 data-hw-dimension="_" data-metric="organic_installs"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td></tr>
+            
+              <tr><td>co.lwb.twilightquiz</td>
+  <td><a href="/apps/co.lwb.twilightquiz?">twilight</a></td>
+  <td>0</td>
+  <td>0</td>
+  <td><table data-hw-pk="['CricketApp', u'co.lwb.twilightquiz']" data-hw-name="twilight"                 data-hw-dimension="_" data-metric="download_impressions"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'co.lwb.twilightquiz']" data-hw-name="twilight"                 data-hw-dimension="_" data-metric="download_impressions/market_clicks"><tr><td>Mon May 28 2012</td><td>0.00%</td></tr>
+<tr><td>Tue May 29 2012</td><td>0.00%</td></tr>
+<tr><td>Wed May 30 2012</td><td>0.00%</td></tr>
+<tr><td>Thu May 31 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0.00%</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'co.lwb.twilightquiz']" data-hw-name="twilight"                 data-hw-dimension="_" data-metric="market_clicks"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'co.lwb.twilightquiz']" data-hw-name="twilight"                 data-hw-dimension="_" data-metric="tracked_installs/clicks"><tr><td>Mon May 28 2012</td><td>0.00%</td></tr>
+<tr><td>Tue May 29 2012</td><td>0.00%</td></tr>
+<tr><td>Wed May 30 2012</td><td>0.00%</td></tr>
+<tr><td>Thu May 31 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0.00%</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'co.lwb.twilightquiz']" data-hw-name="twilight"                 data-hw-dimension="_" data-metric="tracked_installs"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0/td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'co.lwb.twilightquiz']" data-hw-name="twilight"                 data-hw-dimension="_" data-metric="organic_installs"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td></tr>
+            
+              <tr><td>JAVA_ERROR</td>
+  <td><a href="/apps/JAVA_ERROR?">unnamed app</a></td>
+  <td>0</td>
+  <td>0</td>
+  <td><table data-hw-pk="['CricketApp', u'JAVA_ERROR']" data-hw-name="unnamed app"                 data-hw-dimension="_" data-metric="download_impressions"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'JAVA_ERROR']" data-hw-name="unnamed app"                 data-hw-dimension="_" data-metric="download_impressions/market_clicks"><tr><td>Mon May 28 2012</td><td>0.00%</td></tr>
+<tr><td>Tue May 29 2012</td><td>0.00%</td></tr>
+<tr><td>Wed May 30 2012</td><td>0.00%</td></tr>
+<tr><td>Thu May 31 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0.00%</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'JAVA_ERROR']" data-hw-name="unnamed app"                 data-hw-dimension="_" data-metric="market_clicks"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'JAVA_ERROR']" data-hw-name="unnamed app"                 data-hw-dimension="_" data-metric="tracked_installs/clicks"><tr><td>Mon May 28 2012</td><td>0.00%</td></tr>
+<tr><td>Tue May 29 2012</td><td>0.00%</td></tr>
+<tr><td>Wed May 30 2012</td><td>0.00%</td></tr>
+<tr><td>Thu May 31 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0.00%</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'JAVA_ERROR']" data-hw-name="unnamed app"                 data-hw-dimension="_" data-metric="tracked_installs"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'JAVA_ERROR']" data-hw-name="unnamed app"                 data-hw-dimension="_" data-metric="organic_installs"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td></tr>
+            
+              <tr><td>me.tickletouch.batterymaster</td>
+  <td><a href="/apps/me.tickletouch.batterymaster?">batterymaster</a></td>
+  <td>0</td>
+  <td>0</td>
+  <td><table data-hw-pk="['CricketApp', u'me.tickletouch.batterymaster']" data-hw-name="batterymaster"                 data-hw-dimension="_" data-metric="download_impressions"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'me.tickletouch.batterymaster']" data-hw-name="batterymaster"                 data-hw-dimension="_" data-metric="download_impressions/market_clicks"><tr><td>Mon May 28 2012</td><td>0.00%</td></tr>
+<tr><td>Tue May 29 2012</td><td>0.00%</td></tr>
+<tr><td>Wed May 30 2012</td><td>0.00%</td></tr>
+<tr><td>Thu May 31 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0.00%</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'me.tickletouch.batterymaster']" data-hw-name="batterymaster"                 data-hw-dimension="_" data-metric="market_clicks"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'me.tickletouch.batterymaster']" data-hw-name="batterymaster"                 data-hw-dimension="_" data-metric="tracked_installs/clicks"><tr><td>Mon May 28 2012</td><td>0.00%</td></tr>
+<tr><td>Tue May 29 2012</td><td>0.00%</td></tr>
+<tr><td>Wed May 30 2012</td><td>0.00%</td></tr>
+<tr><td>Thu May 31 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0.00%</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'me.tickletouch.batterymaster']" data-hw-name="batterymaster"                 data-hw-dimension="_" data-metric="tracked_installs"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'me.tickletouch.batterymaster']" data-hw-name="batterymaster"                 data-hw-dimension="_" data-metric="organic_installs"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td></tr>
+            
+              <tr><td>mortgagedropnotifier</td>
+  <td><a href="/apps/mortgagedropnotifier?">None</a></td>
+  <td>0</td>
+  <td>0</td>
+  <td><table data-hw-pk="['CricketApp', u'mortgagedropnotifier']" data-hw-name="None"                 data-hw-dimension="_" data-metric="download_impressions"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'mortgagedropnotifier']" data-hw-name="None"                 data-hw-dimension="_" data-metric="download_impressions/market_clicks"><tr><td>Mon May 28 2012</td><td>0.00%</td></tr>
+<tr><td>Tue May 29 2012</td><td>0.00%</td></tr>
+<tr><td>Wed May 30 2012</td><td>0.00%</td></tr>
+<tr><td>Thu May 31 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0.00%</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'mortgagedropnotifier']" data-hw-name="None"                 data-hw-dimension="_" data-metric="market_clicks"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'mortgagedropnotifier']" data-hw-name="None"                 data-hw-dimension="_" data-metric="tracked_installs/clicks"><tr><td>Mon May 28 2012</td><td>0.00%</td></tr>
+<tr><td>Tue May 29 2012</td><td>0.00%</td></tr>
+<tr><td>Wed May 30 2012</td><td>0.00%</td></tr>
+<tr><td>Thu May 31 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0.00%</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0.00%</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0.00%</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0.00%</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0.00%</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0.00%</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0.00%</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0.00%</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'mortgagedropnotifier']" data-hw-name="None"                 data-hw-dimension="_" data-metric="tracked_installs"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td>
+  <td><table data-hw-pk="['CricketApp', u'mortgagedropnotifier']" data-hw-name="None"                 data-hw-dimension="_" data-metric="organic_installs"><tr><td>Mon May 28 2012</td><td>0</td></tr>
+<tr><td>Tue May 29 2012</td><td>0</td></tr>
+<tr><td>Wed May 30 2012</td><td>0</td></tr>
+<tr><td>Thu May 31 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 01 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 02 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 03 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 04 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 05 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 06 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 07 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 08 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 09 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 10 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 11 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 12 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 13 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 14 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 15 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 16 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 17 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 18 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 19 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 20 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 21 2012</td><td>0</td></tr>
+<tr><td>Fri Jun 22 2012</td><td>0</td></tr>
+<tr><td>Sat Jun 23 2012</td><td>0</td></tr>
+<tr><td>Sun Jun 24 2012</td><td>0</td></tr>
+<tr><td>Mon Jun 25 2012</td><td>0</td></tr>
+<tr><td>Tue Jun 26 2012</td><td>0</td></tr>
+<tr><td>Wed Jun 27 2012</td><td>0</td></tr>
+<tr><td>Thu Jun 28 2012</td><td>0</td></tr></table></td></tr>
+            
+          
+          </tbody>
+        </table>
 	</body>
 </html>
