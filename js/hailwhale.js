@@ -56,6 +56,7 @@
             redraw();
           }
         }
+        setInterval(redraw_requests, 250);
     }
 
   $.hailwhale = function(host, opts) {
