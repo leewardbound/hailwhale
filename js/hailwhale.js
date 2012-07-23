@@ -5,7 +5,7 @@
   $ = jQuery;
   $.charts = $.charts || [];
   var render_graph = function(target) {
-        $(target).attr('data-redraw', function() {
+        var redraw = function() { 
             selectors = $(target).attr('data-selector').split(',');
             metric = $(target).attr('data-metric');
             source_table = $(target).attr('data-source-table');
@@ -47,8 +47,15 @@
                 .call(chart);
             nv.utils.windowResize(chart.update);
             return chart;
-        });
-        $(target).attr('data-redraw');
+        }
+        redraw();
+        var redraw_requests = function() {
+          if($(target).attr('please-redraw'))
+          {
+            $(target).attr('please-redraw', null);
+            redraw();
+          }
+        }
     }
 
   $.hailwhale = function(host, opts) {
