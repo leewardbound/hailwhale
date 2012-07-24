@@ -401,7 +401,7 @@ class Whale(object):
                 v = v or 0
                 f = lambda s: locale.format('%d', int(float(s)), True)
             elif f in ['pct', 'percent', '%', 'ratio']:
-                v = v and float(v)*100 or 0
+                v = min(100, v and float(v)*100 or 0)
                 f = lambda s: '%.2f%%'%s
             elif f in ['cash', 'money', 'usd', '$', 'dollars', 'cents']:
                 v = v and float(v) or 0.0
