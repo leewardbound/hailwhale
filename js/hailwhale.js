@@ -6,9 +6,12 @@
   $.charts = $.charts || [];
   var render_graph = function(target) {
         var redraw = function() { 
-            selectors = $(target).attr('data-selector').split(',');
             metric = $(target).attr('data-metric');
             source_table = $(target).attr('data-source-table');
+            all_rows = $(source_table).children('tbody').children('tr');
+            selectors = $(target).attr('data-selector')
+            selectors = selectors && selectors.split(',') || all_rows;
+
             if(source_table)
             {
                 this_head = $('th[data-extra=graphable][data-name="'+metric+'"]', source_table)
