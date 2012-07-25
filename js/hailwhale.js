@@ -22,10 +22,14 @@
             }
             tables = $.map(selectors, function(s) { 
                 return $('table[data-metric="'+metric+'"]', s)});
+            current_legends = $('.legend text', target)
             datum = d3.range(tables.length).map(function(i) {
                 t = tables[i]
+                name = $(t).attr('data-hw-name')
+                if(current_legends.length >= (i+1))
+                    $(current_legends[i]).html(name);
                 return {
-                    key: $(t).attr('data-hw-name'),
+                    key: name,
                     color: $(t).attr('data-hw-color'),
                     values: $.map($('tr', t), function(data_row) {
                         cells = $('td', data_row);
