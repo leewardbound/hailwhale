@@ -9,7 +9,7 @@
             metric = $(target).attr('data-metric');
             source_table = $(target).attr('data-source-table');
             all_rows = $(source_table).children('tbody').children('tr');
-            selectors = $(target).attr('data-selector')
+            selectors = false //$(target).attr('data-selector')
             selectors = selectors && selectors.split(',') || all_rows;
 
             if(source_table)
