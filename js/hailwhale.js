@@ -9,7 +9,7 @@
             metric = $(target).attr('data-metric');
             source_table = $(target).attr('data-source-table');
             all_rows = $(source_table).children('tbody').children('tr');
-            selectors = false //$(target).attr('data-selector')
+            selectors = false; //$(target).attr('data-selector')
             selectors = selectors && selectors.split(',') || all_rows;
 
             if(source_table)
@@ -21,7 +21,7 @@
                     );
             }
             tables = $.map(selectors, function(s) { 
-                return $(s+ ' table[data-metric="'+metric+'"]')});
+                return $('table[data-metric="'+metric+'"]', s)});
             datum = d3.range(tables.length).map(function(i) {
                 t = tables[i]
                 return {
