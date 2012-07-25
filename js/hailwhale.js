@@ -27,7 +27,7 @@
                 t = tables[i]
                 name = $(t).attr('data-hw-name')
                 if(current_legends.length >= (i+1))
-                    $(current_legends[i]).html(name);
+                    $(current_legends[i]).text(name);
                 return {
                     key: name,
                     color: $(t).attr('data-hw-color'),
