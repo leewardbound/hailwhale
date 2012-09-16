@@ -54,12 +54,16 @@ are still being tested and tuned --
     them based on this visitors dimensions? Yes, yes we can --::
     
     # Choose from our historical data
-    http://.../decide?pk=PageVariation&options=['a', 'b', 'c']&dimensions={"country": "US"}&by_metric=spent/earned
-    # Log our decisions
-    http://.../count_decision?pk=PageVariation&option=b&dimensions={"country": "US"}&metric={"spent": .50}
-    # And log our successes, of course ;)
-    http://.../count_decision?pk=PageVariation&option=b&dimensions={"country": "US"}&metric={"earned": 25}
 
+    http://.../decide?pk=PageVariation&options=['a', 'b', 'c']&dimensions={"country": "US"}&by_metric=spent/earned
+
+    # Log our decisions
+
+    http://.../count_decision?pk=PageVariation&option=b&dimensions={"country": "US"}&metric={"spent": .50}
+
+    # And log our successes, of course ;)
+
+    http://.../count_decision?pk=PageVariation&option=b&dimensions={"country": "US"}&metric={"earned": 25}
 
 Test Server
 ===========
@@ -157,9 +161,9 @@ Rainbird looked awesome I knew I had to have it, but after 5 months
 of waiting on release, I proceeded to roll my own solution. Now I
 can count things at webscale without losing my mind, if you know what I mean.
 
-I'm using this in production at http://series.oftubes.com which is still
-pre-beta. In addition to benchmarks, I'm trusting it to count my own live 
-data for a (unrelated) marketing campaign, and it's good enough for me.
+I'm using this in production on lots of sites.
+In addition to benchmarks and performance data, I'm trusting it to count my own live 
+data for marketing campaigns, meaning I'm trusting dollars on it, and it's good enough for me.
 Use at your own risk.
 
 Credits
