@@ -51,18 +51,12 @@ are still being tested and tuned --
   + DECISION MAKING -- My crown jewel, still being tuned heavily, see the unit
     tests. Hey, we have all these graphs for Visitors by Country,
     now can we choose the best of our 3 page variations ['a', 'b', 'c'] to serve
-    them based on this visitors dimensions? Yes, yes we can --::
-    
+    them based on this visitors dimensions? Yes, yes we can -- ::
     # Choose from our historical data
-
     http://.../decide?pk=PageVariation&options=['a', 'b', 'c']&dimensions={"country": "US"}&by_metric=spent/earned
-
     # Log our decisions
-
     http://.../count_decision?pk=PageVariation&option=b&dimensions={"country": "US"}&metric={"spent": .50}
-
     # And log our successes, of course ;)
-
     http://.../count_decision?pk=PageVariation&option=b&dimensions={"country": "US"}&metric={"earned": 25}
 
 Test Server
