@@ -1,13 +1,7 @@
 HailWhale
 =========
 **STATUS UPDATE**
-HailWhale is still in VERY active development. I make improvements almost every
-single day. But for the most part, the readme and the core docs are TERRIBLY out
-of date.
-
-This project is getting exponentially more powerful by the minute. We already
-support shit this readme never even dreamed of -- auto optimizing, pixel
-encryption, fuzzy decision making and tons more.
+HailWhale is still in development. But for the most part, the readme and the core docs are TERRIBLY out of date. These things move fast.
 
 If you need hand holding, get out and go home. This project isn't for you yet.
 
@@ -20,9 +14,12 @@ Real-time counting of rolled-up multi-dimensional metric data via HTTP service.
 
 **OK, now in english?** Live graphs of events happening in real-time, for any measurable things you want to measure, grouped by any properties you want to define about these events.
 
-Fire GET requests to log **Events**. Events can be optionally tagged with **Dimensions**, which are like properties (and can be nested!), and each Event has some **Metrics**, or measurable counting data.
 
-For example, let's say you need to count today's revenue from various income streams and put a fancy graph in your admin panel. From the proper points in your sales and services software, you insert HTTP calls to send Events like these::
+**To use it**
+
+Fire HTTP GET requests to log **Events** from any language, as embedded image pixels, API callback URLs or anything you please. Events can be optionally tagged with **Dimensions**, which are like properties (and can be nested!), and each Event has some **Metrics**, or measurable counting data.
+
+For example, let's say you need to count today's revenue from various income streams and put a fancy graph in your admin panel. From an image tag on your ThankYou page, you trigger these URLs (actually loaded by the browser client, in this case) -- ::
 
     # Sold $200 in services
     http://.../count?dimensions=services&metrics={"dollars": 200} 
@@ -32,12 +29,10 @@ For example, let's say you need to count today's revenue from various income str
     http://.../count?dimensions={"sales": $product_id}&metric={"dollars": 500}
 
 Notice that in the third example, the dimensions are nested. Now, using the jQuery widget, you can add a graph to your admin panel that will show "Overall Dollars", as well as any dimensions that exceed 10% of the total revenue stream (10% is the default threshold). Additionally, you can get a graph of "Sales Overall", which would also show any $product_id that represented 10% or more of the sales. **More additionally still**, you can get a graph of the average revenue per sale,
-because hailwhale adds an extra metric {hits: 1} to each event. Since hailwhale
-lets you perform transformations on metrics in real-time, graphing e.g. the
-click-through ratio on a page is as simple as tracking pageviews with one
-metric, and clickthroughs with another
+because hailwhale adds an extra metric {hits: 1} to each event. Then we can ask
+for metric="dollars/hits" and we'll have a graph of dollar-value-per-transaction.
 
-For each dimension/metric combination, hailwhale provides graphs (flot) and summary data, at whatever roll-up intervals you want, via HTTP/JSON or with the provided jQuery plugin.
+For each dimension/metric combination, hailwhale provides graphs and summary data, at whatever roll-up intervals you want, via HTTP/JSON or with the provided jQuery plugin.
 
 On the backend, Hailwhale is composed of two servers --
 
@@ -45,9 +40,29 @@ On the backend, Hailwhale is composed of two servers --
 
 + The whale server is required. It provides graphs, and allows for directly counting data when used without a Hail server. The whale stores data into a large datastore. Currently Redis is supported, MongoDB and cassandra coming soon.
 
+To sweeten the deal, we support a couple peices of magic, though most of them
+are still being tested and tuned --
+  + "Spy Logs" -- A rotating list of (default 1000) events that have passed
+    through the Event, so you can show recent actions with their dimensions. To
+    use Spy Logs, take a look at the source for Hail.py
+  + Encrypted Pixels -- It's not secure to put all those parameters in a forward
+    facing URL; if you're trying to put a counting pixel on a public page, you
+    can encrypt the URL so that nobody can mess with it.
+  + DECISION MAKING -- My crown jewel, still being tuned heavily, see the unit
+    tests. Hey, we have all these graphs for Visitors by Country,
+    now can we choose the best of our 3 page variations ['a', 'b', 'c'] to serve
+    them based on this visitors dimensions? Yes, yes we can --::
+    
+    # Choose from our historical data
+    http://.../decide?pk=PageVariation&options=['a', 'b', 'c']&dimensions={"country": "US"}&by_metric=spent/earned
+    # Log our decisions
+    http://.../count_decision?pk=PageVariation&option=b&dimensions={"country": "US"}&metric={"spent": .50}
+    # And log our successes, of course ;)
+    http://.../count_decision?pk=PageVariation&option=b&dimensions={"country": "US"}&metric={"earned": 25}
+
+
 Test Server
 ===========
-Currently only tested on my macbook pro and Ubuntu servers.
 OSX::
 
     brew install redis
