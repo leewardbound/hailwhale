@@ -377,11 +377,10 @@ class Whale(object):
 
     @classmethod
     def render_divs(cls, pk, metric, dimension='_', period=None, at=None,
-            tzoffset=None, format=None, hidden=False):
+            tzoffset=None, depth=0, format=None, hidden=False):
         period, ats, tzoffset = Period.get_days(period, at, tzoffset=tzoffset)
         top, bot = parse_formula(metric)
-        pps = cls.plotpoints(pk, dimension, metric, period=period)
-        ppsm = pps[dimension][metric]
+        pps = cls.plotpoints(pk, dimension, metric, period=period, depth=depth)
         if not format:
             if bot:
                 format = 'pct'
@@ -412,12 +411,13 @@ class Whale(object):
                 return v
             return callable(f) and f(v) or v
         hidden = hidden and 'style="display: none"' or ''
-        rep = lambda s: s.format(pk=pk, metric=metric, dimension=dimension, hidden=hidden)
-        table = rep('<table {hidden} data-hw-pk="{pk}" data-hw-name="{{name}}" \
-                data-hw-dimension="{dimension}" data-metric="{metric}">')+'\n'.join([
+        rep = lambda s, d: s.format(pk=pk, metric=metric, dimension=d, hidden=hidden)
+        tables = [rep('<table {hidden} data-hw-pk="{pk}" data-hw-name="{{name}}" \
+                data-hw-dimension="{dimension}" data-metric="{metric}">', d)+'\n'.join([
             '<tr><td>%s</td><td>%s</td></tr>'%(at.replace(' 00:00:00', ''), fmt(count) )
-            for at, count in ppsm.items()])+'</table>'
-        return table
+            for at, count in ppitem[metric].items()])+'</table>'
+                for d, ppitem in pps.items()]
+        return '\n'.join(tables)
 
     @classmethod
     def today(cls, pk, metric, dimension='_'):

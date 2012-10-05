@@ -213,7 +213,7 @@ function jqinit() {{\n
                 $.hailwhale('{hwurl}').graph_tables('{table}', {options});\n
                 }}
         setTimeout(init_graphs, {delay});
-        if(ui_loaded_funcs)
+        if(typeof(ui_loaded_funcs) != "undefined")
             ui_loaded_funcs.init_graphs = init_graphs;
         }});\n
     }}
@@ -253,12 +253,18 @@ def graph():
         params['title'] = '%s [%s]' % (util.maybe_dumps(pkname), util.maybe_dumps(dimname))
     if isinstance(table, basestring):
         table = table.lower() == 'true'
+    hidden_full_table = Whale.render_divs(pk, metric,
+            dimension=dimension, 
+            period=period,
+            depth=params['depth'],
+            hidden=True).replace("\n", "").format(name=dimension)
     hwurl = req.GET.get('hwurl', req.url.split('graph.js')[0])
     params['autoupdate'] = g('live', True)
     params['interval'] = g('interval', 6000)
     graph_id = hashlib.md5(str(params)).hexdigest()
     include_string = \
 "document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/jquery.min.js'></script>\");"%hwurl
+    table_str = '$(\'%s .table\').html(\''%graph_id + hidden_full_table + "');"
     if table: 
         try:
             columns = int(g('table', 6, int))
@@ -269,8 +275,8 @@ def graph():
         dates = [p for p in
                 Period.get(period).datetimes_strs()][(-1*columns - 1):]
 
-        table_str = '''
-            $('#{id} .table').html('<table style="width: 100%"> <tr> <th></th> <th></th> {columns} </tr>
+        table_str += '''
+            $('#{id} .table').append('<table style="width: 100%"> <tr> <th></th> <th></th> {columns} </tr>
         '''.strip().format(id=graph_id,columns=' '.join([
             '<th>%s</th>'%date.replace('00:00:00 ', '') for date in dates])) 
 
@@ -296,8 +302,6 @@ def graph():
                 "<td>%s</td>"%int(pps[dimension][metric][date]) for date in dates])).strip()
 
         table_str += '''</table>');'''
-    else:
-        table_str = ''
     include_string = \
 "document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/hailwhale.min.js'></script>\");"%hwurl
 
@@ -313,8 +317,8 @@ function jqinit() {{\n
         setTimeout(jqinit, 250);\n
     }} else {{\n
         $(function() {{\n
-                $.hailwhale('{hwurl}').add_graph('{id} .graph', {options});\n
                 {table_str}
+                $.hailwhale('{hwurl}').add_graph('{id} .graph', {options});\n
         }});\n
     }}
 }}
