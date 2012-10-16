@@ -35,10 +35,6 @@ class Hail(object):
         return cls._hail_driver
 
     @classmethod
-    def count_decided(cls, pk_base, decision, option, *args, **kwargs):
-        return cls.count([pk_base, decision, option], *args, **kwargs)
-
-    @classmethod
     def count(cls, pk, dimensions='_', metrics=None, at=False):
         metrics = metrics or {}
         metrics = isinstance(metrics, list) and dict([(k, 1) for k in metrics]) or metrics
@@ -68,6 +64,26 @@ class Hail(object):
         except Exception as e:
             return '%s' % e
         return 'OK'
+
+    @classmethod
+    def count_record(cls, pk, record_id='_', **kwargs):
+        cls.count(list(pk) + [record_id], **kwargs)
+
+    @classmethod
+    def count_decided(cls, pk_base, decision, option, **kwargs):
+        return cls.count(list(pk_base) + [decision, option], **kwargs)
+
+
+    @classmethod
+    def set_record(cls, pk, record_id='_', set_dimensions=None,
+            add_dimensions=None, set_metrics=None):
+        pass
+    @classmethod
+    def get_record(cls, pk, record_id='_', dimensions='_', metrics=None, depth=0):
+        #TODO
+        # Get subdimensions or all_subdimensions
+        # Get totals alltime for record
+        pass
 
     @classmethod
     def spy_pos_key(cls, uid):

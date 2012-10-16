@@ -124,7 +124,10 @@ def _retrieve(redis, pk, dimensions, metrics, period=None, dt=None):
     interval = Period.get(period).interval
     for dimension in iterate_dimensions(dimensions)+['_']:
         for metric in metrics:
-            hash_key = keyify(pk, dimension, interval, metric)
+            if ':' in metric:
+                metric_name = metric.split(':')[0]
+            else: metric_name = metric
+            hash_key = keyify(pk, dimension, interval, metric_name)
             value_dict = redis.hgetall(hash_key)
             nested[maybe_dumps(dimension)][maybe_dumps(metric)] = dict([
                     (k, float(v)) for k, v in value_dict.items()])
@@ -280,19 +283,26 @@ class Whale(object):
         for dim, mets in sparse.items():
             for met, points in mets.items():
                 nonsparse[dim][met] = []
+                use_method = False
+                met_name = met
+                if ':' in met:
+                    met_name, use_method = met.split(':')
+
                 const_value = False
-                if met in TIME_MATRIX:
-                    const_value = float(getUnits(period.interval) / TIME_MATRIX[met])
+                if met_name in TIME_MATRIX:
+                    const_value = float(period.getUnits()[0] /
+                            TIME_MATRIX[met_name])
                 # Try to parse static metrics too
-                elif met == '_count':
+                elif met_name == '_count':
                     const_value = len(dts)
                 try:
-                    const_value = float(met)
+                    const_value = float(met_name)
                 except:
                     pass
+                last_value = total = 0
                 for dt in dts:
                     dt_obj = Period.parse_dt_str(dt)
-                    if met == '_days_in_month':
+                    if met_name == '_days_in_month':
                         from calendar import monthrange
                         const_value = monthrange(dt_obj.year, dt_obj.month)[1]
                     if flot_time:
@@ -303,6 +313,17 @@ class Whale(object):
                         value = const_value
                     else:
                         value = points[dt] if dt in points else 0
+                    if use_method == 'count' or not use_method:
+                        value = value
+                    elif use_method in ['+', 'sum', 'add', 'cumulative']:
+                        total += value
+                        value = total
+                    elif use_method in ['_', 'set', 'last', 'level']:
+                        if not last_value:
+                            last_value = value
+                        if not value:
+                            value = last_value
+                        last_value = value
                     nonsparse[dim][met].append([dt_t, float(value)])
                 nonsparse[dim][met] = points_type(nonsparse[dim][met])
         if depth > 0:
