@@ -87,7 +87,7 @@ def _store(redis, pk, dimension, metric, period, dt, count, method='set',
             tgt_pk = pk
             tgt_dimension = parent(dimension)
         rank_key = keyify('rank', tgt_pk, tgt_dimension,
-                Period.get(period).interval, dt, metric) 
+                Period.get(period).interval, dt, metric)
         redis.zadd(rank_key, dimension_json, new_val)
     return new_val
 
@@ -95,13 +95,13 @@ def _ranked(redis, pk, parent_dimension, metric, period, ats, start=0, size=10,
         sort_dir=None):
     top, bot = parse_formula(metric)
     rank_keyify = lambda ats, met: keyify('rank', pk, parent_dimension,
-            Period.get(period).interval, ats, met) 
+            Period.get(period).interval, ats, met)
     final_rank_key = rank_keyify(ats, metric)
     def squash_ats(met):
         if len(ats) > 1:
             map(lambda at: redis.zremrangebyscore(rank_keyify(at, met), 0, 0), ats)
             redis.zunionstore(rank_keyify(ats, met),
-                    map(lambda at: rank_keyify(at, met), ats)) 
+                    map(lambda at: rank_keyify(at, met), ats))
     squash_ats(top)
     if bot:
         squash_ats(bot)
@@ -110,13 +110,13 @@ def _ranked(redis, pk, parent_dimension, metric, period, ats, start=0, size=10,
         for key_i, key_n in ipairs(redis.call("zrange", KEYS[2], 0, -1)) do
             local top_s = tonumber(redis.call("zscore", KEYS[1], key_n))
             local bot_s = tonumber(redis.call("zscore", KEYS[2], key_n))
-            if top_s and bot_s and bot_s > 0 then 
+            if top_s and bot_s and bot_s > 0 then
                 redis.call("zadd", KEYS[3], top_s/bot_s, key_n)
             end
         end
         """, 3, top_key, bot_key, final_rank_key)
         redis.zremrangebyscore(final_rank_key, 0, 0)
-    return redis.zrange(final_rank_key, start, start + size, 
+    return redis.zrange(final_rank_key, start, start + size,
                 desc=not sort_dir or sort_dir.upper() in ['-', 'DESC', 'HIGH'])
 
 def _retrieve(redis, pk, dimensions, metrics, period=None, dt=None):
@@ -143,10 +143,10 @@ class Whale(object):
             for method in ['plotpoints', 'ratio_plotpoints', 'scalar_plotpoints',
                 'totals', 'count_now', 'count_decided_now', 'decide',
                 'weighted_reasons', 'reasons_for', 'graph_tag', 'today',
-                'yesterday', 'update_count_to', 'total', 'render_divs']:
+                'yesterday', 'update_count_to', 'total', 'render_divs', 'get_subdimensions', 'all_subdimensions']:
                 curry_instance_attribute(attr, method, self,
                         with_class_name=True)
-            # Currying for related models as 
+            # Currying for related models as
             for method in ['plotpoints', 'graph_tag', 'count_now', 'totals']:
                 curry_related_dimensions(attr, method, self, with_class_name=True)
             self._hw_curried = True
@@ -603,7 +603,7 @@ class Whale(object):
             at=None, start=0, size=10, sort_dir=None, tzoffset=None):
         period, ats, tzoffset = Period.get_days(period, at)
         dt = ats or [Period.convert(cls.now(), tzoffset)]
-        return map(try_loads, 
+        return map(try_loads,
                 _ranked(cls.whale_driver(), pk, parent_dimension, metric,
                     period, dt, start, size, sort_dir=sort_dir))
 
