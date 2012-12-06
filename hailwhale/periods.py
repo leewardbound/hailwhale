@@ -3,11 +3,11 @@ import time
 import times
 import re
 PERIODS = [
-{'name': 'Last 3 years, by month', 
+{'name': 'Last 3 years, by month',
     'length': '3y',
     'interval': '1mo',
     'nickname': 'monthly'},
-{'name': 'Last year, by week', 
+{'name': 'Last year, by week',
     'length': '1y',
     'interval': '1w',
     'nickname': 'year'},
@@ -261,8 +261,8 @@ class Period(object):
                 self.interval, self.length)
 
 PERIOD_OBJS = []
-PERIOD_NICKS = {} 
-PERIOD_INTERVALS = {} 
+PERIOD_NICKS = {}
+PERIOD_INTERVALS = {}
 for p in PERIODS:
     period = Period(p['interval'], p['length'], p['name'], p.get('nickname', None))
     PERIOD_OBJS.append(period)

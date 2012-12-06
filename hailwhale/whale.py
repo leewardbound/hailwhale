@@ -142,8 +142,9 @@ class Whale(object):
         if hasattr(self, attr) and not hasattr(self, '_hw_curried'):
             for method in ['plotpoints', 'ratio_plotpoints', 'scalar_plotpoints',
                 'totals', 'count_now', 'count_decided_now', 'decide',
-                'weighted_reasons', 'reasons_for', 'graph_tag', 'today',
-                'yesterday', 'update_count_to', 'total', 'render_divs', 'get_subdimensions', 'all_subdimensions']:
+                'weighted_reasons', 'reasons_for', 'graph_tag', 'today', 'cached_rank', 'rank',
+                'yesterday', 'update_count_to', 'total', 'render_divs', 'get_subdimensions',
+                'all_subdimensions', 'rank_subdimensions_scalar', 'rank_subdimensions_ratio']:
                 curry_instance_attribute(attr, method, self,
                         with_class_name=True)
             # Currying for related models as
@@ -274,9 +275,10 @@ class Whale(object):
         metrics = metrics or ['hits']
         if isinstance(metrics, basestring):
             metrics = [metrics]
-        period = Period.get(period)
-        dts = list(period.datetimes_strs())
-        sparse = _retrieve(cls.whale_driver(), pk, dimensions, metrics, period=period)
+        p_obj, ats, tzoffset = Period.get_days(period)
+        p_s = str(p_obj)
+        dts = list(p_obj.datetimes_strs())
+        sparse = _retrieve(cls.whale_driver(), pk, dimensions, metrics, period=p_obj)
         nonsparse = defaultdict(dict)
         if flot_time:
             points_type = list
@@ -290,7 +292,7 @@ class Whale(object):
 
                 const_value = False
                 if met_name in TIME_MATRIX:
-                    const_value = float(period.getUnits()[0] /
+                    const_value = float(p_obj.getUnits()[0] /
                             TIME_MATRIX[met_name])
                 # Try to parse static metrics too
                 elif met_name == '_count':
@@ -473,6 +475,7 @@ class Whale(object):
                 metrics += metric.split('/')
         d = {}
         for p in periods:
+            period, ats, tzoffset = Period.get_days(p)
             p_data = cls.plotpoints(pk, dimensions, metrics, period=p)
             p_totals = dict()
             for dim in p_data.keys():
@@ -480,7 +483,7 @@ class Whale(object):
                 for met, vals in p_data[dim].items():
                     p_totals[dim][met] = sum([
                         v for k, v in vals.items()
-                        if Period.get(p).flatten(k)])
+                        if k in ats])
                 for rat in ratios:
                     top, bot = parse_formula(rat)
                     topt, bott = p_totals[dim][top], p_totals[dim][bot]
@@ -611,9 +614,10 @@ class Whale(object):
     @classmethod
     def rank_subdimensions_scalar(cls, pk, dimension='_', metric='hits',
             period=None, recursive=True, prune_parents=True, points=False):
-        period = Period.get(period) or Period.default_size()
+        p_obj, ats, tzoffset = Period.get_days(period)
+        p_s = str(period)
         d_k = keyify(dimension)
-        total = cls.cached_totals(pk, dimension, metric, periods=[period.interval])[period.interval][d_k][metric]
+        total = cls.totals(pk, dimension, metric, periods=[p_s])[p_s][d_k][metric]
         ranked = dict()
 
         def info(sub):
@@ -635,6 +639,7 @@ class Whale(object):
         _subs = recursive and cls.all_subdimensions or cls.get_subdimensions
         for sub in map(maybe_dumps, _subs(pk, dimension)):
             ranked[sub] = info(sub)
+        print ranked
 
         # Prune parents
         if recursive and prune_parents:
@@ -649,12 +654,15 @@ class Whale(object):
     def rank_subdimensions_ratio(cls, pk, numerator, denominator='hits',
             dimension='_', period=None, recursive=True, points=False):
         top, bottom = numerator, denominator
-        period = Period.get(period) or Period.default_size()
+        p_obj, ats, tzoffset = Period.get_days(period)
+        p_s = str(p_obj)
         d_k = keyify(dimension)
-        top_total = cls.cached_totals(pk, dimension, top,
-                periods=[period])[period.interval][d_k][top]
-        bottom_total = cls.cached_totals(pk, dimension, bottom,
-                periods=[period])[period.interval][d_k][bottom]
+        top_points = cls.totals(pk, dimension, top,
+                periods=[p_s])
+        top_total = p_s in top_points and top_points[p_s][d_k][top] or 0
+        bottom_points = cls.totals(pk, dimension, bottom,
+                periods=[p_s])
+        bottom_total = p_s in bottom_points and bottom_points[p_s][d_k][bottom] or 0
         ratio_total = bottom_total and float(top_total / bottom_total) or 0
         ranked = dict()
 
@@ -663,8 +671,8 @@ class Whale(object):
             top_pps = pps[top]
             bottom_pps = pps[bottom]
 
-            sub_top_sum = sum(top_pps.values())
-            sub_bottom_sum = sum(bottom_pps.values())
+            sub_top_sum = sum({k: v for k, v in top_pps.items() if k in ats}.values())
+            sub_bottom_sum = sum({k: v for k, v in bottom_pps.items() if k in ats}.values())
 
             ratio = sub_bottom_sum and float(sub_top_sum / sub_bottom_sum) or 0
 
