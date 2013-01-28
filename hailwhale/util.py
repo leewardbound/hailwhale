@@ -23,7 +23,13 @@ def maybe_dumps(arg, dump_dicts=True):
     if isinstance(arg, basestring):
         arg = try_loads(arg)
     if isinstance(arg, basestring):
-        return unicode(arg.decode('UTF-8'))
+        try:
+            return unicode(arg.decode('UTF-8'))
+        except:
+            try:
+                return unicode(arg)
+            except:
+                return arg
     if isinstance(arg, list):
         if len(arg) == 1:
             return maybe_dumps(arg[0])
