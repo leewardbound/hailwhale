@@ -537,7 +537,7 @@ class Whale(object):
         for s in set_members:
             loaded = try_loads(s)
             if isinstance(loaded, list) and len(loaded):
-                loaded = map(str, loaded)
+                loaded = map(unicode, loaded)
             subdimensions.append(loaded)
         return subdimensions
 
