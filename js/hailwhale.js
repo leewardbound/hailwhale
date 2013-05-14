@@ -35,7 +35,7 @@
                         cells = $('td', data_row);
                         if(cells.length != 2)
                             return;
-                        return {x: new Date(cells[0].innerText), y: parseFloat(cells[1].innerText)};})
+                        return {x: new Date(cells[0].innerText), y: parseFloat(cells[1].innerText.replace(',', ''))};})
                 };
             }, tables);
             var chart = nv.models.lineChart()
