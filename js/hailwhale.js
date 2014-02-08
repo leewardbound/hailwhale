@@ -5,7 +5,7 @@
   $ = jQuery;
   $.charts = $.charts || [];
   var render_graph = function(target) {
-        var redraw = function() { 
+        var redraw = function() {
             metric = $(target).attr('data-metric');
             source_table = $(target).attr('data-source-table');
             all_rows = $(source_table).children('tbody').children('tr');
@@ -17,10 +17,20 @@
                 this_head = $('th[data-extra=graphable][data-name="'+metric+'"]', source_table)
                 $('[data-extra=graph-icon]').remove();
                 $(this_head).append($('<i>').attr('data-extra', 'graph-icon')
+                                    .addClass('fa fa-bar-chart-o')
                     .addClass('icon').addClass('icon-signal').addClass('icon-white')
                     );
             }
-            tables = $.map(selectors, function(s) { 
+            // Make clickable icons
+            $('[data-graphmetric]').click(function(e) {
+              clicked = $(this)
+              new_metric = clicked.attr('data-graphmetric')
+              if(!new_metric || new_metric == "") return;
+              e.preventDefault();
+              $(target).attr('data-metric', new_metric)
+              $(target).attr('please-redraw', 'true')
+            })
+            tables = $.map(selectors, function(s) {
                 return $('table[data-metric="'+metric+'"]', s)});
             current_legends = $('.legend text', target)
             datum = d3.range(tables.length).map(function(i) {
@@ -44,7 +54,7 @@
                 .tickFormat(function(d) {
                   return d3.time.format('%x')(new Date(d))
                  });
- 
+
             chart.yAxis
                 .tickFormat(d3.format(',.1'));
             svg = $('svg', target);
@@ -126,12 +136,12 @@
     }
     this.add_graph = function(target, extra) {
       var params, poller, poller_handle, url;
-      
+
       // Get the jquery object of the target
       if(typeof(target) == 'string' && target[0] != '#')
           target='#'+target;
       target = $(target)[0];
-      
+
       var charts_on_page = $.charts.length || 0;
       var our_chart_id = charts_on_page+1;
       var our_chart = $.charts[our_chart_id];
