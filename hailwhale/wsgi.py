@@ -188,7 +188,7 @@ def table_graph():
     table = g('table', '')
     height = g('height', '300px')
     delay = g('delay', 5000)
-    hwurl = req.GET.get('hwurl', './' or req.url.split('table_graph.js')[0])
+    hwurl = req.GET.get('hwurl', '/' or req.url.split('table_graph.js')[0])
     include_string = \
 "document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/jquery.min.js'></script>\");"%hwurl
     include_string += \
