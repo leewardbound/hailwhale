@@ -92,7 +92,7 @@ def update_count_to():
         from dateutil.parser import parse
         at = parse(g('at'))
         at = at.replace(tzinfo=None)
-    params = dict(at=at, 
+    params = dict(at=at,
             period=g('period', None),
             **default_params())
 
@@ -147,7 +147,7 @@ def tracker():
         INTERRUPT = u'\u0001'
         PAD = u'\u0000'
 
-        # Since you need to pad your data before encryption, 
+        # Since you need to pad your data before encryption,
         # create a padding function as well
         # Similarly, create a function to strip off the padding after decryption
         def AddPadding(data, interrupt, pad, block_size):
@@ -188,7 +188,7 @@ def table_graph():
     table = g('table', '')
     height = g('height', '300px')
     delay = g('delay', 5000)
-    hwurl = req.GET.get('hwurl', req.url.split('table_graph.js')[0])
+    hwurl = req.GET.get('hwurl', './' or req.url.split('table_graph.js')[0])
     include_string = \
 "document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/jquery.min.js'></script>\");"%hwurl
     include_string += \
@@ -219,8 +219,8 @@ function jqinit() {{\n
     }}
 }}
 jqinit();\n
-    
-    
+
+
     '''.format( include_string=include_string, table=table, delay=delay,
             hwurl=hwurl, options=util.maybe_dumps(params))
     return return_string
@@ -259,7 +259,7 @@ def graph():
     graph_id = hashlib.md5(str(params)).hexdigest()
     include_string = \
 "document.write(\"<scr\" + \"ipt type='text/javascript' src='%sjs/jquery.min.js'></script>\");"%hwurl
-    if table: 
+    if table:
         try:
             columns = int(g('table', 6, int))
         except:
@@ -272,7 +272,7 @@ def graph():
         table_str = '''
             $('#{id} .table').html('<table style="width: 100%"> <tr> <th></th> <th></th> {columns} </tr>
         '''.strip().format(id=graph_id,columns=' '.join([
-            '<th>%s</th>'%date.replace('00:00:00 ', '') for date in dates])) 
+            '<th>%s</th>'%date.replace('00:00:00 ', '') for date in dates]))
 
         dimensions = pps.keys()
         if '_' in dimensions:
@@ -319,8 +319,8 @@ function jqinit() {{\n
     }}
 }}
 jqinit();\n
-    
-    
+
+
     '''.format(parent_div=parent_div, include_string=include_string,
             hwurl=hwurl, table_str=table_str, height=height,
             id=graph_id,
