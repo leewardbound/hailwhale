@@ -143,7 +143,7 @@ class Whale(object):
             for method in ['plotpoints', 'ratio_plotpoints', 'scalar_plotpoints',
                 'totals', 'count_now', 'count_decided_now', 'decide',
                 'weighted_reasons', 'reasons_for', 'graph_tag', 'today', 'cached_rank', 'rank',
-                'yesterday', 'update_count_to', 'total', 'render_divs', 'get_subdimensions',
+                'yesterday', 'update_count_to', 'total', 'render_hw_plotpoint_table', 'get_subdimensions',
                 'all_subdimensions', 'rank_subdimensions_scalar', 'rank_subdimensions_ratio']:
                 curry_instance_attribute(attr, method, self,
                         with_class_name=True)
@@ -399,7 +399,7 @@ class Whale(object):
                 return bot_tot and top_tot/bot_tot or 0
 
     @classmethod
-    def render_divs(cls, pk, metric, dimension='_', period=None, at=None,
+    def render_hw_plotpoint_table(cls, pk, metric, dimension='_', period=None, at=None,
             tzoffset=None, format=None, hidden=False):
         period, ats, tzoffset = Period.get_days(period, at, tzoffset=tzoffset)
         top, bot = parse_formula(metric)
