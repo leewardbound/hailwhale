@@ -400,7 +400,7 @@ class Whale(object):
 
     @classmethod
     def render_hw_plotpoint_table(cls, pk, metric, dimension='_', period=None, at=None,
-            tzoffset=None, format=None, hidden=False):
+            tzoffset=None, format=None, hidden=False, graph_color=''):
         period, ats, tzoffset = Period.get_days(period, at, tzoffset=tzoffset)
         top, bot = parse_formula(metric)
         pps = cls.plotpoints(pk, dimension, metric, period=period)
@@ -435,9 +435,11 @@ class Whale(object):
                 return v
             return callable(f) and f(v) or v
         hidden = hidden and 'style="display: none"' or ''
-        rep = lambda s: s.format(pk=pk, metric=metric, dimension=dimension, hidden=hidden)
+        rep = lambda s: s.format(pk=pk, metric=metric, dimension=dimension,
+        hidden=hidden, color=graph_color)
         table = rep('<table {hidden} data-hw-pk="{pk}" data-hw-name="{{name}}" \
-                data-hw-dimension="{dimension}" data-metric="{metric}">')+'\n'.join([
+                data-hw-dimension="{dimension}" data-metric="{metric}" \
+                data-hw-color="{color}">')+'\n'.join([
             '<tr><td>%s</td><td>%s</td></tr>'%(at.replace(' 00:00:00', ''), fmt(count) )
             for at, count in ppsm.items()])+'</table>'
         return table

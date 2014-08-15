@@ -49,7 +49,7 @@
                 };
             }, tables);
             var chart = nv.models.lineChart()
-                .color(d3.scale.category10().range());
+                .color(document.hw_colors || d3.scale.category10().range());
             chart.xAxis
                 .tickFormat(function(d) {
                   return d3.time.format('%x')(new Date(d))
