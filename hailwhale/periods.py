@@ -5,11 +5,11 @@ import re
 PERIODS = [
 {'name': 'Last 3 years, by month',
     'length': '3y',
-    'interval': '1mo',
+    'interval': '1d',
     'nickname': 'monthly'},
 {'name': 'Last year, by week',
     'length': '1y',
-    'interval': '1w',
+    'interval': '1d',
     'nickname': 'year'},
 {'name': 'Last 30 days, by day', 'length': '1mo', 'interval': '1d',
     'nickname': 'thirty'},
@@ -25,7 +25,7 @@ PERIODS = [
     'nickname': 'mtd'},
 {'name': 'Week to date', 'length': '1w', 'interval': '6h',
     'nickname': 'wtd'},
-{'name': 'Year to date', 'length': '1y', 'interval': '1w',
+{'name': 'Year to date', 'length': '1y', 'interval': '1d',
     'nickname': 'ytd'}
 
 ]
