@@ -59,6 +59,72 @@ are still being tested and tuned --
     # And log our successes, of course ;)
     http://.../count_decision?pk=PageVariation&option=b&dimensions={"country": "US"}&metric={"earned": 25}
 
+Internal Usage: (ie using hailwhale as a library inside django application)
+================
+Updated: 11/14/14 by rbaker
+
+1) download the git repo for hailwhale
+2) The two primary files you might want to include are whale.py and periods.py
+  a) from hailwhale.whale import Whale
+     --This class is the main entry point into all the hailwhale functions
+     --You can track counts, retrieve counts as totals, or retrieve counts as
+     plotpoints
+  b) from hailwhale import periods
+    --This file contains the Period class along with some static dictionaries
+    that help to enumerate the types of periods that are going to be available
+    by default.  
+    --This class is primarily used by hailwhale to codify the way the stats are
+    summed by intervals and over lengths of time and then returned to the user
+    --Generally, you should only edit this file if you need a specific period thatis
+    not available in the default list.  ie, every 5 minute period over the last week.
+    --Under normal use cases, this file probably wont need to be included
+
+
+3) There are three primary commands you'll want to be aware of:
+   a) Whale.count_now()
+     --Used to track incoming information
+   b) Whale.totals()
+     --Used to return the totals summed for the whole duration of the period
+     --This will usually just return a single value for each period/metric
+   c) Whale.plotpoints()
+     --Used to return the totals summed for each interval as a plotpoint for the
+    duration of the period
+     --This is most useful for graphs where you want to see each plotpoint and
+     value in relationship to one another
+
+4) Examples:
+
+===
+User purchases product p, with value x
+from hailwhale.whale import Whale
+
+#hook from purchase action
+#counts revenue as product price, and increments sales by 1
+Whale.count_now(['Product', product_id], metric={'revenue': x, 'sales': 1})
+
+#you can also include a dimension to further subdivide your stats
+Whale.count_now(['Product', product_id], metric={'revenue': x, 'sales': 1}, dimensions={'country': 'US', 'device': 'Mac OS X'})
+====
+
+====
+Seller wants sum of all revenue and number of sales for a given product over the last month
+from hailwhale.whale import Whale
+
+totals = Whale.totals(['Product', product_id], metric=['revenue', 'sales'], period='1d:1mo')
+====
+
+====
+Seller wants to graph all the revenue for a product over the last month
+from hailwhale.whale import Whale
+
+plotpoints = Whale.plotpoints(['Product', product_id], metric=['revenue'])
+====
+
+
+
+
+
+
 Test Server
 ===========
 OSX::
