@@ -1,6 +1,7 @@
 import unittest, urllib, json, time
 from collections import defaultdict
 from whale import maybe_dumps
+HOUR = '1m:1h'
 
 
 class TestHailWhaleHTTP(unittest.TestCase):
@@ -46,7 +47,7 @@ class TestHailWhaleHTTP(unittest.TestCase):
         self.getStandardParamsURL('/reset')
 
     def testCountingNowCorrectly(self):
-        counting = lambda n: n['fivemin']['empty']['counting_now']
+        counting = lambda n: n[HOUR]['empty']['counting_now']
         totals = self.getTotalsURL(metrics=['counting_now'])
         for i in range(3):
             self.assertEqual(self.getCountNowURL(metrics={'counting_now': 5}), 'OK')
@@ -54,7 +55,7 @@ class TestHailWhaleHTTP(unittest.TestCase):
         self.assertEqual(counting(new_totals), counting(totals) + 15)
 
     def testCountingCorrectly(self):
-        counting = lambda n: n['fivemin']['empty']['counting']
+        counting = lambda n: n[HOUR]['empty']['counting']
         totals = self.getTotalsURL(metrics=['counting'])
         for i in range(3):
             self.assertEqual(self.getCountURL(metrics={'counting': 5}), 'OK')
@@ -282,7 +283,7 @@ class TestHailWhale(unittest.TestCase):
         t = str(time.time())
         count = lambda: self.whale.count_now('test_cached', t)
         cached_sum = lambda clear=False: sum(self.whale.cached_plotpoints('test_cached',
-                t, period='fivemin', unmemoize=clear)[t]['hits'].values())
+                t, period=HOUR, unmemoize=clear)[t]['hits'].values())
 
         # Set hits to 1
         count()

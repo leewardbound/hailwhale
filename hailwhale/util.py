@@ -191,7 +191,7 @@ class whale_cache(object):
         if 'period' in kwargs:
             p = Period.get(kwargs['period'])
             kwargs['period'] = str(p)
-            ttl = int(p.interval) / 5
+            ttl = int(p.getUnits()[0]) / 5
         else:
             ttl = 60
 

@@ -57,10 +57,10 @@ def _increment(*args, **kwargs):
     kwargs['method'] = 'incr'
     return _store(*args, **kwargs)
 
-def _store(redis, pk, dimension, metric, period, dt, count, method='set',
+def _store(redis, pk, dimension, metric, interval, dt, count, method='set',
         rank=False):
     # Keep a list of graphs per pk
-    key = keyify(pk, dimension, Period.get(period).interval, metric)
+    key = keyify(pk, dimension, interval, metric)
     # Store pk dimensions
     dimension_key = keyify('dimensions', pk)
     dimension_json = keyify(dimension)
@@ -86,8 +86,7 @@ def _store(redis, pk, dimension, metric, period, dt, count, method='set',
         else:
             tgt_pk = pk
             tgt_dimension = parent(dimension)
-        rank_key = keyify('rank', tgt_pk, tgt_dimension,
-                Period.get(period).interval, dt, metric)
+        rank_key = keyify('rank', tgt_pk, tgt_dimension, interval, dt, metric)
         redis.zadd(rank_key, dimension_json, new_val)
     return new_val
 
@@ -582,13 +581,13 @@ class Whale(object):
         # [b, y],
         # [b, y, 2]
         pipe = cls.whale_driver().pipeline(transaction=False)
-        for pkk, dimension, (period, dt, metric, i) in itertools.product(
+        for pkk, dimension, (interval, dt, metric, i) in itertools.product(
                 iterate_dimensions(pk),
                 iterate_dimensions(dimensions, add_root=True),
                         generate_increments(metrics, periods, at)):
             if i == 0:
                 continue
-            _increment(pipe, pkk, dimension, metric, period, dt, i)
+            _increment(pipe, pkk, dimension, metric, interval, dt, i)
         pipe.execute()
 
     @classmethod
@@ -850,8 +849,8 @@ def generate_increments(metrics, periods=False, at=False):
         dt = period.flatten_str(at)
         if not dt:
             continue
-        observations.add((period, dt))
-    rr = [(period, dt, metric, incr_by)
-            for (period, dt) in observations
+        observations.add((period.interval, dt))
+    rr = [(interval, dt, metric, incr_by)
+            for (interval, dt) in observations
             for metric, incr_by in metrics.items()]
     return rr
