@@ -2,7 +2,6 @@ import json
 import math
 import itertools
 import collections
-import times
 import urllib
 
 from redis import Redis
@@ -10,7 +9,7 @@ from collections import defaultdict, OrderedDict
 from datetime import datetime, timedelta
 
 from util import *
-from periods import DEFAULT_PERIODS, Period
+from periods import DEFAULT_PERIODS, Period, MAX_INTERVALS
 
 """
 Ahoy, traveler!
@@ -846,9 +845,7 @@ def generate_increments(metrics, periods=False, at=False):
     observations = set()
     at = at or cls.now()
     for period in periods:
-        dt = period.flatten_str(at)
-        if not dt:
-            continue
+        dt = MAX_INTERVALS[period.interval].flatten_str(at)
         observations.add((period.interval, dt))
     rr = [(interval, dt, metric, incr_by)
             for (interval, dt) in observations

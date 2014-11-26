@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, date
 import time
 import times
+import pytz; pytznow = lambda: datetime.now(pytz.utc)
 import re
 PERIODS = [
 {'name': 'Last 3 years, by month',
@@ -91,32 +92,32 @@ class Period(object):
         if period == 'ytd':
             period = 'year'
             period = cls.get(period)
-            start = convert(times.now(), tzoffset).replace(month=1,
+            start = convert(pytznow(), tzoffset).replace(month=1,
                     day=1,hour=0,minute=0,second=0, microsecond=0)
             ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
         if period == 'mtd':
             period = 'thirty'
             period = cls.get(period)
-            start = convert(times.now(), tzoffset).replace(day=1, hour=0,
+            start = convert(pytznow(), tzoffset).replace(day=1, hour=0,
                     minute=0, second=0, microsecond=0)
             ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
         if period == 'wtd':
             period = 'thirty'
             period = cls.get(period)
-            start = convert(times.now(), tzoffset).replace(hour=0, minute=0,
+            start = convert(pytznow(), tzoffset).replace(hour=0, minute=0,
                     second=0, microsecond=0)
             start = start - timedelta(start.weekday() + 2)
             ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
         if period in ['today', 'hours']:
             period = 'thirty'
             period = cls.get(period)
-            start = convert(times.now(), tzoffset).replace(hour=0, minute=0,
+            start = convert(pytznow(), tzoffset).replace(hour=0, minute=0,
                     second=0, microsecond=0)
             ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
         if period == 'yesterday':
             period = 'thirty'
             period = cls.get(period)
-            end = convert(times.now(), tzoffset).replace(hour=0, minute=0,
+            end = convert(pytznow(), tzoffset).replace(hour=0, minute=0,
                     second=0, microsecond=0)
             start = end - timedelta(1)
             end = end - timedelta(seconds=1)
@@ -124,7 +125,7 @@ class Period(object):
         if period == 'seven':
             period = 'thirty'
             period = cls.get(period)
-            start = convert(times.now(), tzoffset).replace(hour=0, minute=0,
+            start = convert(pytznow(), tzoffset).replace(hour=0, minute=0,
                     second=0, microsecond=0) - timedelta(7)
             ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
         if '-' in str(period):
@@ -146,8 +147,7 @@ class Period(object):
 
     def start(self):
         interval, length = self.getUnits()
-        dt= (times.now() -
-                timedelta(seconds=length))
+        dt= (pytznow() - timedelta(seconds=length))
         if interval < 60:
             interval_seconds = interval
         else: interval_seconds = 60
@@ -185,7 +185,7 @@ class Period(object):
         in_range = lambda dt: (not start or start <= dt) and (
             not end or end >= dt)
         use_start = start or self.start()
-        use_end = end or convert(times.now(), tzoffset)
+        use_end = end or convert(pytznow(), tzoffset)
         interval, length = self.getUnits()
         if interval >= 3600*24*30:
             rule = rrule.MONTHLY
@@ -214,7 +214,7 @@ class Period(object):
 
     def flatten(self, dtf=None):
         if not dtf:
-            dtf = times.now()
+            dtf = pytznow()
         if type(dtf) in (str, unicode):
             dtf = self.parse_dt_str(dtf)
         dts = list(self.datetimes(end=dtf))
@@ -271,6 +271,7 @@ class Period(object):
 PERIOD_OBJS = []
 PERIOD_NICKS = {}
 PERIOD_INTERVALS = {}
+MAX_INTERVALS = {}
 for p in PERIODS:
     period = Period(p['interval'], p['length'], p['name'], p.get('nickname', None))
     PERIOD_OBJS.append(period)
@@ -279,6 +280,10 @@ for p in PERIODS:
         PERIOD_NICKS[p['nickname']] = period
         PERIOD_NICKS[p['interval']] = period
 DEFAULT_PERIODS = Period.all_sizes()
+for p in PERIOD_OBJS:
+    i = p.interval
+    if i not in MAX_INTERVALS or MAX_INTERVALS[i].getUnits()[1] < p.getUnits()[1]:
+        MAX_INTERVALS[p.interval] = p
 def convert(tzs, tzoffset=None):
     if tzoffset == 'system':
         tzoffset = (time.timezone / -(60*60) * 100)
