@@ -453,6 +453,8 @@ class Whale(object):
                 at=cls.now()-timedelta(days=1))
     @classmethod
     def now(cls):
+        import pytz
+        return datetime.now(pytz.utc)
         if cls._local:
             return datetime.now()
         else:
