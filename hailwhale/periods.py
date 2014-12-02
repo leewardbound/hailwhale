@@ -285,8 +285,10 @@ for p in PERIOD_OBJS:
     if i not in MAX_INTERVALS or MAX_INTERVALS[i].getUnits()[1] < p.getUnits()[1]:
         MAX_INTERVALS[p.interval] = p
 def convert(tzs, tzoffset=None):
-    if not tzoffset or tzoffset == 'system':
+    if tzoffset == 'system':
         tzoffset = (time.timezone / -(60*60) * 100)
+    if not tzoffset:
+        return tzs
     elif isinstance(tzs, datetime):
         return tzs + timedelta(hours=float(tzoffset)/100)
     elif isinstance(tzs, basestring):
