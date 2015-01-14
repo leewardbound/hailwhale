@@ -377,6 +377,7 @@ class Whale(object):
             tzoffset=None):
         period, ats, tzoffset = Period.get_days(period, at, tzoffset=None)
         top, bot = parse_formula(metric)
+        dimension = maybe_dumps(dimension)
         if not ats and not index:
             index = -1
         if isinstance(index, int):
@@ -455,7 +456,7 @@ class Whale(object):
     def now(cls):
         import pytz
         if cls._local:
-            return pytz.utc.localize( datetime.utcnow() ) 
+            return pytz.utc.localize( datetime.utcnow() )
         else:
 	    return datetime.now(pytz.utc)
 
