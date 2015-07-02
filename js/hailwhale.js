@@ -38,25 +38,23 @@
                 name = $(t).attr('data-hw-name')
                 if(current_legends.length >= (i+1))
                     $(current_legends[i]).text(name);
-                return {
+                data = {
                     key: name,
-                    color: $(t).attr('data-hw-color'),
                     values: $.map($('tr', t), function(data_row) {
                         cells = $('td', data_row);
                         if(cells.length != 2)
                             return;
                         return {x: new Date(cells[0].textContent), y: parseFloat(cells[1].textContent.replace(',', '').replace('$', '').replace('%'))};})
                 };
+                return data;
             }, tables);
-            var chart = nv.models.lineChart()
-                .color(document.hw_colors || d3.scale.category10().range());
-            chart.xAxis
-                .tickFormat(function(d) {
+            colors = document.hw_colors || d3.scale.category10().range();
+            var chart = nv.models.lineChart().color(colors);
+            chart.xAxis.tickFormat(function(d) {
                   return d3.time.format('%x')(new Date(d))
-                 });
+             });
 
-            chart.yAxis
-                .tickFormat(d3.format(',.1'));
+            chart.yAxis.tickFormat(d3.format(',.1'));
             svg = $('svg', target);
             d3.select(svg[0])
                 .datum(datum)
