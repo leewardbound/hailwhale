@@ -84,7 +84,7 @@ class Period(object):
     def getUnits(self):
         return parseUnit(self.interval), parseUnit(self.length)
     @classmethod
-    def get_days(cls, period, at=None, tzoffset=None):
+    def get_days(cls, period, at=None, tzoffset=0):
         ats = False
         period = str(period)
         if '|' in period:
@@ -136,8 +136,6 @@ class Period(object):
                     second=0, microsecond=0)+timedelta(1)-timedelta(seconds=1)
             start = datetime.strptime(start_s, '%m/%d/%Y').replace(hour=0, minute=0, second=0, microsecond=0)
             ats = period.datetimes_strs(start=start, end=end, tzoffset=tzoffset)
-
-
         period = cls.get(period)
         if not ats and not at:
             ats = period.datetimes_strs(tzoffset=tzoffset)
@@ -145,9 +143,9 @@ class Period(object):
             ats = [period.flatten_str(convert(at, tzoffset))]
         return period, list(ats), tzoffset
 
-    def start(self):
+    def start(self, tzoffset):
         interval, length = self.getUnits()
-        dt= (pytznow() - timedelta(seconds=length))
+        dt= convert(pytznow(), tzoffset) - timedelta(seconds=length)
         if interval < 60:
             interval_seconds = interval
         else: interval_seconds = 60
@@ -168,6 +166,7 @@ class Period(object):
             hour = (dt.hour - dt.hour%interval_hours),)
         if interval >= (3600*24*30):
             new_start = new_start.replace(day=1)
+        new_start = new_start.replace(tzinfo=None)
         return new_start
     @staticmethod
     def format_dt_str(t):
@@ -175,17 +174,18 @@ class Period(object):
     @staticmethod
     def parse_dt_str(t):
         try:
-            return datetime.strptime(t, '%a %b %d %H:%M:%S %Y')
+            from dateutil import parser
+            return parser.parse(t)
         except ValueError:
             return None
 
-    def datetimes(self, start=False, end=False, tzoffset=None):
+    def datetimes(self, start=False, end=False, tzoffset=0):
         from dateutil import rrule
         from util import datetimeIterator
-        in_range = lambda dt: (not start or start <= dt) and (
-            not end or end >= dt)
-        use_start = start or self.start()
+        use_start = start or self.start(tzoffset)
         use_end = end or convert(pytznow(), tzoffset)
+        use_start = use_start.replace(tzinfo=None)
+        use_end = use_end.replace(tzinfo=None)
         interval, length = self.getUnits()
         if interval >= 3600*24*30:
             rule = rrule.MONTHLY
@@ -205,10 +205,13 @@ class Period(object):
         else:
             rule = rrule.SECONDLY
             step = interval
-        dts = rrule.rrule(rule, dtstart=use_start, until=use_end, interval=step)
+        dts = [
+            dt for dt in
+            rrule.rrule(rule, dtstart=use_start, until=use_end, interval=step)
+        ]
         return dts
 
-    def datetimes_strs(self, start=False, end=False, tzoffset=None):
+    def datetimes_strs(self, start=False, end=False, tzoffset=0):
         return (Period.format_dt_str(dt) for dt in
                 self.datetimes(start=start, end=end, tzoffset=tzoffset))
 
@@ -217,7 +220,9 @@ class Period(object):
             dtf = pytznow()
         if type(dtf) in (str, unicode):
             dtf = self.parse_dt_str(dtf)
-        dts = list(self.datetimes(end=dtf))
+        offset = dtf.tzinfo and dtf.utcoffset().total_seconds()/36 or 0
+        dts = list(self.datetimes(end=dtf,
+                tzoffset=offset))
         flat = len(dts) and dts[-1] or False
         return flat
 

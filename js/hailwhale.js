@@ -33,6 +33,7 @@
             tables = $.map(selectors, function(s) {
                 return $('table[data-metric="'+metric+'"]', s)});
             current_legends = $('.legend text', target)
+            var min_y = 0;
             datum = d3.range(tables.length).map(function(i) {
                 t = tables[i]
                 name = $(t).attr('data-hw-name')
@@ -45,19 +46,42 @@
                         cells = $('td', data_row);
                         if(cells.length != 2)
                             return;
-                        return {x: new Date(cells[0].textContent), y: parseFloat(cells[1].textContent.replace(',', '').replace('$', '').replace('%'))};})
+                        date = new Date(cells[0].textContent);
+                        y = parseFloat(cells[1].textContent.replace(',', '').replace('$', '').replace('%'));
+                        if(y <= min_y) min_y = y
+                        return {x: date, y: y};})
                 };
             }, tables);
             var chart = nv.models.lineChart()
-                .color(document.hw_colors || d3.scale.category10().range());
+                .color(document.hw_colors || d3.scale.category10().range())
+                .options( {
+                    transitionDuration: 300,
+                    useInteractiveGuideline:true
+                });
+            chart.lines.xScale(d3.time.scale());
             chart.xAxis
                 .tickFormat(function(d) {
-                  return d3.time.format('%x')(new Date(d))
+                  var dd = new Date(d);
+                  var dt = d3.time.format('%x %X')(dd)
+                  midnight = '00:00:00';
+                  noon = '12:00:00';
+                  if(dt.includes(midnight))
+                      dt = dt.replace(midnight, '')
+                  else if(dt.includes(noon))
+                      dt = 'Noon'
+                  else
+                      dt = d3.time.format('%I:%M %p')(dd)
+                  return dt
                  });
 
             chart.yAxis
                 .tickFormat(d3.format(',.1'));
+            chart.forceY(min_y);
             svg = $('svg', target);
+            svg.on('mouseout', function() {
+                tooltips = $('.nvtooltip', target);
+                if(tooltips.length > 1) $(tooltips[0]).fadeOut()
+            })
             d3.select(svg[0])
                 .datum(datum)
                 .transition().duration(500)
