@@ -168,6 +168,7 @@ class Period(object):
             new_start = new_start.replace(day=1)
         new_start = new_start.replace(tzinfo=None)
         return new_start
+
     @staticmethod
     def format_dt_str(t):
         return t.strftime('%a %b %d %H:%M:%S %Y')
@@ -182,7 +183,7 @@ class Period(object):
     def datetimes(self, start=False, end=False, tzoffset=0):
         from dateutil import rrule
         from util import datetimeIterator
-        use_start = start or self.start(tzoffset)
+        use_start = start or self.start(tzoffset or end and end.utcoffset().seconds/36)
         use_end = end or convert(pytznow(), tzoffset)
         use_start = use_start.replace(tzinfo=None)
         use_end = use_end.replace(tzinfo=None)
@@ -205,10 +206,7 @@ class Period(object):
         else:
             rule = rrule.SECONDLY
             step = interval
-        dts = [
-            dt for dt in
-            rrule.rrule(rule, dtstart=use_start, until=use_end, interval=step)
-        ]
+        dts = rrule.rrule(rule, dtstart=use_start, until=use_end.replace(tzinfo=pytz.utc), interval=step)
         return dts
 
     def datetimes_strs(self, start=False, end=False, tzoffset=0):
