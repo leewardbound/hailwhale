@@ -39,8 +39,9 @@
                 name = $(t).attr('data-hw-name')
                 if(current_legends.length >= (i+1))
                     $(current_legends[i]).text(name);
-                data = {
+                return {
                     key: name,
+                    color: $(t).attr('data-hw-color'),
                     values: $.map($('tr', t), function(data_row) {
                         cells = $('td', data_row);
                         if(cells.length != 2)
@@ -50,7 +51,6 @@
                         if(y <= min_y) min_y = y
                         return {x: date, y: y};})
                 };
-                return data;
             }, tables);
             var chart = nv.models.lineChart()
                 .color(document.hw_colors || d3.scale.category10().range())
