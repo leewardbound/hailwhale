@@ -8,27 +8,20 @@ PERIODS = [
     'length': '3y',
     'interval': '1d',
     'nickname': 'monthly'},
-{'name': 'Last year, by week',
+{'name': 'Last year, by day',
     'length': '1y',
     'interval': '1d',
     'nickname': 'year'},
 {'name': 'Last 30 days, by day', 'length': '1mo', 'interval': '1d',
     'nickname': 'thirty'},
-{'name': 'Last week, by 6 hours', 'length': '1w', 'interval': '6h',
-    'nickname': 'seven'},
 {'name': 'Last day, by hour', 'length': '1d', 'interval': '1h',
     'nickname': 'day'},
 {'name': 'Last hour, by 1 minutes', 'length': '1h', 'interval': '1m',
     'nickname': 'hour'},
-{'name': 'Last 5 minutes, by 10 seconds', 'length': '5m', 'interval': '10s',
-        'nickname': 'fivemin'},
 {'name': 'Month to date', 'length': '1mo', 'interval': '1d',
     'nickname': 'mtd'},
-{'name': 'Week to date', 'length': '1w', 'interval': '6h',
-    'nickname': 'wtd'},
 {'name': 'Year to date', 'length': '1y', 'interval': '1d',
     'nickname': 'ytd'}
-
 ]
 
 
