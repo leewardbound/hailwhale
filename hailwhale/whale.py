@@ -568,13 +568,12 @@ class Whale(object):
         # [b, y],
         # [b, y, 2]
         pipe = cls.whale_driver().pipeline(transaction=False)
-        for pkk, dimension, (interval, dt, metric, i) in itertools.product(
-                iterate_dimensions(pk),
+        for dimension, (interval, dt, metric, i) in itertools.product(
                 iterate_dimensions(dimensions, add_root=True),
                         generate_increments(metrics, periods, at)):
             if i == 0:
                 continue
-            _increment(pipe, pkk, dimension, metric, interval, dt, i)
+            _increment(pipe, pk, dimension, metric, interval, dt, i)
         pipe.execute()
 
     @classmethod
