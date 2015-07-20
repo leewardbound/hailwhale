@@ -1,32 +1,57 @@
 HailWhale
 =========
-**STATUS UPDATE**
-HailWhale is still in development. But for the most part, the readme and the core docs are TERRIBLY out of date. These things move fast.
-
-If you need hand holding, get out and go home. This project isn't for you yet.
-
 If you like hacking, testing and reading source code, start with tests.py and
 then catch up on the last few weeks of commit logs. You'll be smoking the good
 stuff in no time.
 
 **What Is It?**
-Real-time counting of rolled-up multi-dimensional metric data via HTTP service.
 
-**OK, now in english?** Live graphs of events happening in real-time, for any measurable things you want to measure, grouped by any properties you want to define about these events.
+Laymen-ish: Real-time counting of rolled-up multi-dimensional metric data via HTTP service.
+
+I needed a timeseries database that could count a lot of structured data, but
+also help to find what factors might cause different metrics to change.
+
+Specifically, I needed to be able to say "Give me all the counts of Impressions,
+Clicks, Visitors, Sales and Revenue, grouped by Country, sorted by
+Revenue/Visitors."
+
+That last part is the key, sorting by a ratio of two graphs, because it lets us
+do recommendation services. And I needed the decisions to be delivered quickly,
+in just milliseconds, so everything had to be kept mostly denormalized.
+
+HailWhale uses Redis, instead of cassandra, riak or hbase (I tried to build adapters,
+but like my dad always says, "fuck'em!"), and with tests on Redis Cluster it has been
+horizontally scalable and performant.
+
+**Why?**
+
+The primary application has been of course the advertising industry, but I've re-applied
+hailwhale to billing software (choosing best merchant processors for a given
+card), to design LED lighting algorithms (optimize for upvotes like ElectricSheep), 
+
+It is not an attempt to out-perform other TSDBs, but an attempt to provide novel
+features and an emphasis on the recommendation services and keeping the service
+simple and easy to use (integrating tightly to python and django, but still
+available over HTTP).
+
+It is here because I need it and not because I really want you to enjoy it, I
+promise. I don't care if you don't like it or me or my lack of documentation.
 
 
 **To use it**
 
-Fire HTTP GET requests to log **Events** from any language, as embedded image pixels, API callback URLs or anything you please. Events can be optionally tagged with **Dimensions**, which are like properties (and can be nested!), and each Event has some **Metrics**, or measurable counting data.
+Fire HTTP GET requests to log **Events** from any language, as image or javascript pixels, from your API endpoints, from collectd or anywhere else.
 
-For example, let's say you need to count today's revenue from various income streams and put a fancy graph in your admin panel. From an image tag on your ThankYou page, you trigger these URLs (actually loaded by the browser client, in this case) -- ::
+Events can be optionally tagged with **Dimensions**, which are like properties (and can be nested!), and each Event has some **Metrics**, or measurable counting data.
+
+For example, let's say you need to count today's revenue from various income streams and put a fancy graph in your admin panel. From an image tag on your ThankYou page, you trigger these URLs (actually loaded by the browser client, in this case, WHICH IS FINE) -- ::
 
     # Sold $200 in services
-    http://.../count?dimensions=services&metrics={"dollars": 200} 
+    http://.../count?pk=test&dimensions=services&metrics={"dollars": 200} 
     # Bought $2000 in advertising
-    http://.../count?dimensions=advertising&metrics={"dollars": -2000} 
+    http://.../count?pk=test&dimensions=advertising&metrics={"dollars": -2000} 
     # Sold a $product_id for $500
-    http://.../count?dimensions={"sales": $product_id}&metric={"dollars": 500}
+    http://.../count?pk=test&dimensions={"sales": $product_id}&metric={"dollars": 500}
 
 Notice that in the third example, the dimensions are nested. Now, using the jQuery widget, you can add a graph to your admin panel that will show "Overall Dollars", as well as any dimensions that exceed 10% of the total revenue stream (10% is the default threshold). Additionally, you can get a graph of "Sales Overall", which would also show any $product_id that represented 10% or more of the sales. **More additionally still**, you can get a graph of the average revenue per sale,
 because hailwhale adds an extra metric {hits: 1} to each event. Then we can ask
@@ -37,200 +62,84 @@ For each dimension/metric combination, hailwhale provides graphs and summary dat
 On the backend, Hailwhale is composed of two servers --
 
 + The hail server is optional, and designed to quickly collect incoming events in high-traffic scenarios. Hail depends on Redis and Bottle.py.
+  **UPDATE** Hail server has not actually really been used in years! It's
+  probably still fine to use it, but I've switched to mostly using rabbitmq to
+  handle incoming traffic. Whale still works the same without it, in this regard.
 
-+ The whale server is required. It provides graphs, and allows for directly counting data when used without a Hail server. The whale stores data into a large datastore. Currently Redis is supported, MongoDB and cassandra coming soon.
++ The whale server is required. It provides TSDB read/write wrappers, and allows for directly counting data when used without a Hail server.
 
-To sweeten the deal, we support a couple peices of magic, though most of them
-are still being tested and tuned --
-  + "Spy Logs" -- A rotating list of (default 1000) events that have passed
-    through the Event, so you can show recent actions with their dimensions. To
-    use Spy Logs, take a look at the source for Hail.py
-  + Encrypted Pixels -- It's not secure to put all those parameters in a forward
-    facing URL; if you're trying to put a counting pixel on a public page, you
-    can encrypt the URL so that nobody can mess with it.
-  + DECISION MAKING -- My crown jewel, still being tuned heavily, see the unit
-    tests. Hey, we have all these graphs for Visitors by Country,
-    now can we choose the best of our 3 page variations ['a', 'b', 'c'] to serve
-    them based on this visitors dimensions? Yes, yes we can -- ::
-    # Choose from our historical data
-    http://.../decide?pk=PageVariation&options=['a', 'b', 'c']&dimensions={"country": "US"}&by_metric=spent/earned
+**Making Decisions**
+    Hey, we have all these graphs for Visitors by Country,
+    now can we choose the best of our 3 page variations ['a', 'b', 'c'] to recommend one
+    based on this visitors dimensions? Yes, yes we can -- ::
     # Log our decisions
     http://.../count_decision?pk=PageVariation&option=b&dimensions={"country": "US"}&metric={"spent": .50}
     # And log our successes, of course ;)
     http://.../count_decision?pk=PageVariation&option=b&dimensions={"country": "US"}&metric={"earned": 25}
+    # Now choose one from our historical data
+    http://.../decide?pk=PageVariation&options=['a', 'b', 'c']&dimensions={"country": "US"}&by_metric=spent/earned
 
-Internal Usage: (ie using hailwhale as a library inside django application)
-================
-Updated: 11/14/14 by rbaker
+**Python Integration**
 
-1) download the git repo for hailwhale
-2) The two primary files you might want to include are whale.py and periods.py
-  a) from hailwhale.whale import Whale
-     --This class is the main entry point into all the hailwhale functions
-     --You can track counts, retrieve counts as totals, or retrieve counts as
-     plotpoints
-  b) from hailwhale import periods
-    --This file contains the Period class along with some static dictionaries
-    that help to enumerate the types of periods that are going to be available
-    by default.  
-    --This class is primarily used by hailwhale to codify the way the stats are
-    summed by intervals and over lengths of time and then returned to the user
-    --Generally, you should only edit this file if you need a specific period thatis
-    not available in the default list.  ie, every 5 minute period over the last week.
-    --Under normal use cases, this file probably wont need to be included
+Grab the source ::
+    git clone github.com/linked/hailwhale
 
+Include it ::
+     # This class is the main entry point into all the hailwhale functions
+     # You can track counts, retrieve counts as totals, or retrieve counts as
+     # plotpoints
+     from hailwhale.whale import Whale
 
-3) There are three primary commands you'll want to be aware of:
-   a) Whale.count_now()
-     --Used to track incoming information
-   b) Whale.totals()
-     --Used to return the totals summed for the whole duration of the period
-     --This will usually just return a single value for each period/metric
-   c) Whale.plotpoints()
-     --Used to return the totals summed for each interval as a plotpoint for the
-    duration of the period
-     --This is most useful for graphs where you want to see each plotpoint and
-     value in relationship to one another
+     # Optional, but includes some extra helpers for working with our periods
+      from hailwhale import periods
 
-4) Examples:
+     # Let's log some data
+     Whale.count_now('my_counter', metrics={'hits': 1})
 
-===
-User purchases product p, with value x
-from hailwhale.whale import Whale
+     # How many hits today? 1. 1 hit. Gooood dooog.
+     assert(Whale.total('my_counter', metric='hits', period='today') == 1)
 
-#hook from purchase action
-#counts revenue as product price, and increments sales by 1
-Whale.count_now(['Product', product_id], metric={'revenue': x, 'sales': 1})
+     # Count something else probably
+     Whale.count_now('my_counter', metrics={'sales': 1, 'revenue': 5})
 
-#you can also include a dimension to further subdivide your stats
-Whale.count_now(['Product', product_id], metric={'revenue': x, 'sales': 1}, dimensions={'country': 'US', 'device': 'Mac OS X'})
-====
+     # Now we want some graph. The men in suits always want more graph :(
+     pps = Whale.plotpoints('my_counter', metrics=['hits','sales','revenue/hits'], period='mtd')
 
-====
-Seller wants sum of all revenue and number of sales for a given product over the last month
-from hailwhale.whale import Whale
+     # we all gonna be out the job
+     print pps['my_counter']['revenue/hits'].keys()[:3]
+     { '1/1/11': 0, '1/2/11': 0, '1/3/11': 5.0}
 
-totals = Whale.totals(['Product', product_id], metric=['revenue', 'sales'], period='1d:1mo')
-====
+     # you can also nest your PKs, and include a dimension to further subdivide your stats
+     Whale.count_now(['Product', '123'], metric={'revenue': 10.0, 'sales': 1}, dimensions={'country': 'US', 'device': 'Mac OS X'})
 
-====
-Seller wants to graph all the revenue for a product over the last month
-from hailwhale.whale import Whale
+     # Get some numbers for a dashboard
+     totals = Whale.totals(['Product', '123'], metric=['revenue', 'sales'], period='1d:1mo')
 
-plotpoints = Whale.plotpoints(['Product', product_id], metric=['revenue'])
-====
+     # Now get plotpoints for graphs of all countries, by revenue/visitor
+     plotpoints = Whale.plotpoints(['Product', '123'], dimensions='country', metric=['revenue/visitor'], depth=1)
+     
+     # And I believe you mentioned some recommendation utilities?
+     # What if we showed US visitor an english page?
+     Whale.count_decision(['Product', '123'], decided={'language': 'EN'},
+          metric={'revenue': 500, 'visitors': 100}, dimensions={'country': 'US', 'device': 'Mac OS X'})
+     # Then US visitors a spanish page?
+     Whale.count_decision(['Product', '123'], decided={'language': 'SP'},
+          metric={'revenue': 0, 'visitors': 100}, dimensions={'country': 'US', 'device': 'Mac OS X'})
+
+     # Hey we have a guy from US, which page should we show him?
+     Whale.decide(['Product', '123'], options={'language': ['EN', 'SP']},
+          known_dimensions={'country': 'US', 'device': 'Mac OS X'})
 
 
 
 
-
-
-Test Server
-===========
-OSX::
-
-    brew install redis
-    git clone git://github.com/linked/hailwhale.git
-    cd hailwhale
-    sudo python setup.py
-    python hailwhale/wsgi.py
-
-Ubuntu 11.10::
- 
-    sudo apt-get install redis
-    git clone git://github.com/linked/hailwhale.git
-    cd hailwhale
-    sudo python setup.py
-    python hailwhale/wsgi.py
-
-Ubuntu 10.04 i386::
-
-        wget -O redis.deb http://ftp.us.debian.org/debian/pool/main/r/redis/redis-server_2.4.5-1_i386.deb
-        wget -O libjemalloc-dev.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc-dev_2.2.5-1_i386.deb
-        wget -O libjemalloc1.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc1_2.2.5-1_i386.deb
-        sudo dpkg -i libjemalloc1.deb
-        sudo dpkg -i libjemalloc-dev.deb
-        sudo dpkg -i redis.deb
-        # Continue 11.10 instructions
-
-Ubuntu 10.04 amd64::
-
-        wget -O redis.deb http://ftp.us.debian.org/debian/pool/main/r/redis/redis-server_2.4.5-1_amd64.deb
-        wget -O libjemalloc-dev.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc-dev_2.2.5-1_amd64.deb
-        wget -O libjemalloc1.deb http://ftp.us.debian.org/debian/pool/main/j/jemalloc/libjemalloc1_2.2.5-1_amd64.deb
-        sudo dpkg -i libjemalloc1.deb
-        sudo dpkg -i libjemalloc-dev.deb
-        sudo dpkg -i redis.deb
-        # Continue 11.10 instructions
 
 Deployment
 ==========
+Just run a Redis server like normal. HailWhale creates all it's own keys. If you run into scaling issues,
+add more machines, and use the Redis Cluster "{mustache}" clustering key notation to shard your primary keys.
 
-Ubuntu::
-
-    pip install supervisor
-    sudo vim /etc/supervisord.conf
-    ADD THESE LINES, TWEAK TO FIT:
-      [program:hailwhale]
-        command=/usr/bin/python /path/to/hailwhale/hailwhale/wsgi.py
-        numprocs=1
-        user=www-data
-        autostart=true
-        autorestart=true
-        stdout_logfile=/var/log/hailwhale.log
-        redirect_stderr=true
-        startsecs = 5
-        stopwaitsecs = 5
-
-Done :) if port 8085 is exposed, you can access hailwhale from it.
-If 8085 is not exposed, you should setup a local reverse proxy. I like to use
-the following nginx config inside my server {} block::
-
-      upstream hailwhale {
-          server 127.0.0.1:8085 fail_timeout=1;
-      }
-      server {
-          listen 80; 
-          server_name  hw.lwb.co;
-          proxy_redirect off;
-          location / { 
-            // Fix the host name for hailwhale
-            proxy_set_header Host $host;
-            // Sites you want to be able to include cross-domain hailwhale graphs from
-            proxy_set_header Access-Control-Allow-Origin http://hw.lwb.co;
-            proxy_set_header Access-Control-Allow-Origin http://lwb.co;
-            // If you set too many sites above, you have to increase these numbers below
-            proxy_headers_hash_max_size 1024;
-            proxy_headers_hash_bucket_size 256;
-            proxy_pass http://hailwhale;
-            break;
-          }   
-       }
-
-              
-About
-=====
-I built this after studying a presentation on Rainbird by Brian Weil 
-(of Twitter), and re-using a lot of recent work I've done in
-parameterized hit counting.
-
-Full credit to Twitter for the inspiriation, and my project name (a pun 
-on both the name "Rainbird" and their classic downtime logo).
-
-Rainbird looked awesome I knew I had to have it, but after 5 months
-of waiting on release, I proceeded to roll my own solution. Now I
-can count things at webscale without losing my mind, if you know what I mean.
-
-I'm using this in production on lots of sites.
-In addition to benchmarks and performance data, I'm trusting it to count my own live 
-data for marketing campaigns, meaning I'm trusting dollars on it, and it's good enough for me.
-Use at your own risk.
-
-Credits
-=======
-HailWhale was almost entirely coded by yours truly, Leeward Bound, with very
-little outside assistance. But some names need mentioning and thanks need giving
-
-  + Mike and WhatRunsWhere.com, for paying me cash for some custom mods
-  + Mattseh, for assisting in some of the early WSGI code
-  + Every deadbeat client that still owes me money, shit's fuel for my fire.
+License and Terms
+=================
+I do not suggest that anyone should try to use this, unless they are cautious and experimental and adventerous.
+They would be at their own risk, and going against my advice in proceeding.
