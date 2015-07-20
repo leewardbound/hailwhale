@@ -14,6 +14,8 @@ PERIODS = [
     'nickname': 'year'},
 {'name': 'Last 30 days, by day', 'length': '1mo', 'interval': '1d',
     'nickname': 'thirty'},
+{'name': 'Last week, by day', 'length': '1w', 'interval': '1d',
+    'nickname': 'seven'},
 {'name': 'Last day, by hour', 'length': '1d', 'interval': '1h',
     'nickname': 'day'},
 {'name': 'Last hour, by 1 minutes', 'length': '1h', 'interval': '1m',
@@ -123,7 +125,7 @@ class Period(object):
             ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
         if '-' in str(period):
             start_s, end_s = period.split('-')
-            period = 'thirty'
+            period = 'year'
             period = cls.get(period)
             end = datetime.strptime(end_s, '%m/%d/%Y').replace(hour=0, minute=0,
                     second=0, microsecond=0)+timedelta(1)-timedelta(seconds=1)
@@ -209,15 +211,26 @@ class Period(object):
                 self.datetimes(start=start, end=end, tzoffset=tzoffset))
 
     def flatten(self, dtf=None):
+        """
+        Take a datetime, flatten it to this period,
+        return M/D/Y H:00:00 or H:MM:00 and etc
+        Returns None if out of timerange
+        """
+        # Default to now
         if not dtf:
             dtf = pytznow()
+        # Or parse the string
         if type(dtf) in (str, unicode):
             dtf = self.parse_dt_str(dtf)
-        offset = dtf.tzinfo and dtf.utcoffset().total_seconds()/36 or 0
-        dts = list(self.datetimes(end=dtf,
-                tzoffset=offset))
-        flat = len(dts) and dts[-1] or False
-        return flat
+
+        # Convert UTCOffsetSeconds to "-0700"
+        _conv = 3600 * 1/100
+        offset = dtf.tzinfo and dtf.utcoffset().total_seconds()/_conv or 0
+
+        # TODO We should be memoizing this method call
+        dts = list(self.datetimes(end=dtf, tzoffset=offset))
+
+        return len(dts) and dts[-1] or False
 
     def flatten_str(self, dtf):
         f = self.flatten(dtf)
