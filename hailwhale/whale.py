@@ -180,7 +180,6 @@ class Whale(object):
     @classmethod
     def plotpoints(cls, pk, dimensions=None, metrics=None, **kwargs):
         """ Combines scalar_plotpoints and ratio_plotpoints into a single func call w/ formula support """
-        combo = defaultdict(dict)
         scalars = []
         ratios = {}
         metrics = metrics or ['hits']
@@ -251,7 +250,8 @@ class Whale(object):
 
     @classmethod
     def scalar_plotpoints(cls, pk, dimensions=None, metrics=None,
-            depth=0, period=None, tzoffset=None, flot_time=False, points_type=OrderedDict):
+            depth=0, period=None, tzoffset=None, flot_time=False,
+            points_type=OrderedDict, descending=False, with_totals=False):
         metrics = metrics or ['hits']
         if isinstance(metrics, basestring):
             metrics = [metrics]
@@ -281,7 +281,7 @@ class Whale(object):
                     const_value = float(met_name)
                 except:
                     pass
-                last_value = total = 0
+                last_value = total = 0.0
                 for dt in dts:
                     dt_obj = Period.parse_dt_str(dt)
                     if met_name == '_days_in_month':
@@ -295,10 +295,10 @@ class Whale(object):
                         value = const_value
                     else:
                         value = points[dt] if dt in points else 0
+                    total += value
                     if use_method == 'count' or not use_method:
                         value = value
                     elif use_method in ['+', 'sum', 'add', 'cumulative']:
-                        total += value
                         value = total
                     elif use_method in ['_', 'set', 'last', 'level']:
                         if not last_value:
@@ -307,23 +307,29 @@ class Whale(object):
                             value = last_value
                         last_value = value
                     nonsparse[dim][met].append([dt_t, float(value)])
+                if with_totals:
+                    nonsparse[dim][met].append(['Total', total])
+                if descending:
+                    nonsparse[dim][met] = reversed(nonsparse[dim][met])
                 nonsparse[dim][met] = points_type(nonsparse[dim][met])
         if depth > 0:
             for sub in cls.get_subdimensions(pk, dimensions):
                 nonsparse = dict(nonsparse.items() +
                     cls.plotpoints(pk, sub, metrics, depth=depth - 1, period=period,
+                        descending=descending, with_totals=with_totals,
                         flot_time=flot_time, points_type=points_type).items())
         return nonsparse
 
     @classmethod
     def ratio_plotpoints(cls, pk, numerator_metric, denomenator_metric='hits',
             dimensions=None, depth=0, period=None, flot_time=False, tzoffset=None,
-            points_type=OrderedDict):
+            points_type=OrderedDict, descending=False, with_totals=False):
         if flot_time:
             points_type = list
         top, bot = numerator_metric, denomenator_metric
         pps = cls.scalar_plotpoints(pk, dimensions, [top, bot], depth=depth, period=period,
-            flot_time=flot_time, points_type=points_type, tzoffset=tzoffset)
+            flot_time=flot_time, points_type=points_type, tzoffset=tzoffset,
+            descending=descending, with_totals=with_totals)
         formula = '%s/%s' % (top, bot)
 
         # The function that makes the ratios
