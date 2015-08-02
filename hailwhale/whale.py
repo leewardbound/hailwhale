@@ -451,6 +451,9 @@ class Whale(object):
             return pytz.utc.localize( datetime.utcnow() )
         else:
 	    return datetime.now(pytz.utc)
+    @classmethod
+    def now_naive(cls):
+        return cls.now().replace(tzinfo=None)
 
     @classmethod
     def totals(cls, pk, dimensions=None, metrics=None, periods=None, tzoffset=0):
@@ -493,25 +496,33 @@ class Whale(object):
 
     @classmethod
     def cleanup(cls):
-        ps = dict([(str(p), p) for p in DEFAULT_PERIODS])
+        ps = MAX_INTERVALS
+        print ps
         r = cls.whale_driver()
-        keys = r.keys('*||*||*||*')
+        keys = r.scan_iter('*||*||*||*')
         for k in keys:
             parts = k.split('||')
             if parts == 'rank':
                 continue
-            #try:
-                #val = r.hgetall(k)
-            #except:
-                #r.delete(k)
-                #continue
+            try:
+                val = r.hgetall(k)
+            except: continue
             this_p = parts[2]
             deleted = 0
             for dt, num in val.items():
-                if not ps[this_p].flatten(dt):
+                delete = False
+                if not this_p in ps:
+                    delete = True
+                else:
+                    from dateutil import parser
+                    dt_obj = parser.parse(dt)
+                    expire = timedelta(seconds=ps[this_p].units[1])
+                    oneday = timedelta(days=1)
+                    delete = dt_obj < (cls.now_naive() - expire - oneday)
+                if delete:
                     r.hdel(k, dt)
                     deleted += 1
-                    print 'Flatten invalid', dt, ps[this_p]
+                    print 'Flatten invalid', dt, this_p
             # Cleanup empty key
             if (len(val) - deleted) == 0:
                 print 'Key empty, deleting --', k

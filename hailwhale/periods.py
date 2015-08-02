@@ -76,6 +76,7 @@ class Period(object):
         self.length = str(length)
         self.name = name
         self.nickname = nickname
+        self.units = self.getUnits()
     def getUnits(self):
         return parseUnit(self.interval), parseUnit(self.length)
     @classmethod
@@ -139,7 +140,7 @@ class Period(object):
         return period, list(ats), tzoffset
 
     def start(self, tzoffset):
-        interval, length = self.getUnits()
+        interval, length = self.units
         dt= convert(pytznow(), tzoffset) - timedelta(seconds=length)
         if interval < 60:
             interval_seconds = interval
@@ -181,7 +182,7 @@ class Period(object):
         use_end = end or convert(pytznow(), tzoffset)
         use_start = use_start.replace(tzinfo=None)
         use_end = use_end.replace(tzinfo=None)
-        interval, length = self.getUnits()
+        interval, length = self.units
         if interval >= 3600*24*30:
             rule = rrule.MONTHLY
             step = interval / (3600*24*30)
@@ -293,7 +294,7 @@ for p in PERIODS:
 DEFAULT_PERIODS = Period.all_sizes()
 for p in PERIOD_OBJS:
     i = p.interval
-    if i not in MAX_INTERVALS or MAX_INTERVALS[i].getUnits()[1] < p.getUnits()[1]:
+    if i not in MAX_INTERVALS or MAX_INTERVALS[i].units[1] < p.units[1]:
         MAX_INTERVALS[p.interval] = p
 def convert(tzs, tzoffset=None):
     if tzoffset == 'system':
