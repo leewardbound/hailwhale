@@ -522,7 +522,6 @@ class Whale(object):
                 if delete:
                     r.hdel(k, dt)
                     deleted += 1
-                    print 'Flatten invalid', dt, this_p
             # Cleanup empty key
             if (len(val) - deleted) == 0:
                 print 'Key empty, deleting --', k
