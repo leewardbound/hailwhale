@@ -74,10 +74,10 @@ def _store(redis, pk, dimension, metric, interval, dt, count, method='set',
             _added_subdimensions[subdimension_key].append(dimension_json)
 
     if method == 'set':
-        new_val = float(count)
+        new_val = int(count)
         redis.hset(key, dt, new_val)
     elif method == 'incr':
-        new_val = redis.execute_command('HINCRBY', key, dt, float(count))
+        new_val = redis.execute_command('HINCRBY', key, dt, int(count))
     if rank and (isinstance(try_loads(pk), list) or dimension != '_'):
         if isinstance(pk, list) and dimension == '_':
             tgt_pk = parent(pk)
