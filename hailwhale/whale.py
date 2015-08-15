@@ -77,7 +77,7 @@ def _store(redis, pk, dimension, metric, interval, dt, count, method='set',
         new_val = float(count)
         redis.hset(key, dt, new_val)
     elif method == 'incr':
-        new_val = redis.execute_command('HINCRBYFLOAT', key, dt, float(count))
+        new_val = redis.execute_command('HINCRBY', key, dt, float(count))
     if rank and (isinstance(try_loads(pk), list) or dimension != '_'):
         if isinstance(pk, list) and dimension == '_':
             tgt_pk = parent(pk)
@@ -499,7 +499,7 @@ class Whale(object):
         ps = MAX_INTERVALS
         print ps
         r = cls.whale_driver()
-        keys = r.scan_iter('*||*||*||*')
+        keys = r.execute_command('xscan', 'hash', '*||*||*||*')
         for k in keys:
             parts = k.split('||')
             if parts == 'rank':
