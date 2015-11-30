@@ -499,8 +499,14 @@ class Whale(object):
         ps = MAX_INTERVALS
         print ps
         r = cls.whale_driver()
-        keys = r.execute_command('xscan', 'hash', '*||*||*||*')
-        for k in keys:
+	def get_keys():
+           cur = ""
+	   cur, keys = r.execute_command('xscan', 'hash', "", "match", '.*||.*||.*||.*')
+           for key in keys: yield key
+           while cur:
+	       cur, keys = r.execute_command('xscan', 'hash', cur, "match", '.*||.*||.*||.*')
+               for key in keys: yield key
+        for k in get_keys():
             parts = k.split('||')
             if parts == 'rank':
                 continue
