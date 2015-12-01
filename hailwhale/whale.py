@@ -590,12 +590,13 @@ class Whale(object):
         # [b, y],
         # [b, y, 2]
         pipe = cls.whale_driver().pipeline(transaction=False)
-        for dimension, (interval, dt, metric, i) in itertools.product(
+        for pkk, dimension, (interval, dt, metric, i) in itertools.product(
+                iterate_dimensions(pk),
                 iterate_dimensions(dimensions, add_root=True),
-                        generate_increments(metrics, periods, at)):
+                generate_increments(metrics, periods, at)):
             if i == 0:
                 continue
-            _increment(pipe, pk, dimension, metric, interval, dt, i)
+            _increment(pipe, pkk, dimension, metric, interval, dt, i)
         pipe.execute()
 
     @classmethod
@@ -648,7 +649,6 @@ class Whale(object):
         _subs = recursive and cls.all_subdimensions or cls.get_subdimensions
         for sub in map(maybe_dumps, _subs(pk, dimension)):
             ranked[sub] = info(sub)
-        print ranked
 
         # Prune parents
         if recursive and prune_parents:
@@ -795,7 +795,7 @@ class Whale(object):
         overall = cls.cached_rank([pk_base, decision], formula=formula, dimension=base,
             period=period, recursive=recursive, points=False)
         parent_score = overall[base]['score']
-        parent_count = overall[base]['count']
+        parent_count = overall[base]['count'] or 1
         ranks[base]['effect'] = ranks[base]['count'] * ranks[base]['difference']
 
         def delta(info):
