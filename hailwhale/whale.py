@@ -839,6 +839,8 @@ def parse_formula(formula):
 def iterate_dimensions(dimensions, add_root=False):
     if not dimensions:
         dimensions = []
+    if isinstance(dimensions, tuple):
+        dimensions = list(dimensions)
     if isinstance(dimensions, dict):
         dimensions = list(nested_dict_to_list_of_keys(dimensions))
     elif isinstance(dimensions, basestring):
