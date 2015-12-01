@@ -508,10 +508,10 @@ class Whale(object):
         r = cls.whale_driver()
 	def get_keys():
            cur = ""
-	   cur, keys = r.execute_command('xscan', 'hash', "", "match", '.*||.*||.*||.*')
+           cur, keys = r.execute_command('xscan', 'hash', "", "match", '[^:].*||.*||.*||.*')
            for key in keys: yield key
            while cur:
-	       cur, keys = r.execute_command('xscan', 'hash', cur, "match", '.*||.*||.*||.*')
+               cur, keys = r.execute_command('xscan', 'hash', cur, "match", '[^:].*||.*||.*||.*')
                for key in keys: yield key
         for k in get_keys():
             parts = k.split('||')

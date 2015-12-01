@@ -252,6 +252,9 @@ class Period(object):
             Period.all_sizes()))
 
     @staticmethod
+    def interval_sizes_dict():
+        return MAX_INTERVALS
+    @staticmethod
     def get(name=None):
         if isinstance(name, Period):
             return name
