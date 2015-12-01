@@ -151,7 +151,11 @@ class Whale(object):
             # Currying for related models as
             for method in ['plotpoints', 'graph_tag', 'count_now', 'totals']:
                 curry_related_dimensions(attr, method, self, with_class_name=True)
-            self._hw_curried = True
+            self._hw_curried = lambda o: [self.__class__.__name__,
+                                          getattr(o, attr)]
+    @property
+    def _hw_key(self):
+        return maybe_dumps(self._hw_curried(self))
 
 
     @classmethod
