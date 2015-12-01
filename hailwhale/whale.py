@@ -260,11 +260,11 @@ class Whale(object):
             depth=0, period=None, tzoffset=None, flot_time=False,
             points_type=OrderedDict, descending=False, with_totals=False):
         metrics = metrics or ['hits']
+        dimensions = dimensions or ['_']
         if isinstance(metrics, basestring):
             metrics = [metrics]
         p_obj, ats, tzoffset = Period.get_days(period, tzoffset=tzoffset)
         p_s = str(p_obj)
-        dts = list(p_obj.datetimes_strs(tzoffset=tzoffset))
         sparse = _retrieve(cls.whale_driver(), pk, dimensions, metrics, period=p_obj)
         nonsparse = defaultdict(dict)
         if flot_time:
@@ -283,13 +283,13 @@ class Whale(object):
                             TIME_MATRIX[met_name])
                 # Try to parse static metrics too
                 elif met_name == '_count':
-                    const_value = len(dts)
+                    const_value = len(ats)
                 try:
                     const_value = float(met_name)
                 except:
                     pass
                 last_value = total = 0.0
-                for dt in dts:
+                for dt in ats:
                     dt_obj = Period.parse_dt_str(dt)
                     if met_name == '_days_in_month':
                         from calendar import monthrange

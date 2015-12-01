@@ -4,10 +4,7 @@ import times
 import pytz; pytznow = lambda: datetime.now(pytz.utc)
 import re
 PERIODS = [
-{'name': 'Last 3 years, by month',
-    'length': '3y',
-    'interval': '1d',
-    'nickname': 'monthly'},
+#{'name': 'Last 3 years, by month', 'length': '3y', 'interval': '1d', 'nickname': 'monthly'},
 {'name': 'Last year, by day',
     'length': '1y',
     'interval': '1d',
@@ -20,8 +17,7 @@ PERIODS = [
     'nickname': 'day'},
 {'name': 'Last hour, by 1 minutes', 'length': '1h', 'interval': '1m',
     'nickname': 'hour'},
-{'name': 'Month to date', 'length': '1mo', 'interval': '1d',
-    'nickname': 'mtd'},
+{'name': 'Month to date', 'length': '1mo', 'interval': '1d', 'nickname': 'mtd'},
 {'name': 'Year to date', 'length': '1y', 'interval': '1d',
     'nickname': 'ytd'}
 ]
@@ -77,6 +73,7 @@ class Period(object):
         self.name = name
         self.nickname = nickname
         self.units = self.getUnits()
+
     def getUnits(self):
         return parseUnit(self.interval), parseUnit(self.length)
     @classmethod

@@ -115,7 +115,7 @@ class TestHailWhale(unittest.TestCase):
         self.assertEqual(plotpoints[maybe_dumps([t, 'c', 'child'])]['hits'][-1][1], 1)
 
         # Test ranking and limiting
-        plotpoints = self.whale.plotpoints('test_depth', t, points_type=list, depth=1, limit=3)
+        plotpoints = self.whale.plotpoints('test_depth', t, points_type=list, depth=1, limit=2)
         self.assertEqual(plotpoints[maybe_dumps([t, 'b'])]['hits'][-1][1], 2)
         self.assertEqual(True, maybe_dumps([t, 'a']) not in plotpoints)
         self.assertEqual(True, maybe_dumps([t, 'c']) not in plotpoints)
