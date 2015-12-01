@@ -117,10 +117,12 @@ def _ranked(redis, pk, parent_dimension, metric, period, ats, start=0, size=10,
     return redis.zrange(final_rank_key, start, start + size,
                 desc=not sort_dir or sort_dir.upper() in ['-', 'DESC', 'HIGH'])
 
-def _retrieve(redis, pk, dimensions, metrics, period=None, dt=None):
+def _retrieve(redis, pk, dimensions, metrics, period=None, dt=None,
+              parents=False):
     nested = defaultdict(dict)
     interval = Period.get(period).interval
-    for dimension in iterate_dimensions(dimensions)+['_']:
+    dimensions = parents and iterate_dimensions(dimensions)+['_'] or [dimensions]
+    for dimension in dimensions:
         for metric in metrics:
             if ':' in metric:
                 metric_name = metric.split(':')[0]
