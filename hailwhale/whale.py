@@ -134,6 +134,7 @@ def _retrieve(redis, pk, dimensions, metrics, period=None, dt=None):
 
 class Whale(object):
     whale_driver_settings = {}
+    periods = DEFAULT_PERIODS
     _local = None
 
     def curry_whale_instance_methods(self, attr='id'):
