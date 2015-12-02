@@ -3,6 +3,7 @@ import time
 import times
 import pytz; pytznow = lambda: datetime.now(pytz.utc)
 import re
+PARSED = {}
 PERIODS = [
 #{'name': 'Last 3 years, by month', 'length': '3y', 'interval': '1d', 'nickname': 'monthly'},
 {'name': 'Last year, by day',
@@ -74,7 +75,6 @@ class Period(object):
         self.nickname = nickname
         self.units = self.getUnits()
         self._ats_cache = {}
-
 
     def getUnits(self):
         return parseUnit(self.interval), parseUnit(self.length)
@@ -173,11 +173,14 @@ class Period(object):
         return t.strftime('%a %b %d %H:%M:%S %Y')
     @staticmethod
     def parse_dt_str(t):
+        if t in PARSED: return PARSED[t]
         try:
             from dateutil import parser
-            return parser.parse(t)
+            val = parser.parse(t)
         except ValueError:
-            return None
+            val = None
+        PARSED[t] = val
+        return val
 
     def datetimes(self, start=False, end=False, tzoffset=0):
         from dateutil import rrule
