@@ -73,6 +73,8 @@ class Period(object):
         self.name = name
         self.nickname = nickname
         self.units = self.getUnits()
+        self._ats_cache = {}
+
 
     def getUnits(self):
         return parseUnit(self.interval), parseUnit(self.length)
@@ -82,6 +84,11 @@ class Period(object):
         period = str(period)
         if '|' in period:
             period, tzoffset = period.split('|')
+        p_obj = cls.get(period)
+        if tzoffset in p_obj._ats_cache:
+            ats, ts = p_obj._ats_cache[tzoffset]
+            if ats and time.time() - ts <= 60:
+                return p_obj, ats, tzoffset
         if period == 'ytd':
             period = 'year'
             period = cls.get(period)
@@ -129,12 +136,12 @@ class Period(object):
                     second=0, microsecond=0)+timedelta(1)-timedelta(seconds=1)
             start = datetime.strptime(start_s, '%m/%d/%Y').replace(hour=0, minute=0, second=0, microsecond=0)
             ats = period.datetimes_strs(start=start, end=end, tzoffset=tzoffset)
-        period = cls.get(period)
         if not ats and not at:
-            ats = period.datetimes_strs(tzoffset=tzoffset)
+            ats = p_obj.datetimes_strs(tzoffset=tzoffset)
         elif not ats:
-            ats = [period.flatten_str(convert(at, tzoffset))]
-        return period, list(ats), tzoffset
+            ats = [p_obj.flatten_str(convert(at, tzoffset))]
+        p_obj._ats_cache[tzoffset] = list(ats), time.time()
+        return p_obj, p_obj._ats_cache[tzoffset][0], tzoffset
 
     def start(self, tzoffset):
         interval, length = self.units
