@@ -78,71 +78,65 @@ class Period(object):
 
     def getUnits(self):
         return parseUnit(self.interval), parseUnit(self.length)
+
     @classmethod
-    def get_days(cls, period, at=None, tzoffset=0):
-        ats = False
-        period = str(period)
-        if '|' in period:
-            period, tzoffset = period.split('|')
-        if False and tzoffset in p_obj._ats_cache:
-            p_obj = cls.get(period)
-            ats, ts = p_obj._ats_cache[tzoffset]
-            if 0 and ats and time.time() - ts <= 60:
-                return p_obj, ats, tzoffset
-        if period == 'ytd':
-            period = 'year'
-            period = cls.get(period)
-            start = convert(pytznow(), tzoffset).replace(month=1,
-                    day=1,hour=0,minute=0,second=0, microsecond=0)
-            ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
-        if period == 'mtd':
-            period = 'thirty'
-            period = cls.get(period)
-            start = convert(pytznow(), tzoffset).replace(day=1, hour=0,
-                    minute=0, second=0, microsecond=0)
-            ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
-        if period == 'wtd':
-            period = 'thirty'
-            period = cls.get(period)
-            start = convert(pytznow(), tzoffset).replace(hour=0, minute=0,
-                    second=0, microsecond=0)
-            start = start - timedelta(start.weekday() + 2)
-            ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
-        if period in ['today', 'hours']:
-            period = 'thirty'
-            period = cls.get(period)
-            start = convert(pytznow(), tzoffset).replace(hour=0, minute=0,
-                    second=0, microsecond=0)
-            ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
-        if period == 'yesterday':
-            period = 'thirty'
-            period = cls.get(period)
-            end = convert(pytznow(), tzoffset).replace(hour=0, minute=0,
-                    second=0, microsecond=0)
+    def parse(cls, formula, tzoffset=0):
+        formula = str(formula)
+        if '|' in formula:
+            formula, tzoffset = formula.split('|')
+        p = cls.lookup('thirty')
+        start = end = None
+        now = convert(pytznow(), tzoffset)
+        if formula == 'ytd':
+            p = cls.lookup('year')
+            start = now.replace(month=1, day=1,hour=0,minute=0,second=0, microsecond=0)
+        elif formula == 'mtd':
+            start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        elif formula == 'wtd':
+            end = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            start = end - timedelta(now.weekday() + 2)
+        elif formula in ['24h', 'hours']:
+            p = cls.lookup('day')
+            end = now.replace(minute=0, second=0, microsecond=0)
+            start = now - timedelta(hours=24)
+        elif formula in ['today']:
+            p = cls.lookup('day')
+            start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif formula in ['hour']:
+            p = cls.lookup('hour')
+            end = now.replace(second=0, microsecond=0)
+            start = end - timedelta(hours=1)
+        elif formula == 'yesterday':
+            end = now.replace(hour=0, minute=0, second=0, microsecond=0)
             start = end - timedelta(1)
             end = end - timedelta(seconds=1)
-            ats = period.datetimes_strs(start=start, end=end, tzoffset=tzoffset)
-        if period == 'seven':
-            period = 'thirty'
-            period = cls.get(period)
-            start = convert(pytznow(), tzoffset).replace(hour=0, minute=0,
-                    second=0, microsecond=0) - timedelta(7)
-            ats = period.datetimes_strs(start=start, tzoffset=tzoffset)
-        if '-' in str(period):
-            start_s, end_s = period.split('-')
-            period = 'year'
-            period = cls.get(period)
+        elif formula == 'seven':
+            start = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(7)
+        elif '-' in str(formula):
+            start_s, end_s = formula.split('-')
+            p = cls.lookup('year')
             end = datetime.strptime(end_s, '%m/%d/%Y').replace(hour=0, minute=0,
                     second=0, microsecond=0)+timedelta(1)-timedelta(seconds=1)
             start = datetime.strptime(start_s, '%m/%d/%Y').replace(hour=0, minute=0, second=0, microsecond=0)
-            ats = period.datetimes_strs(start=start, end=end, tzoffset=tzoffset)
-        p_obj = cls.get(period)
+        else:
+            p = cls.lookup(formula)
+        return p, start, end, tzoffset
+
+    @classmethod
+    def get_days(cls, formula, at=None, tzoffset=0):
+        ats = False
+        p, start, end, tzoffset = cls.parse(formula, tzoffset)
+        if tzoffset in p._ats_cache:
+            ats, ts = p._ats_cache[tzoffset]
+            if ats and (time.time() - ts) <= 60:
+                return p, ats, tzoffset
+        ats = list(p.datetimes_strs(start=start, end=end, tzoffset=tzoffset))
         if not ats and not at:
-            ats = p_obj.datetimes_strs(tzoffset=tzoffset)
+            ats = list(p.datetimes_strs(tzoffset=tzoffset))
         elif not ats:
-            ats = [p_obj.flatten_str(convert(at, tzoffset))]
-        p_obj._ats_cache[tzoffset] = list(ats), time.time()
-        return p_obj, p_obj._ats_cache[tzoffset][0], tzoffset
+            ats = [p.flatten_str(convert(at, tzoffset))]
+        p._ats_cache[tzoffset] = ats, time.time()
+        return p, ats, tzoffset
 
     def start(self, tzoffset):
         interval, length = self.units
@@ -265,8 +259,9 @@ class Period(object):
     @staticmethod
     def interval_sizes_dict():
         return MAX_INTERVALS
+
     @staticmethod
-    def get(name=None):
+    def lookup(name=None):
         if isinstance(name, Period):
             return name
         if name and name in PERIOD_NICKS:
@@ -279,6 +274,12 @@ class Period(object):
             return PERIOD_INTERVALS[parseUnit(name)]
         except:
             raise KeyError(name)
+
+    @staticmethod
+    def get(formula=None):
+        return Period.parse(formula)[0]
+
+
 
     @staticmethod
     def default_size():
