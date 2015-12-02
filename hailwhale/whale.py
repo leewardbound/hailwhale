@@ -504,9 +504,8 @@ class Whale(object):
     @classmethod
     def cleanup(cls):
         ps = MAX_INTERVALS
-        print ps
         r = cls.whale_driver()
-	def get_keys():
+        def get_keys():
            cur = ""
            cur, keys = r.execute_command('xscan', 'hash', "", "match", '[^:].*||.*||.*||.*')
            for key in keys: yield key
@@ -520,16 +519,19 @@ class Whale(object):
             try:
                 val = r.hgetall(k)
             except: continue
-            this_p = parts[2]
+            pk = parts[0]
+            dim = parts[1]
+            p = parts[2]
+            met = parts[3]
             deleted = 0
             for dt, num in val.items():
                 delete = False
-                if not this_p in ps:
+                if not p in ps:
                     delete = True
                 else:
                     from dateutil import parser
                     dt_obj = parser.parse(dt)
-                    expire = timedelta(seconds=ps[this_p].units[1])
+                    expire = timedelta(seconds=ps[p].units[1])
                     oneday = timedelta(days=1)
                     delete = dt_obj < (cls.now_naive() - expire - oneday)
                 if delete:
@@ -539,6 +541,7 @@ class Whale(object):
             if (len(val) - deleted) == 0:
                 print 'Key empty, deleting --', k
                 r.delete(k)
+
             elif deleted > 0:
                 print 'Deleted', deleted, 'old keys from', k
 
