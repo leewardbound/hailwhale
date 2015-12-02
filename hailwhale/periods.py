@@ -84,8 +84,8 @@ class Period(object):
         period = str(period)
         if '|' in period:
             period, tzoffset = period.split('|')
-        p_obj = cls.get(period)
-        if tzoffset in p_obj._ats_cache:
+        if False and tzoffset in p_obj._ats_cache:
+            p_obj = cls.get(period)
             ats, ts = p_obj._ats_cache[tzoffset]
             if 0 and ats and time.time() - ts <= 60:
                 return p_obj, ats, tzoffset
@@ -136,6 +136,7 @@ class Period(object):
                     second=0, microsecond=0)+timedelta(1)-timedelta(seconds=1)
             start = datetime.strptime(start_s, '%m/%d/%Y').replace(hour=0, minute=0, second=0, microsecond=0)
             ats = period.datetimes_strs(start=start, end=end, tzoffset=tzoffset)
+        p_obj = cls.get(period)
         if not ats and not at:
             ats = p_obj.datetimes_strs(tzoffset=tzoffset)
         elif not ats:
