@@ -173,7 +173,7 @@ class Period(object):
         return t.strftime('%a %b %d %H:%M:%S %Y')
     @staticmethod
     def parse_dt_str(t):
-        if t in PARSED: return PARSED[t]
+        #if t in PARSED: return PARSED[t]
         try:
             from dateutil import parser
             val = parser.parse(t)
