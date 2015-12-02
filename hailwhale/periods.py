@@ -87,7 +87,7 @@ class Period(object):
         p_obj = cls.get(period)
         if tzoffset in p_obj._ats_cache:
             ats, ts = p_obj._ats_cache[tzoffset]
-            if ats and time.time() - ts <= 60:
+            if 0 and ats and time.time() - ts <= 60:
                 return p_obj, ats, tzoffset
         if period == 'ytd':
             period = 'year'
