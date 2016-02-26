@@ -439,7 +439,7 @@ class Whale(object):
                 data-hw-dimension="{dimension}" data-metric="{metric}" \
                 data-hw-color="{color}">')+'\n'.join([
             '<tr><td>%s</td><td>%s</td></tr>'%(at.replace(' 00:00:00', ''), fmt(count) )
-            for at, count in ppsm.items() if at in ats])+'</table>'
+            for at, count in ppsm.items()])+'</table>'
         return table
 
     @classmethod
